@@ -886,6 +886,7 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
     <div class="top-dropdown" id="ddMore">
       <button class="top-dd-trigger" type="button" aria-haspopup="true">更多<span class="caret">▾</span></button>
       <div class="top-dd-menu" role="menu">
+        <button data-act="help" role="menuitem">帮助</button>
         <button data-act="tpl" role="menuitem">PRD 模板</button>
         <button data-act="reset" role="menuitem">重置看板</button>
       </div>
@@ -997,7 +998,7 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
 </div></div>
 
 <div class="modal" id="wizardModal"><div class="box">
-  <div class="m-head"><h3>欢迎使用 · PRD 健康度驾驶舱</h3><button class="x" data-act="closemodal">×</button></div>
+  <div class="m-head"><h3>帮助 · 快速上手</h3><button class="x" data-act="closemodal">×</button></div>
   <div class="m-body">
     <div class="wz-step" data-step="0">
       <h4>PRD 智能看板能做什么</h4>
@@ -2496,7 +2497,14 @@ function bindStatic(){
       case 'ovclose':{const ov=document.getElementById('overviewPanel');if(ov)ov.classList.remove('open');break;}
       case 'ovopen':{
         const ov=document.getElementById('overviewPanel');if(ov)ov.classList.remove('open');
-        const pj=STATE.projects.find(x=>x.id===id);if(pj&&STATE.activeProjectId!==pj.id){STATE.activeProjectId=pj.id;drillOpen=null;save();render();}
+        const pj=STATE.projects.find(x=>x.id===id);
+        // v17.24 修复：切换后必须先 refreshData() 再 save()，否则 save() 会把上一个项目的 DATA 覆盖到目标项目（真实数据丢失）
+        if(pj&&STATE.activeProjectId!==pj.id){
+          try{if(typeof flushSave==='function')flushSave();}catch(e){}
+          STATE.activeProjectId=pj.id;drillOpen=null;
+          try{refreshData();}catch(e){}
+          save();render();
+        }
         break;
       }
       case 'sidebartoggle':openSidebar();break;
@@ -2513,6 +2521,7 @@ function bindStatic(){
       case 'accstatus':{const idx=+t.dataset.idx;const v=t.dataset.val;if(DATA.accept&&DATA.accept.items[idx]){DATA.accept.items[idx].status=v;save();render();}break;}
       case 'exportdocx':exportDOCX();break;
       case 'tpl':showTpl();break;
+      case 'help':openWizard();break;
       case 'copytpl':copyTpl();break;
       case 'tpl-regen':tplRegen();break;
       case 'tpl-preset':tplApplyPreset();break;
@@ -3537,7 +3546,7 @@ function tplApply(asNew){
 
 /* ============ 示例 ============ */
 // FDR 示例（按《座舱语音VPA功能设计需求FDR》规范结构预置）
-function sampleData(){
+function sampleDataLegacy(){
   const d=blankData();
   d.meta={html:'版本 V1.0 / 2026-08-13 / 编制：示例'};
   d.purpose={html:'本规范定义了语音 VPA 功能要求：语音虚拟形象相关功能，让用户对话时有具象化的对话对象，提供情感陪伴载体、提高用户粘性。'};
@@ -3559,10 +3568,51 @@ function sampleData(){
   d.launch={html:'填写预计功能上线时间'};
   return d;
 }
+// v17.24：示例 PRD 改用标准 14 节框架（智能座舱语音助手 · 多意图连续对话与免唤醒交互）
+function sampleData(){
+  const d=blankData(DEFAULT_FRAMEWORK);
+  d.meta={rows:[{cells:['版本','更改内容','作者','日期']},{cells:['V1.0','初稿（示例 PRD）','产品团队','2026-08-16']}],cards:[]};
+  d.purpose={html:'<p>本文档定义智能座舱语音助手「多意图连续对话与免唤醒交互」功能的完整需求：明确痛点、目标用户、核心业务流程、功能边界与验收标准。</p><p>本功能面向量产智能座舱平台，作为车机语音交互的基础能力升级，把「一次一问一答」升级为「自然、连续、可打断」的车内语音交互体验，降低驾驶中操作车机的分心成本。</p>',cards:[]};
+  d.scope={html:'<p>本文档适用于「星舱 OS」智能座舱平台 V3.2 及以上版本的车载语音助手模块开发与测试，为平台化能力。</p><ul><li>适用系统：座舱域控制器（CDC）上的语音助手 App（Android / Linux 双栈）</li><li>适用车型：搭载星舱 OS V3.2 的全部在研车型（平台化，非单车型定制）</li><li>协作边界：语音算法（ASR/NLU/TTS）由算法供应商 A 提供 SDK；车控指令执行由整车控制团队提供能力网关；云端语义理解与上下文管理由语音云平台团队负责</li></ul>',cards:[]};
+  d.def={rows:[{cells:['术语','定义']},{cells:['ASR','语音识别：把语音转为文本']},{cells:['NLU','自然语言理解：解析意图与槽位']},{cells:['TTS','语音合成：把文本播报为语音']},{cells:['VAD','语音活动检测：判断是否有人在说话']},{cells:['多意图','一句话包含多条子指令，如「开空调 24 度 + 导航回家 + 放音乐」']},{cells:['免唤醒','一次唤醒后窗口期内无需再次说唤醒词即可续指令']},{cells:['会话上下文','一次会话内的历史与状态，支持指代消解与连续对话']}],cards:[]};
+  d.prodinfo={html:'<p>在现有「唤醒词 + 单轮指令」架构上，新增会话上下文管理器与连续对话状态机，实现一次唤醒后可连续下达多条指令、支持一句话多意图、随时打断与修正。整体方案自上而下分四层：交互层（车机端收音 / 播报 / 打断检测）、决策层（会话状态机 / 上下文管理 / 端侧兜底）、理解层（云侧多意图 NLU / 指代消解）、执行层（车控网关分发指令）。</p><p>量化目标（上线判断依据）：</p><ul><li>一次唤醒后连续对话轮次 ≥ 5 轮（免唤醒续指令）</li><li>多意图语句拆解准确率 ≥ 92%（内部测试集）</li><li>唤醒率 ≥ 95%，误唤醒 ≤ 1 次 / 24 小时</li><li>端到端响应延迟 ≤ 1.5 秒（说完话到开始播报，4G/5G 网络）</li><li>免唤醒监听窗口内二次指令识别率 ≥ 90%</li><li>上线后车内语音操控相关驾驶分心投诉下降 ≥ 25%</li></ul>',cards:[]};
+  d.users={items:[
+    {role:'驾驶员',want:'行车中连续下达多条指令而无需反复唤醒',soThat:'减少操作车机的分心'},
+    {role:'乘客（副驾/后排）',want:'独立发起语音请求并支持声源定位',soThat:'多人场景下指令不串台'},
+    {role:'座舱测试人员',want:'按验收标准逐条验证功能',soThat:'确保上线质量'},
+    {role:'售后 / 运营',want:'查看语音使用数据与埋点',soThat:'定位问题并持续优化'}
+  ],cards:[]};
+  d.feat={items:[
+    {name:'会话上下文管理',desc:'维护一次会话内的历史与状态，支撑连续对话与指代消解',priority:'P0',status:'评审中'},
+    {name:'免唤醒监听',desc:'播报结束后 8s 窗口内无需唤醒词即可续指令（可调 5-15s）',priority:'P0',status:'评审中'},
+    {name:'打断恢复',desc:'播报中用户开口即压低/停止 TTS，接管新指令',priority:'P1',status:'草稿'},
+    {name:'多意图拆分',desc:'一句话拆多条子指令（上限 3 条），并行执行并汇总播报',priority:'P0',status:'评审中'},
+    {name:'指代消解',desc:'「调小一点」等省略指代在当前会话内补全',priority:'P1',status:'草稿'},
+    {name:'低置信兜底',desc:'ASR 连续两次置信度低于阈值时友好提示重说，不退出上下文',priority:'P1',status:'草稿'},
+    {name:'端侧降级',desc:'无网时自动切离线模式，仅支持空调/媒体/车窗等本地指令',priority:'P2',status:'草稿'}
+  ],cards:[]};
+  d.nfr={html:'<ul><li>性能：端到端响应延迟 ≤ 1.5s；云端 NLU 并发支持单车型 ≥ 5 万在线用户；多意图拆分耗时 ≤ 300ms</li><li>安全：语音日志不含明文音频，仅存指令摘要与脱敏文本；车控敏感指令需声道校验 + 语音二次确认；云端链路全程 TLS</li><li>可用性：语音助手整体可用性 ≥ 99.5%（月度不可用 ≤ 3.6h）；单指令失败不影响其他子系统</li><li>接口：车控执行网关 POST /v1/vehicle/command；云端 NLU grpc CockpitNLU/Parse；上下文 GET/PUT /v1/session/{context_id}</li></ul>',cards:[]};
+  d.selftest={html:'<ul><li>功能自测通过率 ≥ 95%</li><li>P0 级 Bug 数量 = 0 方可提测</li><li>异常处理表全部场景须有对应测试用例覆盖</li><li>多意图测试集（≥ 200 条）拆分准确率达标方可合入</li></ul>',cards:[]};
+  d.track={rows:[{cells:['事件','触发条件','参数','上报方式']},{cells:['voice_wake','唤醒词命中','唤醒方式 / 时间 / 声道','实时']},{cells:['voice_cmd','指令执行完成','意图 / 槽位 / 结果 / 耗时','实时']},{cells:['voice_session','上下文开始与结束','会话时长 / 轮次 / 打断次数','批量']},{cells:['voice_fail','识别失败或降级','置信度 / 错误码 / 是否离线','实时']}],cards:[]};
+  d.ui={html:'<ul><li>麦克风状态图标常驻状态栏，含聆听 / 识别 / 播报 / 熄灭四态</li><li>多意图执行时以卡片列出各子指令状态（进行中 / 成功 / 失败），配色区分</li><li>触控目标最小 48×48px；夜间模式自适应；行驶中简化非必要视觉元素</li><li>行驶中禁止模态确认弹窗，统一改为语音播报 + 语音确认</li></ul>',cards:[]};
+  d.accept={items:[
+    {text:'说唤醒词后一次说出 2 条意图，系统拆出并执行 2 条子指令且汇总播报正确',status:'na',id:uid()},
+    {text:'播报结束后 8s 内直接说「音量调小」，系统免唤醒执行媒体音量调整',status:'na',id:uid()},
+    {text:'说出 4 条意图，系统仅执行前 3 条并提示超出限制',status:'na',id:uid()},
+    {text:'播报中用户开口打断，TTS 立即停止并转入聆听',status:'na',id:uid()},
+    {text:'模拟断网，系统自动切换离线模式且仅执行本地指令并提示',status:'na',id:uid()},
+    {text:'行驶中（模拟信号）发起车窗指令，系统要求语音二次确认方可执行',status:'na',id:uid()},
+    {text:'连续 5 轮免唤醒指令全部成功，第 6 轮起需重新唤醒',status:'na',id:uid()},
+    {text:'副驾声道发起车控指令默认被忽略（未开启全车控车时）',status:'na',id:uid()}
+  ],cards:[]};
+  d.launch={html:'<ul><li>上线前完成 UAT 并由产品 / 测试双签确认</li><li>灰度策略：先 5% 车辆灰度 3 天，无 P0 再扩至 100%</li><li>上线时间窗：车辆 OTA 静默时段 02:00-04:00</li><li>回滚方案：灰度期间出现 P0（如误控车），立即 OTA 回滚语音助手至 V3.1 并关闭多意图开关</li><li>上线后监控埋点 48 小时，确认唤醒率 / 误唤醒在目标区间</li></ul>',cards:[]};
+  d.other={html:'<ul><li>《星舱 OS 语音接口规范 V3.2》</li><li>《智能座舱麦克风阵列与声源定位设计文档》</li><li>《车控网关指令字典 V3.2》</li><li>《UI 设计稿 - 语音交互状态》（Figma 链接见内部空间）</li></ul><p>核对清单：目的 / 定义 / 量化目标 / 场景 / 功能总览 / 异常处理 / 权限 / 验收均已覆盖，验收 8 条均可「是/否」判定。</p>',cards:[]};
+  return d;
+}
 function loadSample(){
+  if(!currentProj()){createProject('示例 PRD','default');}
   const d=sampleData();
-  if(!currentProj()){createProject('示例 PRD');}
-  DATA=d;currentProj().data=d;save();render();toast('已加载示例（含多处待订正）');
+  DATA=d;currentProj().data=d;save();render();toast('已加载示例 PRD（标准 14 节框架 · 智能座舱语音助手）');
 }
 
 /* ============ 启动 ============ */
@@ -3708,7 +3758,7 @@ function init(){
     imgs.forEach(f=>{if(f.size>2*1024*1024)oversized=true;const rd=new FileReader();rd.onload=()=>{insertImageAtCursor(el,rd.result);if(--pend===0){saveEditableEl(el);if(oversized)toast('部分图片较大，已内联（注意存储空间）');}};rd.readAsDataURL(f);});
   });
   render();
-  if(!STATE.seenWizard)openWizard();
+  // v17.24：引导已移入「更多 → 帮助」，不再首启自动弹出
 }
 /* ============ 图片/表格 选中·缩放·删除 ============ */
 let selMedia=null;
@@ -4424,7 +4474,7 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
   sync();
 })();
 </script>
-<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.23 · 新手引导焕新</div>
+<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.24 · 帮助入口与标准示例</div>
 <!-- v16.6 Floating UI (MIT, https://floating-ui.com) ??????????/??/??/????????? -->
 <script>
 /*! @floating-ui/core v1.6.9 (MIT) */
@@ -5492,22 +5542,8 @@ function aiWrapImport(){
   };
 }
 function aiWrapLoadSample(){
-  if(window.__aiSampleWrapped||typeof loadSample!=='function'||!AI_SAMPLE_TEXT)return;
+  // v17.24：示例已由 block1 的 loadSample 改用标准 14 节框架，不再用自动框架覆盖
   window.__aiSampleWrapped=true;
-  var orig=window.loadSample;
-  window.loadSample=function(){
-    try{
-      if(!currentProj()&&typeof createProject==='function')createProject('示例 PRD');
-      if(typeof autoGenImport==='function'){
-        autoGenImport(AI_SAMPLE_TEXT);
-        aiToast('已加载示例 PRD（多意图连续对话与免唤醒交互，自动框架）');
-      }else{
-        orig.apply(this,arguments);
-      }
-    }catch(e){
-      aiToast('示例加载失败：'+(e&&e.message||e));
-    }
-  };
 }
 function aiAlignPrompt(){
   var fw=STATE.framework.map(function(s){return s.id+'「'+s.title+'」类型:'+s.type+(s.required?'（必填）':'');}).join('；');

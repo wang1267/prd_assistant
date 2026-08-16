@@ -417,11 +417,11 @@ function check(name,cond,detail){results.push({name,pass:!!cond});console.log((c
     ctx.localStorage.removeItem('prdKanbanStateV3.bak');
     ctx.localStorage.setItem('prdKanbanStateV3', mainRaw);
 
-    // ---------- 28. v17.11 新示例 PRD（内嵌文档 + 自动框架） ----------
+    // ---------- 28. v17.11/v17.24 示例 PRD（内嵌文档 + 标准 14 节框架） ----------
     check('v17.11 示例文本已内嵌', (AI._test.sampleText()||'').indexOf('多意图连续对话')>=0, String((AI._test.sampleText()||'').length));
     ctx.loadSample();
     const sp=ctx.currentProj();
-    check('v17.11 加载示例走自动框架并含「目的」节', !!sp&&sp.autoGen===true&&sp.framework.length>0&&sp.framework.some(s=>s.title==='目的')&&JSON.stringify(sp.data).indexOf('多意图连续对话')>=0, JSON.stringify(sp&&sp.framework.map(s=>s.title).slice(0,15)));
+    check('v17.24 加载示例走标准 14 节框架且内容完整', !!sp&&!sp.autoGen&&sp.framework.length===14&&sp.framework.some(s=>s.id==='purpose'&&s.title==='目的')&&sp.framework.some(s=>s.id==='feat'&&s.title==='功能需求')&&JSON.stringify(sp.data).indexOf('多意图连续对话')>=0&&JSON.stringify(sp.data).indexOf('免唤醒监听')>=0, JSON.stringify(sp&&sp.framework.map(s=>s.id).slice(0,15)));
 
     // ---------- 29. v17.13 整份解析失败→按节逐个优化兜底 ----------
     ctx.STATE.framework=JSON.parse(JSON.stringify(t.DEFAULT_FRAMEWORK));

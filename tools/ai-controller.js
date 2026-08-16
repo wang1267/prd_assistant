@@ -794,22 +794,8 @@ function aiWrapImport(){
   };
 }
 function aiWrapLoadSample(){
-  if(window.__aiSampleWrapped||typeof loadSample!=='function'||!AI_SAMPLE_TEXT)return;
+  // v17.24：示例已由 block1 的 loadSample 改用标准 14 节框架，不再用自动框架覆盖
   window.__aiSampleWrapped=true;
-  var orig=window.loadSample;
-  window.loadSample=function(){
-    try{
-      if(!currentProj()&&typeof createProject==='function')createProject('示例 PRD');
-      if(typeof autoGenImport==='function'){
-        autoGenImport(AI_SAMPLE_TEXT);
-        aiToast('已加载示例 PRD（多意图连续对话与免唤醒交互，自动框架）');
-      }else{
-        orig.apply(this,arguments);
-      }
-    }catch(e){
-      aiToast('示例加载失败：'+(e&&e.message||e));
-    }
-  };
 }
 function aiAlignPrompt(){
   var fw=STATE.framework.map(function(s){return s.id+'「'+s.title+'」类型:'+s.type+(s.required?'（必填）':'');}).join('；');

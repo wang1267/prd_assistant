@@ -81,12 +81,20 @@ try {
   check('dash v17.1x/17.2x 水印', /v17\.(1[6-9]|2\d)/.test(badge), badge);
 
   // ---------- v17.23 新手引导 + 默认框架精简 ----------
+  // v17.24：引导移入「更多 → 帮助」，不再首启自动弹出
+  await evalJs(`(()=>{ const b=document.querySelector('#ddMore .top-dd-trigger'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 200));
   const wz = await evalJs(`(()=>{
     const m=document.getElementById('wizardModal');
     const t0=document.querySelector('#wizardModal .wz-step[data-step="0"]');
-    return {open: !!m&&m.classList.contains('open'), text0: t0?t0.textContent:''};
+    const helpBtn=document.querySelector('[data-act="help"]');
+    const menuOpen=document.querySelector('#ddMore .top-dd-menu')&&document.querySelector('#ddMore .top-dd-menu').classList.contains('open');
+    if(helpBtn)helpBtn.click();
+    return {menuOpen, open: !!m&&m.classList.contains('open'), text0: t0?t0.textContent:''};
   })()`);
-  check('新手引导：首启自动打开且介绍新版能力', wz.open && wz.text0.indexOf('AI 撰写')>=0 && wz.text0.indexOf('多项目总览')>=0 && wz.text0.indexOf('模板')>=0, JSON.stringify(wz));
+  await new Promise(r => setTimeout(r, 200));
+  const wzOpen = await evalJs(`(()=>{ const m=document.getElementById('wizardModal'); return m&&m.classList.contains('open'); })()`);
+  check('帮助：更多菜单打开→点「帮助」弹出引导', wz.menuOpen && wzOpen && wz.text0.indexOf('AI 撰写草稿')>=0 && wz.text0.indexOf('多项目总览')>=0 && wz.text0.indexOf('模板')>=0, JSON.stringify(wz));
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="wznext"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 200));
   const wz1 = await evalJs(`(()=>{
@@ -109,9 +117,11 @@ try {
   const bootOv = await evalJs(`(()=>{ const p=document.getElementById('overviewPanel'); return p?getComputedStyle(p).display:'missing'; })()`);
   check('总览浮层启动即隐藏（不糊屏）', bootOv==='none', String(bootOv));
 
-  // 加载示例 → 触发 render（含 15 个自动节，验收黄）
+  // 加载示例 → 触发 render（标准 14 节框架，验收黄）
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="sample"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 1800));
+  const sampleOk = await evalJs(`(()=>{ const p=currentProj(); return p?((p.data.purpose&&p.data.purpose.html||'').indexOf('多意图')>=0 && (p.data.feat&&p.data.feat.items?p.data.feat.items.length:0)===7):false; })()`);
+  check('示例加载后内容完整（标准 14 节）', sampleOk===true, String(sampleOk));
 
   const dash = await evalJs(`(()=>{
     const sub=document.getElementById('heroSub');
@@ -131,7 +141,7 @@ try {
     return out;
   })()`);
   check('dash hero 实时摘要含完成度', (dash.hero||'').indexOf('完成度')>=0 && (dash.hero||'').indexOf('%')>=0, JSON.stringify(dash.hero));
-  check('dash 热力图：节数=框架节数、颜色合法、含图例', dash.cellCount>=15 && dash.cellsOk && dash.hasLegend, JSON.stringify(dash));
+  check('dash 热力图：14 节=框架节数、颜色合法、含图例', dash.cellCount===14 && dash.cellsOk && dash.hasLegend, JSON.stringify(dash));
   check('dash 无 AI 报告时显示体检入口 + 摘要操作', dash.hasAiCard && dash.hasScoreBtn && dash.hasCopyBtn && dash.hasExportBtn, JSON.stringify(dash));
   check('dash 缺口清单仍在', dash.hasGaps===true, JSON.stringify(dash));
 
@@ -217,9 +227,10 @@ try {
   const ovSwitch = await evalJs(`(()=>{
     const panel=document.getElementById('overviewPanel');
     const tp=document.getElementById('topbarProjName');
-    return {closed: !panel.classList.contains('open'), name: tp?tp.textContent:''};
+    const sp=STATE.projects.find(p=>p.name==='示例 PRD');
+    return {closed: !panel.classList.contains('open'), name: tp?tp.textContent:'', spPurpose: sp&&sp.data.purpose?(sp.data.purpose.html||'').slice(0,30):'EMPTY'};
   })()`);
-  check('总览：点击卡片切换项目并关闭', ovSwitch.closed && ovSwitch.name!=='风险项目', JSON.stringify(ovSwitch));
+  check('总览：点击卡片切换项目并关闭（目标项目内容不被覆盖）', ovSwitch.closed && ovSwitch.name!=='风险项目' && ovSwitch.spPurpose.indexOf('多意图')>=0, JSON.stringify(ovSwitch));
 
   // 再打开 → 关闭按钮
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="toggleoverview"]'); if(b)b.click(); return true; })()`);
@@ -267,7 +278,7 @@ try {
 
   await evalJs(`(()=>{ if(typeof toggleOverview==='function')toggleOverview(); return true; })()`);
   await new Promise(r => setTimeout(r, 300));
-  const s1 = await evalJs(`(()=>{ const cards=Array.from(document.querySelectorAll('.ov-card')); return {first: cards[0]?cards[0].textContent.indexOf('风险项目')>=0:false, mode: window.ovSortMode}; })()`);
+  const s1 = await evalJs(`(()=>{ const cards=Array.from(document.querySelectorAll('.ov-card')); const risks=STATE.projects.map(p=>{const h=window.healthForProject?window.healthForProject(p):null;return {name:p.name,risk:h?h.metrics.risk:null,comp:h?h.metrics.completion:null};}); const sp=STATE.projects.find(p=>p.name==='示例 PRD'); return {first: cards[0]?cards[0].textContent.indexOf('风险项目')>=0:false, mode: window.ovSortMode, names: cards.map(c=>c.textContent.slice(0,20)), risks, active: currentProj()?currentProj().name:'none', spKeys: sp?Object.keys(sp.data||{}).length:-1, spPurpose: sp&&sp.data.purpose?(sp.data.purpose.html||'').slice(0,40):'EMPTY'}; })()`);
   check('总览排序：默认风险优先(风险项目在前)', s1.first && s1.mode===0, JSON.stringify(s1));
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="ovsort"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 250));

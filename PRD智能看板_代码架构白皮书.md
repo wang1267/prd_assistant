@@ -169,6 +169,12 @@
 >   2. **默认框架精简**：`DEFAULT_PRESETS` 删除 `{id:'cards',name:'带小卡片结构'}`（原 8 节），仅保留 default/minimal；`load()` 新增迁移 `STATE.frameworkPresets=(STATE.frameworkPresets||[]).filter(p=>p&&p.id!=='cards')`，老用户存储同步清理（自定义预设保留、旧项目框架副本不受影响）；新建项目弹窗与 AI 撰写框架下拉自动生效。
 >   3. 测试：新增 `tools/regress_v1723.js`（3 断言）；`browser_check_dash.mjs` 增至 26 断言（首启引导/入口/无带小卡片）；`browser_check_gen.mjs` 框架选项断言 3→2。
 
+>   ⚠️ v17.24 变更提示（帮助入口化 + 标准 14 节示例 + 总览切换数据丢失修复）：
+>   1. **帮助入口**：`#ddMore` 新增 `data-act="help"`（bindStatic `case 'help':openWizard()`）；`init()` 移除首启自动弹窗；向导标题改「帮助 · 快速上手」。
+>   2. **标准示例**：`sampleData()` 按 `blankData(DEFAULT_FRAMEWORK)` 重写（智能座舱语音助手 14 节全填充）；`loadSample()` 用 `createProject('示例 PRD','default')`；`aiWrapLoadSample` 改为仅设标志不再覆盖（旧 `sampleDataLegacy` 保留，`AI_SAMPLE_TEXT` 供 `_test.sampleText`）。
+>   3. **数据丢失修复**：`case 'ovopen'` 切换项目前先 `flushSave()`、切换后先 `refreshData()` 再 `save()`——此前 `save()` 的 `p.data=DATA` 会把上一个项目的 DATA 覆盖到目标项目（真实数据丢失，v17.24 示例改标准框架后测试暴露）。
+>   4. 测试：`browser_check_dash.mjs` 增至 27 断言（更多→帮助/示例内容完整/切换不覆盖/排序）；regress v170 示例断言改「标准 14 节框架且内容完整」。
+
 ---
 
 ## 0. 阅读导览
@@ -194,7 +200,7 @@
 | 790–975 | `<body>` | 顶栏按钮群、侧边栏（项目按钮+分组面板+目录）、main、modals、隐藏 file input、mediaBar、图片缩放柄 |
 | 976–3784 | `<script>`（主脚本） | **block1（核心，~2800 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、媒体条 |
 | 3966–4003 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.23） |
+| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.24） |
 | 4006–4015 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
 | 4016–4275 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
 | 4300–7050 | `<script id="ai-controller">` | **block6（v17.15）**：AI 助手（设置/评分/优化/结构对齐/撰写/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |
