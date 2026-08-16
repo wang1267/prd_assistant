@@ -479,6 +479,32 @@ function renderDashboard(){
     '<div class="card click" data-act="drillmetric" data-m="risk"><div class="k">风险数（红节）'+riskTag+'</div><div class="v red">'+m.risk+'</div>'+delta('risk')+'</div>'+
     '<div class="card click" data-act="drillmetric" data-m="consistency"><div class="k">一致性问题'+consTag+'</div><div class="v brand">'+m.consistency+'</div>'+delta('consistency')+'</div>'+
     '<div class="card"><div class="k">人工覆盖'+ovTag+'</div><div class="v '+(m.overrideCount?'yellow':'ink')+'">'+m.overrideCount+'</div>'+delta('overrideCount')+'</div>';
+  // 节健康度热力图（看板核心：一眼看清哪些节绿/黄/红）
+  html+='<div class="dash-heatmap" style="grid-column:1/-1"><div class="dash-heatmap-h"><b>节健康度总览</b><span class="muted">'+STATE.framework.length+' 节 · 绿 '+m.green+' / 黄 '+(m.total-m.green-m.risk)+' / 红 '+m.risk+'</span></div><div class="dash-cells">';
+  STATE.framework.forEach((s,i)=>{
+    const e=HEALTH.sec[s.id].effective;
+    const lbl=e==='red'?'有风险':e==='yellow'?'需关注':'达标';
+    html+='<div class="dash-cell '+e+'" data-act="goto" data-id="'+s.id+'" title="'+(i+1)+'. '+esc(s.title)+' · '+lbl+'（点击定位）">'+(i+1)+'</div>';
+  });
+  html+='</div><div class="dash-legend"><span class="lg"><i class="ok"></i>达标</span><span class="lg"><i class="warn"></i>需关注</span><span class="lg"><i class="bad"></i>有风险</span></div></div>';
+  // AI 总评 + 摘要操作
+  const aiReport=currentProj()&&currentProj().ai&&currentProj().ai.lastReport?currentProj().ai.lastReport:null;
+  if(aiReport){
+    const dims=aiReport.dimensions||[];
+    html+='<div class="dash-panel dash-ai" style="grid-column:1/3"><div class="dash-panel-h"><b>AI 深度总评</b><span class="pill-st '+(aiReport.total>=85?'lv-green':aiReport.total>=60?'lv-yellow':'lv-red')+'">'+aiReport.total+' 分</span></div>'
+      +(aiReport.summary?'<div class="dash-ai-sum">'+esc(aiReport.summary)+'</div>':'')
+      +'<div class="dash-dims">'+dims.slice(0,6).map(function(d){
+        const dv=aiReport.total>=85?'ok':aiReport.total>=60?'warn':'bad';
+        return '<div class="dash-dim"><span>'+esc(d.name)+'</span><div class="dash-dim-bar"><i class="'+dv+'" style="width:'+Math.max(0,Math.min(100,d.score||0))+'%"></i></div><b>'+d.score+'</b></div>';
+      }).join('')+'</div></div>';
+  }else{
+    html+='<div class="dash-panel dash-ai" style="grid-column:1/3"><div class="dash-panel-h"><b>AI 深度体检</b></div><div class="muted" style="font-size:12.5px">让 AI 按 6 个维度评分并逐条诊断，与红黄绿规则引擎并列、不覆盖。</div><div class="row-act" style="margin-top:8px"><button data-ai="score">运行深度体检</button></div></div>';
+  }
+  html+='<div class="dash-panel dash-sum" style="grid-column:3/5"><div class="dash-panel-h"><b>体检摘要</b></div>'
+    +'<div class="dash-sum-line">完成度 <b>'+m.completion+'%</b>（'+m.green+'/'+m.total+' 必填节达标）</div>'
+    +'<div class="dash-sum-line">风险红节 <b class="'+(m.risk?'bad':'ok')+'">'+m.risk+'</b> · 一致性问题 <b>'+(m.consistency||0)+'</b> · 人工覆盖 <b>'+(m.overrideCount||0)+'</b></div>'
+    +'<div class="row-act" style="margin-top:8px"><button data-act="copyhealth">⧉ 复制摘要（Markdown）</button><button data-act="exportmd">导出 MD</button></div>'
+    +'<div class="muted" style="font-size:11.5px;margin-top:6px">粘贴到评审群/需求评审文档，一行带全部关键指标。</div></div>';
   const hits=HEALTH.activeHits.slice();
   if(hits.length){
     html+='<div class="gaps" style="grid-column:1/-1"><h3>缺口清单（点击章节名跳到对应节）</h3><div class="gap-table-wrap"><table class="gap-table"><thead><tr><th>缺口项</th><th>所属章节</th><th>严重程度</th><th>改进建议</th></tr></thead><tbody>';
@@ -498,6 +524,63 @@ function renderDashboard(){
   el.innerHTML=html;
   PREV_METRICS=m;
 }
+function renderHero(){
+  const sub=document.getElementById('heroSub');
+  if(!sub||!HEALTH||!HEALTH.metrics)return;
+  const m=HEALTH.metrics;
+  const aiReport=currentProj()&&currentProj().ai&&currentProj().ai.lastReport?currentProj().ai.lastReport:null;
+  const updated=currentProj()&&currentProj().updatedAt?new Date(currentProj().updatedAt).toLocaleString():'';
+  sub.innerHTML='<span class="hero-meta hero-dot ok"></span>完成度 <b>'+m.completion+'%</b>'
+    +'<span class="hero-sep">·</span>风险红节 <b>'+(m.risk||0)+'</b>'
+    +(aiReport?'<span class="hero-sep">·</span>AI 总评 <b>'+aiReport.total+'</b>':'')
+    +(updated?'<span class="hero-sep">·</span>更新于 '+esc(updated):'')
+    +'<span class="hero-sep">·</span><span class="muted">智能体检 · 红黄绿可视化面板</span>';
+}
+function copyHealthSummary(){
+  if(!HEALTH||!HEALTH.metrics)return;
+  const m=HEALTH.metrics;
+  const p=currentProj();
+  const aiReport=p&&p.ai&&p.ai.lastReport?p.ai.lastReport:null;
+  const lines=['# '+esc((p&&p.name)||'PRD')+' · 健康度摘要',''];
+  lines.push('- 生成时间：'+new Date().toLocaleString());
+  lines.push('- 完成度：'+m.completion+'%（必填节 '+m.green+'/'+m.total+' 达标）');
+  lines.push('- 风险红节：'+m.risk);
+  lines.push('- 一致性问题：'+(m.consistency||0));
+  lines.push('- 人工覆盖：'+(m.overrideCount||0));
+  if(aiReport)lines.push('- AI 总评：'+aiReport.total+' 分'+(aiReport.summary?'（'+aiReport.summary+'）':''));
+  lines.push('');
+  lines.push('### 节状态');
+  STATE.framework.forEach(s=>{
+    const e=HEALTH.sec[s.id].effective;
+    lines.push('- ['+(e==='green'?'✅':e==='yellow'?'⚠️':'🔴')+'] '+s.title);
+  });
+  const hits=HEALTH.activeHits.slice();
+  if(hits.length){
+    lines.push('');
+    lines.push('### 缺口清单');
+    hits.forEach(h=>{
+      lines.push('- ['+(h.level==='red'?'红':'黄')+'] '+sectionTitle(h.sectionId)+'：'+(h.snippet||'').replace(/\n/g,' ')+'（建议：'+(h.advice||'').replace(/\n/g,' ')+'）');
+    });
+  }
+  const text=lines.join('\n');
+  function done(){toast('体检摘要已复制，可直接粘贴到评审群');}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{fallbackCopy(text);done();});
+  }else{
+    fallbackCopy(text);done();
+  }
+  try{window.__lastHealthSummary=text;}catch(e){}
+  return text;
+}
+function fallbackCopy(text){
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }catch(e){toast('复制失败，请手动复制');}
+}
 function renderTOC(){
   const toc=document.getElementById('toc');
   let html='<div class="toc-title">目录</div>';
@@ -511,14 +594,14 @@ function renderSections(){
   const main=document.getElementById('main');
   // hero + dashboard 容器只在首次创建
   let wrap=main.querySelector('#content');
-  const heroHtml='<div class="hero"><div class="hcontent"><h1>'+esc(currentProj().name)+'</h1><div class="sub">智能体检 · 红黄绿可视化面板</div></div></div>'+
+  const heroHtml='<div class="hero"><div class="hcontent"><h1>'+esc(currentProj().name)+'</h1><div class="sub" id="heroSub"></div></div></div>'+
 
     '<div id="dashboard" class="dashboard"></div><div id="content"></div>';
   if(!wrap){main.innerHTML=heroHtml;wrap=main.querySelector('#content');}
   let html='';
   STATE.framework.forEach((s,i)=>{html+=renderSection(s,i);});
   wrap.innerHTML=html;
-  renderDashboard();renderTOC();
+  renderHero();renderDashboard();renderTOC();
   if(drillOpen&&HEALTH.sec[drillOpen])renderDrill(drillOpen);
 }
 function renderSection(s,i){
@@ -1389,6 +1472,7 @@ function bindStatic(){
       case 'paste':document.getElementById('pasteArea').value='';openModal('pasteModal');break;
       case 'doPaste':{const txt=document.getElementById('pasteArea').value;doImportText(txt);closeModal('pasteModal');break;}
       case 'exportmd':download(currentProj().name+'.md',exportMD(),'text/markdown;charset=utf-8');break;
+      case 'copyhealth':copyHealthSummary();break;
       case 'backup':download('prd-kanban-backup.json',JSON.stringify({app:'prd-kanban',version:3,exportedAt:Date.now(),state:STATE}),'application/json');break;
       case 'importbackup':document.getElementById('fileInputBackup').click();break;
       case 'reset':if(confirm('确定重置看板？将清空所有项目与配置。')){localStorage.removeItem(STORAGE_KEY);STATE=seedState();save();render();toast('已重置');}break;

@@ -123,6 +123,15 @@
 
 >   注：`tools/` 下浏览器检查脚本（`browser_check*.mjs`）在受限沙箱内需以 PowerShell `Start-Process` 拉起 Edge/Chrome 并加 `--no-sandbox --disable-breakpad --disable-crash-reporter --remote-allow-origins=*`（node 直接 spawn 会崩），已统一更新。
 
+>   ⚠️ v17.16 变更提示（看板总览升级，block1 渲染 + CSS，数据模型零改动）：
+>   1. **hero 实时摘要**：`renderSections` 首次创建 `<div class="sub" id="heroSub">`，每次渲染由新函数 `renderHero()` 刷新（完成度/风险红节/AI 总评/更新时间）。
+>   2. **节健康度热力图**：`renderDashboard` 新增 `.dash-heatmap`（全宽）——每节一个 `.dash-cell`（green/yellow/red），`data-act="goto"` 点击定位，附统计与 `.dash-legend` 图例。
+>   3. **AI 总评卡**：`p.ai.lastReport` 存在时渲染 `.dash-ai`（总分 pill + `.dash-dim` 6 维迷你条 + 摘要），否则渲染「运行深度体检」入口（`data-ai="score"`，复用 aiBind 委托）。
+>   4. **摘要复制**：新函数 `copyHealthSummary()`（`data-act="copyhealth"`，bindStatic 新 case）生成 Markdown（指标 + `### 节状态` emoji 逐节 + `### 缺口清单`），`navigator.clipboard` + `fallbackCopy` 双兜底，测试钩子 `window.__lastHealthSummary`。
+>   5. **AI 面板微调**（`ai-controller` CSS）：`.ai-tools .ai-btn{flex:1}`、`.ai-head` 渐变、`.ai-body` 滚动条。
+>   6. 新样式全部走 CSS 变量（`--card/--line/--green/--yellow/--red/--ink-*`），深浅色/拟态自动适配；900px 以下 `.dash-panel` 全宽、维度条单列。
+>   7. 测试：新增 `tools/browser_check_dash.mjs`（8 断言：hero/热力图/AI 卡/摘要/定位）；6 套回归 170 + v17.15 22 断言全绿；其余浏览器检查全绿。
+
 ---
 
 ## 0. 阅读导览
@@ -148,7 +157,7 @@
 | 790–975 | `<body>` | 顶栏按钮群、侧边栏（项目按钮+分组面板+目录）、main、modals、隐藏 file input、mediaBar、图片缩放柄 |
 | 976–3784 | `<script>`（主脚本） | **block1（核心，~2800 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、媒体条 |
 | 3966–4003 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.15） |
+| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.16） |
 | 4006–4015 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
 | 4016–4275 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
 | 4300–7050 | `<script id="ai-controller">` | **block6（v17.15）**：AI 助手（设置/评分/优化/结构对齐/撰写/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |
