@@ -484,7 +484,7 @@ function renderDashboard(){
   STATE.framework.forEach((s,i)=>{
     const e=HEALTH.sec[s.id].effective;
     const lbl=e==='red'?'有风险':e==='yellow'?'需关注':'达标';
-    html+='<div class="dash-cell '+e+'" data-act="goto" data-id="'+s.id+'" title="'+(i+1)+'. '+esc(s.title)+' · '+lbl+'（点击定位）">'+(i+1)+'</div>';
+    html+='<div class="dash-cell '+e+'" data-act="opensec" data-id="'+s.id+'" title="'+(i+1)+'. '+esc(s.title)+' · '+lbl+'（点击定位并查看判分明细）">'+(i+1)+'</div>';
   });
   html+='</div><div class="dash-legend"><span class="lg"><i class="ok"></i>达标</span><span class="lg"><i class="warn"></i>需关注</span><span class="lg"><i class="bad"></i>有风险</span></div></div>';
   // AI 总评 + 摘要操作
@@ -1444,6 +1444,7 @@ function bindStatic(){
       case 'tpl':showTpl();break;
       case 'copytpl':copyTpl();break;
       case 'tpl-regen':tplRegen();break;
+      case 'tpl-preset':tplApplyPreset();break;
       case 'tpl-save':tplSaveDraft();break;
       case 'tpl-loaddraft':tplLoadDraft();break;
       case 'tpl-importfile':tplImportFile();break;
@@ -2169,6 +2170,79 @@ async function importDOCX(file,projName){
 
 /* ============ PRD 完整模板（整体式，可编辑 / 粘贴 / 导入） ============ */
 const TPL_DRAFT_KEY='prdKanbanTplDraftV1';
+/* v17.18：内置内容模板库（3 套高质量骨架，套用时先自动备份原编辑区到草稿） */
+const TPL_PRESETS={
+  standard:'# PRD 完整模板（标准 14 节）\n\n'
+    +'> 撰写提示：必填节必须填写；量化指标给具体数字与判定方式；验收项可"是/否"判定。\n\n'
+    +'## 文档变更历史\n| 版本 | 更改内容 | 作者 | 日期 |\n| --- | --- | --- | --- |\n| V0.1 | 初稿 | 【作者】 | 【日期】 |\n\n'
+    +'## 目的\n> 一句话说清"为什么做"：解决什么问题、服务谁、带来什么价值。\n\n'
+    +'【背景：当前痛点 / 业务机会】\n\n'
+    +'【目标：本功能上线后要达到的核心结果】\n\n'
+    +'## 适用范围\n【适用系统 / 版本 / 平台，如"XX 系统 V3.2 及以上"】\n\n'
+    +'【适用对象：最终用户 / 内部系统】\n\n'
+    +'【协作边界：与哪些团队 / 系统的依赖关系】\n\n'
+    +'## 定义\n| 术语 | 定义 |\n| --- | --- |\n| 【术语】 | 【定义】 |\n\n'
+    +'## 产品信息与目标\n【产品方案概述：核心机制 / 架构分层，1-3 段】\n\n'
+    +'- 量化目标 1：【指标】目标值【如 ≥95%】判定方式【如何测量】\n'
+    +'- 量化目标 2：【指标】目标值【】判定方式【】\n\n'
+    +'## 使用者需求\n作为【角色】，我希望【需求】，以便【价值 / 动机】\n\n'
+    +'## 功能需求\n| 功能点 | 描述 | 优先级 | 状态 |\n| --- | --- | --- | --- |\n'
+    +'| 【功能名】 | 【一句话描述】 | P0 | 草稿 |\n| 【功能名】 | 【一句话描述】 | P1 | 草稿 |\n\n'
+    +'## 非功能需求\n【性能：延迟 / 并发 / 容量，如"端到端延迟 ≤ 1.5s"】\n\n'
+    +'【安全：数据加密、权限、脱敏要求】\n\n'
+    +'【可用性：SLA，如"月度可用性 ≥ 99.5%"】\n\n'
+    +'【接口：对外接口 / 依赖服务，含协议与字段说明】\n\n'
+    +'## 自测\n- 功能自测通过率 ≥ 【95】%\n- P0 级 Bug = 0 方可提测\n- 【关键场景】全部有对应测试用例\n\n'
+    +'## 埋点\n| 事件 | 触发条件 | 参数 | 上报方式 |\n| --- | --- | --- | --- |\n'
+    +'| 【event_name】 | 【触发时机】 | 【参数列表】 | 【实时 / 批量】 |\n\n'
+    +'## 界面\n【界面 / 交互说明：状态、动效、反馈；可附设计稿链接】\n\n'
+    +'## 验收\n- [ ] 【验收项：可量化、可"是/否"判定】\n- [ ] 【验收项】\n\n'
+    +'## 上线\n- 上线前完成 UAT 并由产品 / 测试双签确认\n- 灰度策略：【如 5% 灰度 3 天无 P0 再全量】\n- 回滚方案：【出现 P0 时如何回滚】\n- 上线后监控：【关键指标】48 小时确认达标\n\n'
+    +'## 其他相关文件\n- 【关联文档 1】\n- 【关联文档 2】\n',
+  agile:'# 精简敏捷 PRD（7 节）\n\n'
+    +'> 撰写提示：面向迭代，聚焦"这次要交付什么、怎么验收"，范围要明确排除项。\n\n'
+    +'## 目的\n【一句话：本次迭代解决什么问题、成功标准是什么】\n\n'
+    +'## 范围\n【做：…】\n\n【不做：…（明确排除项，防范围蔓延）】\n\n'
+    +'## 功能需求\n| 功能点 | 描述 | 优先级 | 状态 |\n| --- | --- | --- | --- |\n'
+    +'| 【功能名】 | 【描述】 | P0 | 草稿 |\n\n'
+    +'## 非功能需求\n【性能 / 安全 / 可用性 / 接口关键约束，缺省写 N/A】\n\n'
+    +'## 验收标准\n- [ ] 【可量化的验收项】\n- [ ] 【可量化的验收项】\n\n'
+    +'## 上线计划\n【发布时间窗 / 灰度策略 / 回滚方案 / 监控指标】\n\n'
+    +'## 其他\n【遗留问题、依赖、待澄清项】\n',
+  hardware:'# 智能硬件 / 车规需求模板\n\n'
+    +'> 撰写提示：硬件类 PRD 必须覆盖安全、环境、法规与可测试性；量化指标给上下限。\n\n'
+    +'## 文档变更历史\n| 版本 | 更改内容 | 作者 | 日期 |\n| --- | --- | --- | --- |\n| V0.1 | 初稿 | 【作者】 | 【日期】 |\n\n'
+    +'## 目的\n【一句话：解决什么问题、目标市场 / 用户、商业价值】\n\n'
+    +'## 适用范围\n【车型 / 硬件平台 / 软件版本】\n\n【环境条件：温度 / 湿度 / 振动等】\n\n'
+    +'【法规与合规：认证要求（如 EMC、CCC、车规 AEC-Q）】\n\n'
+    +'## 定义\n| 术语 | 定义 |\n| --- | --- |\n| 【术语】 | 【定义】 |\n\n'
+    +'## 产品信息与目标\n【硬件方案概述：关键器件 / 架构】\n\n'
+    +'- 目标指标：如【误唤醒 ≤ 1 次 / 24h】、【唤醒率 ≥ 95%】、【延迟 ≤ 1.5s】\n\n'
+    +'## 使用者需求\n作为【角色】，我希望【需求】，以便【价值】\n\n'
+    +'## 功能需求\n| 功能点 | 描述 | 优先级 | 状态 |\n| --- | --- | --- | --- |\n'
+    +'| 【功能名】 | 【描述】 | P0 | 草稿 |\n\n'
+    +'## 非功能需求\n【性能：延迟 / 功耗 / 并发，给上下限】\n\n'
+    +'【安全：功能安全等级、故障降级、敏感指令二次确认】\n\n'
+    +'【可用性：SLA 与恢复时间】\n\n'
+    +'【接口：硬件接口 / 协议 / 依赖服务】\n\n'
+    +'## 自测\n- 环境试验（高低温 / 振动 / EMC）通过\n- 关键场景测试用例全覆盖\n- P0 级 Bug = 0\n\n'
+    +'## 埋点\n| 事件 | 触发条件 | 参数 | 上报方式 |\n| --- | --- | --- | --- |\n'
+    +'| 【event】 | 【触发】 | 【参数】 | 【方式】 |\n\n'
+    +'## 界面\n【人机交互：状态机、提示语、多态反馈】\n\n'
+    +'## 验收\n- [ ] 【硬件 / 软件验收项，可量化】\n- [ ] 【安全相关验收项】\n\n'
+    +'## 上线\n【SOP 量产节点 / 灰度 / 回滚 / 售后监控】\n\n'
+    +'## 其他相关文件\n- 【设计文档 / 规格书 / 认证资料】\n'
+};
+function tplApplyPreset(){
+  const sel=document.getElementById('tplPreset');
+  const key=sel?sel.value:'standard';
+  const text=TPL_PRESETS[key];
+  const el=document.getElementById('tplEditor');
+  if(!text||!el)return;
+  if(el.value.trim())localStorage.setItem(TPL_DRAFT_KEY,el.value); // 先自动备份，防误丢
+  el.value=text;tplEditorInput();
+  toast('已套用「'+(sel&&sel.selectedOptions[0]?sel.selectedOptions[0].textContent:'模板')+'」（原内容已自动存入草稿）');
+}
 function tplPlaceholder(type){
   if(type==='feat')return '| 功能点 | 描述 | 优先级 | 状态 |\n| --- | --- | --- | --- |\n|  |  |  |  |\n';
   if(type==='accept')return '- [ ] 验收项（需可量化，如响应≤1.5s）\n';

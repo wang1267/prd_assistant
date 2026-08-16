@@ -199,6 +199,24 @@ try {
   await new Promise(r => setTimeout(r, 200));
   const ovClosed = await evalJs(`(()=>!document.getElementById('overviewPanel').classList.contains('open'))()`);
   check('总览：ovclose 关闭浮层', ovClosed===true, String(ovClosed));
+
+  // ---------- v17.18 模板库 + 热力图下钻 ----------
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="tpl"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 300));
+  const tpl1 = await evalJs(`(()=>{
+    const sel=document.getElementById('tplPreset');
+    const ed=document.getElementById('tplEditor');
+    return {open: !!document.getElementById('tplModal')&&document.getElementById('tplModal').classList.contains('open'), opts: sel?sel.options.length:0, editor: !!(ed&&ed.value&&ed.value.indexOf('# PRD')>=0)};
+  })()`);
+  check('模板库：弹窗打开+3 套预设+编辑器已载入', tpl1.open && tpl1.opts===3 && tpl1.editor, JSON.stringify(tpl1));
+  await evalJs(`(()=>{ const sel=document.getElementById('tplPreset'); if(sel)sel.value='hardware'; const b=document.querySelector('[data-act="tpl-preset"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 200));
+  const tpl2 = await evalJs(`(()=>{ const v=(document.getElementById('tplEditor')||{}).value||''; return {hw: v.indexOf('智能硬件 / 车规需求模板')>=0, safety: v.indexOf('功能安全等级')>=0, env: v.indexOf('高低温')>=0}; })()`);
+  check('模板库：套用硬件/车规预设（安全/环境/验证）', tpl2.hw && tpl2.safety && tpl2.env, JSON.stringify(tpl2));
+  await evalJs(`(()=>{ const b=document.querySelector('#tplModal .x'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 200));
+  const drill = await evalJs(`(()=>{ const c=document.querySelector('.dash-cell'); return {act: c?c.dataset.act:''}; })()`);
+  check('热力图：色块点击=opensec（定位并展开判分明细）', drill.act==='opensec', JSON.stringify(drill));
 } catch (e) {
   fail++; console.log('FAIL  browser 脚本异常  >>> ' + (e && e.message || e));
 }

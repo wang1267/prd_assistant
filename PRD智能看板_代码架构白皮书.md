@@ -139,6 +139,11 @@
 >   4. **视图态横幅**（block2 `sync`）：`rb-meta` 增加「风险红节 N」与「AI 总评 X 分」。
 >   5. 测试：`browser_check_dash.mjs` 增至 14 断言（含总览打开/项目卡/色点/隔离性/两项目统计/切换/关闭）；6 套回归 170 + v17.15 22 断言全绿。
 
+>   ⚠️ v17.18 变更提示（模板库内容化 + 热力图下钻）：
+>   1. **内置模板预设**：新常量 `TPL_PRESETS`（standard/agile/hardware 三套 Markdown 骨架，含量化目标/验收判定/安全环境法规接口提示）；模板弹窗工具栏新增 `#tplPreset` 下拉 + `data-act="tpl-preset"`，`tplApplyPreset()` 套用前先自动备份编辑区到草稿（`TPL_DRAFT_KEY`）再覆盖，与 `tplRegen` 防丢约定一致。
+>   2. **热力图下钻**：`renderDashboard` 的 `.dash-cell` 由 `data-act="goto"` 改为 `data-act="opensec"`（bindStatic 已有 case，滚动定位 + 展开判分明细）。
+>   3. 测试：`browser_check_dash.mjs` 增至 17 断言（模板弹窗/3 预设/套用硬件模板含安全与环境/色块下钻）；6 套回归 170 + v17.15 22 断言全绿。
+
 ---
 
 ## 0. 阅读导览
@@ -164,7 +169,7 @@
 | 790–975 | `<body>` | 顶栏按钮群、侧边栏（项目按钮+分组面板+目录）、main、modals、隐藏 file input、mediaBar、图片缩放柄 |
 | 976–3784 | `<script>`（主脚本） | **block1（核心，~2800 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、媒体条 |
 | 3966–4003 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.17） |
+| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.18） |
 | 4006–4015 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
 | 4016–4275 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
 | 4300–7050 | `<script id="ai-controller">` | **block6（v17.15）**：AI 助手（设置/评分/优化/结构对齐/撰写/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |

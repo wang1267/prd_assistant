@@ -120,6 +120,12 @@ try {
   await shot('06_overview');
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="ovclose"]'); if(b)b.click(); return true; })()`);
 
+  // 打开 PRD 模板弹窗（含模板预设）
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="tpl"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 500));
+  await shot('07_tpl_modal');
+  await evalJs(`(()=>{ const b=document.querySelector('#tplModal .x'); if(b)b.click(); return true; })()`);
+
   // 打开 AI 面板
   await evalJs(`(()=>{ if(window.__AICtrl) window.__AICtrl.openPanel(); return true; })()`);
   await new Promise(r => setTimeout(r, 600));
