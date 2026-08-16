@@ -1000,24 +1000,37 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
   <div class="m-head"><h3>欢迎使用 · PRD 健康度驾驶舱</h3><button class="x" data-act="closemodal">×</button></div>
   <div class="m-body">
     <div class="wz-step" data-step="0">
-      <h4>这是什么</h4>
-      <p>一个<strong>本地优先、单文件、零网络</strong>的 PRD 健康度驾驶舱：你导入或撰写的 PRD 会经规则引擎逐节体检（红黄绿），顶部出健康度面板，缺口自动列成可跳转清单。</p>
-      <p class="muted">你的 PRD <strong>永远不离开这台电脑</strong>——不上云、不收集、不联网。</p>
+      <h4>PRD 智能看板能做什么</h4>
+      <ul class="wz-list">
+        <li><strong>✍ AI 撰写草稿</strong>：输入产品描述，按框架逐节生成整份 PRD（可选手模板风格），逐条确认后写入、版本可回滚</li>
+        <li><strong>🏥 体检</strong>：规则引擎即时红黄绿 + AI 6 维深度体检（带原文引用与幻觉校验），缺口自动列成可跳转清单</li>
+        <li><strong>📊 看板</strong>：单项目健康度热力图 / AI 总评 / 摘要一键复制，多项目总览横向对比并一键切换</li>
+        <li><strong>📐 模板</strong>：内置标准 / 敏捷 / 车规模板，也可把常用内容存成自定义模板</li>
+      </ul>
+      <p class="muted">本地优先、单文件、零网络——你的 PRD <strong>永远不离开这台电脑</strong>，不上云、不收集。</p>
     </div>
     <div class="wz-step" data-step="1" style="display:none">
-      <h4>支持导入的格式</h4>
+      <h4>怎么开始</h4>
+      <p>三种方式任选其一：</p>
       <ul class="wz-list">
-        <li>文件：<code>.md / .markdown / .txt / .html / .docx</code>（Word 自动识别），或粘贴文本</li>
-        <li>分节：按 Markdown 标题（<code>#</code>~<code>######</code>）映射到框架节</li>
-        <li>功能点行：<code>名称｜描述｜优先级｜状态</code></li>
-        <li>验收：<code>- [ ] 文本</code></li>
-        <li>用户故事：<code>作为X，我希望Y，以便Z</code></li>
+        <li><strong>新建项目</strong>：选框架（标准 14 节 / 精简 7 节）或「导入自动生成」，直接开始写</li>
+        <li><strong>导入现有文档</strong>：顶栏「导入」支持 <code>.md / .txt / .html / .docx</code>（Word 自动识别）或直接粘贴，按标题自动建节</li>
+        <li><strong>AI 撰写草稿</strong>：侧栏「AI 助手 → ✍ AI 撰写」，输入描述一键生成整份 PRD（需先在 设置→AI 配置 Key）</li>
       </ul>
+      <div class="row-act" style="margin-top:10px">
+        <button data-act="wz-newproj">＋ 新建项目</button>
+        <button data-act="wz-sample">加载示例 PRD</button>
+        <button data-act="wz-ai">✍ AI 撰写草稿</button>
+      </div>
     </div>
     <div class="wz-step" data-step="2" style="display:none">
-      <h4>准备好了吗</h4>
-      <p>你可以直接新建一个空白项目开始写，或先<strong>加载一份示例</strong>看看效果。</p>
-      <div class="row-act"><button data-act="wz-sample">加载示例 PRD</button></div>
+      <h4>几个小贴士</h4>
+      <ul class="wz-list">
+        <li>所有数据存在<strong>当前浏览器</strong>；换电脑/换浏览器请用「导出 JSON 备份 / 导入 JSON 备份」迁移</li>
+        <li>每 5 秒自动备份到本地，意外清空可一键恢复</li>
+        <li>AI 功能需自备 API Key（设置→AI，支持 DeepSeek / 智谱 GLM-4-Flash 等 OpenAI 兼容服务），Key 只存本机、不随备份导出</li>
+        <li>写完后可切「完成编辑」进入只读评审视图，一键生成体检报告</li>
+      </ul>
     </div>
   </div>
   <div class="m-foot">
@@ -1095,16 +1108,6 @@ const DEFAULT_PRESETS=[
     {id:'nfr',title:'非功能需求',type:'text',required:true,weight:1,template:''},
     {id:'accept',title:'验收标准',type:'accept',required:true,weight:2,template:''},
     {id:'launch',title:'上线计划',type:'timeline',required:true,weight:1,template:''},
-    {id:'other',title:'其他',type:'text',required:false,weight:0.5,template:''}
-  ]},
-  {id:'cards',name:'带小卡片结构',framework:[
-    {id:'purpose',title:'目的',type:'text',required:true,weight:2,template:''},
-    {id:'prodinfo',title:'产品信息与目标',type:'text',required:true,weight:2,template:''},
-    {id:'users',title:'使用者需求',type:'users',required:true,weight:2,template:''},
-    {id:'feat',title:'功能需求',type:'feat',required:true,weight:3,template:''},
-    {id:'nfr',title:'非功能需求',type:'text',required:true,weight:1,template:''},
-    {id:'accept',title:'验收',type:'accept',required:true,weight:2,template:''},
-    {id:'launch',title:'上线',type:'timeline',required:true,weight:1,template:''},
     {id:'other',title:'其他',type:'text',required:false,weight:0.5,template:''}
   ]}
 ];
@@ -1207,6 +1210,8 @@ function load(){
   if(!STATE.groupOpen)STATE.groupOpen={};
   STATE.seenWizard=!!STATE.seenWizard;
   if(!STATE.frameworkPresets||!STATE.frameworkPresets.length)STATE.frameworkPresets=deep(DEFAULT_PRESETS);
+  // v17.23：移除已废弃的「带小卡片结构（8 节）」默认框架（老用户存储里也清掉；已用它建过的项目不受影响）
+  STATE.frameworkPresets=(STATE.frameworkPresets||[]).filter(p=>p&&p.id!=='cards');
   if(!STATE.framework||!STATE.framework.length)STATE.framework=deep(DEFAULT_FRAMEWORK);
   STATE.framework.forEach(f=>{if(f.template===undefined)f.template='';});
   if(!STATE.ruleSet)STATE.ruleSet=deep(DEFAULT_RULES);
@@ -2523,6 +2528,8 @@ function bindStatic(){
       case 'wznext':wzNext();break;
       case 'wzfinish':wzFinish();break;
       case 'wz-sample':{loadSample();wzFinish();break;}
+      case 'wz-newproj':{wzFinish();renderNewProjFrameworks();openModal('newProjModal');break;}
+      case 'wz-ai':{wzFinish();if(window.__AICtrl&&window.__AICtrl.openGen)window.__AICtrl.openGen();else toast('AI 助手尚未就绪，请稍后再试');break;}
       case 'drillmetric':toast('点击各节色标查看判分明细');break;
       case 'goto':{const el=document.getElementById('sec-'+id);if(el)el.scrollIntoView({behavior:'smooth'});if(window.innerWidth<=860)closeSidebar();break;}
       case 'ovmenu':openOverrideQuick(id);break;
@@ -4417,7 +4424,7 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
   sync();
 })();
 </script>
-<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.22 · 长文档分块评分</div>
+<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.23 · 新手引导焕新</div>
 <!-- v16.6 Floating UI (MIT, https://floating-ui.com) ??????????/??/??/????????? -->
 <script>
 /*! @floating-ui/core v1.6.9 (MIT) */

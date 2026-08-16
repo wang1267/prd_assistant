@@ -79,6 +79,33 @@ function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + 
 try {
   const badge = await evalJs(`(document.getElementById('vbadge')||{}).textContent || ''`);
   check('dash v17.1x/17.2x 水印', /v17\.(1[6-9]|2\d)/.test(badge), badge);
+
+  // ---------- v17.23 新手引导 + 默认框架精简 ----------
+  const wz = await evalJs(`(()=>{
+    const m=document.getElementById('wizardModal');
+    const t0=document.querySelector('#wizardModal .wz-step[data-step="0"]');
+    return {open: !!m&&m.classList.contains('open'), text0: t0?t0.textContent:''};
+  })()`);
+  check('新手引导：首启自动打开且介绍新版能力', wz.open && wz.text0.indexOf('AI 撰写')>=0 && wz.text0.indexOf('多项目总览')>=0 && wz.text0.indexOf('模板')>=0, JSON.stringify(wz));
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="wznext"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 200));
+  const wz1 = await evalJs(`(()=>{
+    const t1=document.querySelector('#wizardModal .wz-step[data-step="1"]');
+    return {vis: t1?getComputedStyle(t1).display:'', hasNew: !!document.querySelector('[data-act="wz-newproj"]'), hasAi: !!document.querySelector('[data-act="wz-ai"]')};
+  })()`);
+  check('新手引导：第二步含新建/示例/AI 撰写入口', wz1.vis==='block' && wz1.hasNew && wz1.hasAi, JSON.stringify(wz1));
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="wz-newproj"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 300));
+  const np = await evalJs(`(()=>{
+    const m=document.getElementById('newProjModal');
+    const list=document.getElementById('npFwList');
+    const txt=list?list.textContent:'';
+    return {open: !!m&&m.classList.contains('open'), wzClosed: !document.getElementById('wizardModal').classList.contains('open'), hasCards: txt.indexOf('带小卡片')>=0, fwPicks: list?list.querySelectorAll('.fw-pick[data-fwid]').length:0};
+  })()`);
+  check('新建项目：向导关闭、框架列表无「带小卡片」', np.open && np.wzClosed && !np.hasCards && np.fwPicks===4, JSON.stringify(np));
+  await evalJs(`(()=>{ const b=document.querySelector('#newProjModal .x'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 200));
+
   const bootOv = await evalJs(`(()=>{ const p=document.getElementById('overviewPanel'); return p?getComputedStyle(p).display:'missing'; })()`);
   check('总览浮层启动即隐藏（不糊屏）', bootOv==='none', String(bootOv));
 

@@ -96,7 +96,7 @@ try {
     const m=document.getElementById('aiGenModal');
     return {open: m&&m.classList.contains('open'), hasName: !!document.getElementById('aiGenName'), hasDesc: !!document.getElementById('aiGenDesc'), fwOptions: document.querySelectorAll('#aiGenFw option').length};
   })()`);
-  check('browser 撰写弹窗打开且含表单/框架选项', modal.open && modal.hasName && modal.hasDesc && modal.fwOptions >= 3, JSON.stringify(modal));
+  check('browser 撰写弹窗打开且含表单/框架选项', modal.open && modal.hasName && modal.hasDesc && modal.fwOptions >= 2, JSON.stringify(modal));
 
   // 填表 + 模拟 AI 返回（minimal 7 节，1 节失败）
   await evalJs(`(()=>{

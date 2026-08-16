@@ -31,16 +31,6 @@ const DEFAULT_PRESETS=[
     {id:'accept',title:'验收标准',type:'accept',required:true,weight:2,template:''},
     {id:'launch',title:'上线计划',type:'timeline',required:true,weight:1,template:''},
     {id:'other',title:'其他',type:'text',required:false,weight:0.5,template:''}
-  ]},
-  {id:'cards',name:'带小卡片结构',framework:[
-    {id:'purpose',title:'目的',type:'text',required:true,weight:2,template:''},
-    {id:'prodinfo',title:'产品信息与目标',type:'text',required:true,weight:2,template:''},
-    {id:'users',title:'使用者需求',type:'users',required:true,weight:2,template:''},
-    {id:'feat',title:'功能需求',type:'feat',required:true,weight:3,template:''},
-    {id:'nfr',title:'非功能需求',type:'text',required:true,weight:1,template:''},
-    {id:'accept',title:'验收',type:'accept',required:true,weight:2,template:''},
-    {id:'launch',title:'上线',type:'timeline',required:true,weight:1,template:''},
-    {id:'other',title:'其他',type:'text',required:false,weight:0.5,template:''}
   ]}
 ];
 
@@ -142,6 +132,8 @@ function load(){
   if(!STATE.groupOpen)STATE.groupOpen={};
   STATE.seenWizard=!!STATE.seenWizard;
   if(!STATE.frameworkPresets||!STATE.frameworkPresets.length)STATE.frameworkPresets=deep(DEFAULT_PRESETS);
+  // v17.23：移除已废弃的「带小卡片结构（8 节）」默认框架（老用户存储里也清掉；已用它建过的项目不受影响）
+  STATE.frameworkPresets=(STATE.frameworkPresets||[]).filter(p=>p&&p.id!=='cards');
   if(!STATE.framework||!STATE.framework.length)STATE.framework=deep(DEFAULT_FRAMEWORK);
   STATE.framework.forEach(f=>{if(f.template===undefined)f.template='';});
   if(!STATE.ruleSet)STATE.ruleSet=deep(DEFAULT_RULES);
@@ -1458,6 +1450,8 @@ function bindStatic(){
       case 'wznext':wzNext();break;
       case 'wzfinish':wzFinish();break;
       case 'wz-sample':{loadSample();wzFinish();break;}
+      case 'wz-newproj':{wzFinish();renderNewProjFrameworks();openModal('newProjModal');break;}
+      case 'wz-ai':{wzFinish();if(window.__AICtrl&&window.__AICtrl.openGen)window.__AICtrl.openGen();else toast('AI 助手尚未就绪，请稍后再试');break;}
       case 'drillmetric':toast('点击各节色标查看判分明细');break;
       case 'goto':{const el=document.getElementById('sec-'+id);if(el)el.scrollIntoView({behavior:'smooth'});if(window.innerWidth<=860)closeSidebar();break;}
       case 'ovmenu':openOverrideQuick(id);break;

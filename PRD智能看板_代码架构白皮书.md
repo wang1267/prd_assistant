@@ -164,6 +164,11 @@
 >   2. **糊屏热修**（用户反馈）：`.ov-panel` 此前只有 `position:fixed;inset:0`，无关闭态隐藏——启动即全屏半透明遮罩 + `backdrop-filter:blur(3px)`，整屏被罩且模糊；且程序化 `.click()` 不受遮罩拦截导致测试盲区。修复：默认 `display:none`、`.ov-panel.open` 才 `display:flex`，去掉背景模糊；`browser_check_dash.mjs` 新增启动即隐藏/打开 flex 断言。
 >   3. 测试：新增 `tools/regress_v1722.js`（8 断言）；`browser_check_dash.mjs` 增至 23 断言；6 套回归 199 断言全绿。
 
+>   ⚠️ v17.23 变更提示（新手引导焕新 + 默认框架精简）：
+>   1. **向导重写**：`#wizardModal` 三步内容替换（能力总览 / 三种开始方式 / 小贴士），新增 `data-act="wz-newproj"`（`wzFinish()` 后打开新建项目弹窗）与 `data-act="wz-ai"`（`wzFinish()` 后调 `__AICtrl.openGen`）；bindStatic 新增对应 case。
+>   2. **默认框架精简**：`DEFAULT_PRESETS` 删除 `{id:'cards',name:'带小卡片结构'}`（原 8 节），仅保留 default/minimal；`load()` 新增迁移 `STATE.frameworkPresets=(STATE.frameworkPresets||[]).filter(p=>p&&p.id!=='cards')`，老用户存储同步清理（自定义预设保留、旧项目框架副本不受影响）；新建项目弹窗与 AI 撰写框架下拉自动生效。
+>   3. 测试：新增 `tools/regress_v1723.js`（3 断言）；`browser_check_dash.mjs` 增至 26 断言（首启引导/入口/无带小卡片）；`browser_check_gen.mjs` 框架选项断言 3→2。
+
 ---
 
 ## 0. 阅读导览
@@ -189,7 +194,7 @@
 | 790–975 | `<body>` | 顶栏按钮群、侧边栏（项目按钮+分组面板+目录）、main、modals、隐藏 file input、mediaBar、图片缩放柄 |
 | 976–3784 | `<script>`（主脚本） | **block1（核心，~2800 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、媒体条 |
 | 3966–4003 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.22） |
+| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.23） |
 | 4006–4015 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
 | 4016–4275 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
 | 4300–7050 | `<script id="ai-controller">` | **block6（v17.15）**：AI 助手（设置/评分/优化/结构对齐/撰写/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |
@@ -234,7 +239,7 @@
 
 - `DEFAULT_FRAMEWORK`：14 节标准框架（meta 变更历史/ purpose 目的 / scope 范围 / def 定义 / prodinfo 产品信息 / users 使用者需求 / feat 功能需求 / nfr 非功能 / selftest 自测 / track 埋点 / ui 界面 / accept 验收 / launch 上线(timeline) / other 兜底）。
 
-- `DEFAULT_PRESETS`：标准 14 节、精简 7 节、带小卡片 3 套。
+- `DEFAULT_PRESETS`：标准 14 节、精简 7 节（v17.23 起移除「带小卡片 8 节」，load 自动清理老数据残留）。
 
 - `DEFAULT_RULES`：19 条规则（R-SPEC/R-CONS/R-TEST/R-RISK/R-SAFE），含"车控/行驶中未标安全红线"等座舱特色规则。
 
