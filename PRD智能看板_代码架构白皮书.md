@@ -154,6 +154,11 @@
 >   2. **总览排序**：全局 `ovSortMode`（0 风险优先 / 1 完成度升序 / 2 最近更新降序），`renderOverview` 排序后渲染，头部 `data-act="ovsort"` 循环切换并更新标签。
 >   3. 测试：`browser_check_dash.mjs` 增至 22 断言（自定义模板保存/套用/删除 + 排序默认与切换）；6 套回归 170 + v17.15 22 + v17.19 7 断言全绿。
 
+>   ⚠️ v17.21 变更提示（富文本表格列宽持久化修复）：
+>   1. 真机复现：拖拽列宽会以 inline `width` 落盘到正文 html（持久化本身 OK）；真实缺陷在 `doTblOp` 富文本分支——插列后新列无宽（auto layout 下 17px 挤扁）、表头插成 `<td>`、插行无宽。
+>   2. 修复：插列继承相邻列宽 `colW`（缺省 120px）并表头用 `document.createElement('th')` 替换；插行复制表头列宽；对 `style/replaceChild/createElement` 做防御性判断（兼容 vm shim 与真实 DOM）。
+>   3. 测试：新增 `tools/browser_check_rtbl.mjs`（5 断言：渲染带宽/拖拽落盘/刷新保留/插列继承宽+`<th>`+非挤扁/插行复制宽）；6 套回归 199 断言全绿。
+
 ---
 
 ## 0. 阅读导览
@@ -179,7 +184,7 @@
 | 790–975 | `<body>` | 顶栏按钮群、侧边栏（项目按钮+分组面板+目录）、main、modals、隐藏 file input、mediaBar、图片缩放柄 |
 | 976–3784 | `<script>`（主脚本） | **block1（核心，~2800 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、媒体条 |
 | 3966–4003 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.20） |
+| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.21） |
 | 4006–4015 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
 | 4016–4275 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
 | 4300–7050 | `<script id="ai-controller">` | **block6（v17.15）**：AI 助手（设置/评分/优化/结构对齐/撰写/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |

@@ -3185,14 +3185,33 @@ function doTblOp(op,ctx){
       save();render();
     }else if(ed){ // 富文本表格：直接改 DOM + 落盘
       const ncols=table.rows[0]?table.rows[0].cells.length:(colIdx+1);
+      // v17.21：富文本表格列宽持久化修复——新列/新行必须继承列宽，否则渲染成 17px 挤成一团且刷新后仍窄
+      const colW=function(at){
+        const src=table.rows[0]&&table.rows[0].cells[at];
+        return (src&&src.style&&src.style.width)||'120px';
+      };
       if(op==='ins-row-above'||op==='ins-row-below'){
         const tr=table.insertRow(op==='ins-row-above'?rowIdx:rowIdx+1);
-        for(let j=0;j<ncols;j++){const td=tr.insertCell(-1);td.innerHTML='&nbsp;';}
+        const headCells=table.rows[0]?table.rows[0].cells:[];
+        for(let j=0;j<ncols;j++){
+          const td=tr.insertCell(-1);td.innerHTML='&nbsp;';
+          if(headCells[j]&&headCells[j].style&&headCells[j].style.width)td.style.width=headCells[j].style.width;
+        }
       }else if(op==='del-row'){
         if(table.rows.length>1)table.deleteRow(rowIdx);else{toast('至少保留一行');return;}
       }else if(op==='ins-col-left'||op==='ins-col-right'){
         const at=op==='ins-col-left'?colIdx:colIdx+1;
-        for(let r=0;r<table.rows.length;r++){const td=table.rows[r].insertCell(at);td.innerHTML='&nbsp;';}
+        const w=colW(colIdx);
+        for(let r=0;r<table.rows.length;r++){
+          const tr=table.rows[r];
+          const td=tr.insertCell(at);td.innerHTML='&nbsp;';
+          if(td.style)td.style.width=w;
+          if(r===0&&tr.replaceChild&&document.createElement){ // 表头行用 <th>（v17.21 修复：此前插的是 <td>）
+            const th=document.createElement('th');
+            th.innerHTML='&nbsp;';if(th.style)th.style.width=w;
+            tr.replaceChild(th,td);
+          }
+        }
       }else if(op==='del-col'){
         if(ncols>1){for(let r=0;r<table.rows.length;r++)table.rows[r].deleteCell(colIdx);}else{toast('至少保留一列');return;}
       }else if(op==='del-table'){
