@@ -175,11 +175,20 @@
 >   3. **数据丢失修复**：`case 'ovopen'` 切换项目前先 `flushSave()`、切换后先 `refreshData()` 再 `save()`——此前 `save()` 的 `p.data=DATA` 会把上一个项目的 DATA 覆盖到目标项目（真实数据丢失，v17.24 示例改标准框架后测试暴露）。
 >   4. 测试：`browser_check_dash.mjs` 增至 27 断言（更多→帮助/示例内容完整/切换不覆盖/排序）；regress v170 示例断言改「标准 14 节框架且内容完整」。
 
+>   📌 **当前现状速览（v17.24）**：本白皮书正文仍以 v16.1 基线撰写，以下为截至 v17.24 的现状事实，与正文冲突时以此为准。
+>   1. 文件规模：`PRD智能看板.html` 约 **2.35MB / 7555 行**；脚本块行号（v17.24）：block0 ~802、block1 1080–4434、block2 4435、block3-4 ~4470、block5 4489、block6 4749–7555。
+>   2. 存储键：`prdKanbanStateV3`（+ `.bak` 自动备份）、`prdKanbanAiSettings`（AI 设置，永不导出）、`prdKanbanTheme`、`prdKanbanTplCustom`（自定义模板）、`TPL_DRAFT_KEY`（模板草稿）。
+>   3. 框架预设：仅「标准 PRD 14 节 + 精简 7 节」（v17.23 移除「带小卡片 8 节」并迁移清理）。
+>   4. 事件委托新增：`help`（更多→帮助）、`ovsort`（总览排序）、`ovopen`（总览切换项目，先 `refreshData()` 再 `save()`）、`wz-newproj`/`wz-ai`（引导直达）、`tpl-preset`/`tpl-saveas`/`tpl-delcustom`（模板）、`copyhealth`（摘要复制）；AI 面板 `data-ai` 新增 `gen/genstart/genclose/cleargendbg`。
+>   5. AI 能力现状：6 维评分（引用/幻觉/缓存 + **长文分块**）、一键优化（块级最小编辑/独立复检/确定性校验/按节兜底）、结构对齐（搬移 + ops）、**AI 撰写草稿**（模板风格注入、items 补丁、transform 回滚）。
+>   6. 测试清单（截至 v17.24，全绿）：10 套 node 回归（`regress_v162~166`、`v170`、`v1715`、`v1719`、`v1722`、`v1723`）+ 6 个浏览器端到端（`browser_check.mjs` / `browser_check_grid.mjs` / `browser_check_ai.mjs` 19 / `browser_check_gen.mjs` 6 / `browser_check_dash.mjs` 27 / `browser_check_rtbl.mjs` 5）+ `screenshot_ui.mjs` 截图基线；**210 项 node 断言 + 57 项浏览器断言**。
+>   7. 设计权威文档：方案设计请读《[PRD智能看板_方案设计.md](PRD智能看板_方案设计.md)》（v17.24 整合版）；旧三份方案已归档。
+
 ---
 
 ## 0. 阅读导览
 
-- 单文件自包含：`PRD智能看板.html`（约 2.1MB / 4100+ 行），无任何外部依赖（图片内联 base64、docx 解析自实现）。
+- 单文件自包含：`PRD智能看板.html`（约 2.35MB / 7555 行），无任何外部依赖（图片内联 base64、docx 解析自实现）。
 
 - 结构三明治：**`<style>` 设计系统 → `<body>` 静态骨架 → 7 个 `<script>` 逻辑**（block0 主题 / block1 主逻辑 / block2 视图模式 / block3-4 Floating UI / block5 评论 / block6 AI）。
 
@@ -195,15 +204,14 @@
 | --- | --- | --- |
 | 1–16 | `:root` CSS 变量 | 品牌色/文字色/边框色/红黄绿状态色/字体栈（衬线+等宽） |
 | 17–726 | 主样式 | topbar、sidebar、卡片、表格、评论、模态框、打印适配 |
-| 727–751 | `<script id="theme-controller">` | **block0**：浅色/深色主题 + 拟态皮肤开关，注入设置页主题按钮 |
-| 752–788 | `<style id="comment-style">` | 评论划线/气泡/列表面板样式（独立 style 便于定位） |
-| 790–975 | `<body>` | 顶栏按钮群、侧边栏（项目按钮+分组面板+目录）、main、modals、隐藏 file input、mediaBar、图片缩放柄 |
-| 976–3784 | `<script>`（主脚本） | **block1（核心，~2800 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、媒体条 |
-| 3966–4003 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.24） |
-| 4006–4015 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
-| 4016–4275 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
-| 4300–7050 | `<script id="ai-controller">` | **block6（v17.15）**：AI 助手（设置/评分/优化/结构对齐/撰写/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |
+| 727–~800 | `<script id="theme-controller">` | **block0**：浅色/深色主题 + 拟态皮肤开关，注入设置页主题按钮 |
+| ~800–~1080 | `<style id="comment-style">` 等 | 评论划线/气泡/列表面板样式、body 骨架（顶栏/侧边栏/modals/向导） |
+| 1080–4434 | `<script>`（主脚本） | **block1（核心，~3350 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、总览、示例 |
+| 4435 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
+| ~4440 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.24） |
+| ~4470 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
+| 4489 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
+| 4749–7555 | `<script id="ai-controller">` | **block6（v17.24）**：AI 助手（设置/评分/优化/对齐/撰写/分块/风格/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |
 
 > 注意：4 个 script 块按 `theme-controller → 主脚本 → view-mode-controller → comment-controller` 顺序加载；block3 依赖 block1 的全局（`DATA`/`editing`/`esc` 等）。
 
@@ -489,6 +497,10 @@
 
 1. **数据合并 vs 覆盖**：正文失焦保存必须 `Object.assign({}, cur, {html})` 合并；整体替换会清掉 rows/cards/items。
 
+1. **总览切换覆盖目标项目数据（v17.24，真实数据丢失）**：`case 'ovopen'` 只改 `STATE.activeProjectId` 就 `save()`，而 `save()` 会 `p.data=DATA`——DATA 仍是上个项目的引用，把上个项目数据整体覆盖到目标项目。之前测试未暴露（v17.23 示例为自动框架、与默认框架节不同，排序表现恰巧一致）；v17.24 示例改标准 14 节后立刻暴露。修复：切换后先 `refreshData()` 再 `save()`（并先 `flushSave()`）。**教训：任何切换 activeProjectId 的路径，改完必须先 refreshData 再落盘；写测试时要覆盖"切换后内容完整性"，不能只看排序/名称**。
+
+1. **全屏浮层缺关闭态隐藏（v17.22，用户反馈"界面糊"）**：`.ov-panel` 只有 `position:fixed;inset:0`，没有 `display:none` 关闭态——`injectOverviewPanel()` 启动即把全屏遮罩（半透明 + `backdrop-filter:blur(3px)`）挂在页面上，整屏被罩且模糊；程序化 `.click()` 不受遮罩拦截导致测试盲区。修复：默认 `display:none`、`.open` 才 `display:flex`，去掉背景模糊；端到端补"启动即隐藏/打开才显示"断言。**教训：所有 fixed 全屏浮层必须有显式隐藏态；测试断言要查真实可见性（getComputedStyle），不能只查 classList**。
+
 1. **沙箱/环境（仅开发时）**：node 写 `.workbuddy/` 偶发被禁 → 测试产物写 `tools/`；node --check 批跑偶发误报 → 用 `node -e` + vm.Script 或单文件重查；交付 .md 必须无 BOM UTF-8（WorkBuddy 预览乱码）。
 
 ---
@@ -501,14 +513,18 @@
 
 1. **渲染与数据边界**：运行时注入的临时 UI 必须打标记（data-rtbl 等）且**保存时剥离**；不要往 `c.html` 里留任何 UI 壳。
 
-1. **多副本警惕**：目录里有深色拟态版/旧备份/publish 旧发布，只改主文件 `PRD智能看板.html`。
+1. **多副本警惕**：只改主文件 `PRD智能看板.html`；历史备份在 `tools/backups/`（勿当主文件）。参考：[AGENTS.md](AGENTS.md)。
 
 1. **自测清单**（改完至少跑一遍）：
 
-  - 语法：Python 提取 4 个 script 块 → `node --check`（写 tools/，批跑失败就单块重查）。
+  - 语法：抽取 `tools/block1.js`（主脚本）与 `tools/ai-controller.js`（block6）→ `node --check`。
 
-  - 行为：`tools/` 下回归脚本 `verify_docx.js`（Word 导入 T1–T9）、`_verify_export.js`（导出）、`_verify_cmt3.js`（评论）、`_verify_r13.js`（撤销+表格兜底）、`_hp_m25.py`（分组拖拽）。
+  - 回归：`node tools/regress_v162.js` ~ `v166.js`、`v170.js`、`v1715.js`、`v1719.js`、`v1722.js`、`v1723.js` 全绿（截至 v17.24 共 210 断言）。
 
-  - 手工：建项目→写正文→插表格增删行列→评论→分组拖拽→导出 MD/Word→刷新确认数据还在。
+  - 端到端（无头浏览器，串行跑避免时序抖动）：`node tools/browser_check.mjs`（评论）、`browser_check_grid.mjs`（表格网格）、`browser_check_ai.mjs`（19）、`browser_check_gen.mjs`（6）、`browser_check_dash.mjs`（27）、`browser_check_rtbl.mjs`（5）；沙箱内浏览器需经 PowerShell `Start-Process` 拉起并加 `--no-sandbox --disable-breakpad --disable-crash-reporter --remote-allow-origins=*`。
 
-1. **测试产物**统一写 `D:\虚拟看板\tools\`（沙箱对 `.workbuddy/` 写入非确定）；读文件用 Python 写 + PowerShell 转 UTF-8 再 Read。
+  - 截图基线：`node tools/screenshot_ui.mjs [输出目录]`。
+
+  - 手工：建项目→写正文→插表格增删行列→评论→总览切换项目（确认内容不丢）→导出 MD/Word→刷新确认数据还在。
+
+1. **测试产物**统一写 `E:\vibecoding\prd_assistant\tools\`；读取含中文的文件用 `Get-Content -Encoding UTF8` / `-Raw -Encoding UTF8`，避免乱码。
