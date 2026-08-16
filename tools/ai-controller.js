@@ -11,6 +11,7 @@ var AI_SAMPLE_TEXT="# 22\r\n\r\n## 文档变更历史\r\n## 目的\r\n本文档�
 var AI_SETTINGS_KEY='prdKanbanAiSettings';
 var AI_MAX_VERSIONS=10;
 var AI_PATCH_WARN=300*1024;
+var AI_SCORE_CHUNK_CHARS=5500; // v17.22：长文档分块评分阈值（单块约 5.5k 字，弱模型安全）
 var DIM_META={
   completeness:{label:'完整性'},
   clarity:{label:'清晰度'},
@@ -440,34 +441,99 @@ function aiScore(text,opts){
     var cached=aiDeep(st.scoreCache.report);cached.cached=true;
     return Promise.resolve(cached);
   }
+  var doCache=function(report){if(st)st.scoreCache={fingerprint:fp,report:aiDeep(report)};return report;};
+  // v17.22：长文档分块评分——超过阈值按节切块、逐块打分、按内容长度加权聚合，避免弱模型长输出截断
+  if(String(text||'').length>AI_SCORE_CHUNK_CHARS){
+    return aiScoreChunked(text,opts).then(doCache);
+  }
   return aiAskJSON([
     {role:'system',content:aiScoreSystem()},
     {role:'user',content:'请评分以下 PRD 内容：\n\n'+text}
   ],{temperature:0,onStatus:opts&&opts.onStatus,onDelta:opts&&opts.onDelta,timeout:120000}).then(function(resp){
+    return doCache(aiScoreNormalize(resp));
+  });
+}
+function aiScoreNormalize(resp){
+  var s=aiGetSettings();
+  var dims=resp&&Array.isArray(resp.dimensions)?resp.dimensions:[];
+  var out=[];
+  var totalW=0,totalV=0;
+  var docTxt=aiDocText();
+  Object.keys(DIM_META).forEach(function(k){
+    var cfg=s.dims[k]||{weight:10,enabled:true};
+    var d=dims.filter(function(x){return x&&(x.id===k);})[0];
+    var score=d&&!isNaN(+d.score)?aiRound(d.score):0;
+    var issues=d&&Array.isArray(d.issues)?d.issues.map(function(it){
+      var sid=it.sectionId||null;
+      var q=String(it.quote||'');
+      var hay=sid?aiSecText(sid):docTxt;
+      var low=!!q&&aiNormText(hay).indexOf(aiNormText(q))<0;
+      return {id:aiKey(sid||'',it.reason||''),sectionId:sid,sectionTitle:STATE.framework.find(function(f){return f.id===sid;})?(STATE.framework.find(function(f){return f.id===sid;})).title:'',severity:(it.severity==='high'||it.severity==='medium'||it.severity==='low')?it.severity:'medium',reason:String(it.reason||''),quote:q,lowConfidence:low,suggestion:String(it.suggestion||'')};
+    }):[];
+    if(!d){issues.push({id:aiKey(k,'missing'),sectionId:null,sectionTitle:'',severity:'medium',reason:'该维度未能评估（AI 未返回）',suggestion:'请重试深度体检。'});}
+    out.push({id:k,name:d&&d.name?d.name:DIM_META[k].label,score:score,note:String(d&&d.note||''),weight:cfg.enabled?cfg.weight:0,issues:issues});
+    if(cfg.enabled){totalW+=cfg.weight;totalV+=score*cfg.weight;}
+  });
+  var total=totalW?aiRound(totalV/totalW):0;
+  return {total:total,dimensions:out,summary:String(resp&&resp.summary||''),generatedAt:Date.now(),cached:false};
+}
+function aiChunkDoc(text,maxChars){
+  var limit=maxChars||AI_SCORE_CHUNK_CHARS;
+  var lines=String(text||'').split('\n');
+  var chunks=[],cur=[],curLen=0;
+  lines.forEach(function(ln){
+    var isHead=/^##\s*\[[^\]]+\]/.test(ln);
+    var addLen=ln.length+1;
+    if(isHead&&curLen>0&&curLen+addLen>limit){chunks.push(cur.join('\n'));cur=[];curLen=0;}
+    cur.push(ln);curLen+=addLen;
+  });
+  if(cur.length)chunks.push(cur.join('\n'));
+  return chunks.filter(function(c){return String(c).trim();});
+}
+function aiScoreChunked(text,opts){
+  var chunks=aiChunkDoc(text,AI_SCORE_CHUNK_CHARS);
+  if(chunks.length<=1)return Promise.resolve(null);
+  var results=[];
+  function next(i){
+    if(aiCancelFlag)return Promise.reject({kind:'canceled',message:'已停止'});
+    if(i>=chunks.length)return Promise.resolve(results);
+    if(opts&&opts.onStatus)opts.onStatus('长文档分块评分 '+(i+1)+'/'+chunks.length+'…');
+    return aiAskJSON([
+      {role:'system',content:aiScoreSystem()},
+      {role:'user',content:'这是长文档的第 '+(i+1)+'/'+chunks.length+' 个分块，请仅依据该分块内容评分并输出 JSON：\n\n'+chunks[i]}
+    ],{temperature:0,onStatus:opts&&opts.onStatus,onDelta:opts&&opts.onDelta,timeout:120000,maxTokens:4000}).then(function(resp){
+      results.push({resp:resp,len:chunks[i].length});
+      return next(i+1);
+    });
+  }
+  return next(0).then(function(){
     var s=aiGetSettings();
-    var dims=resp&&Array.isArray(resp.dimensions)?resp.dimensions:[];
     var out=[];
-    var totalW=0,totalV=0;
-    var docTxt=aiDocText();
     Object.keys(DIM_META).forEach(function(k){
       var cfg=s.dims[k]||{weight:10,enabled:true};
-      var d=dims.filter(function(x){return x&&(x.id===k);})[0];
-      var score=d&&!isNaN(+d.score)?aiRound(d.score):0;
-      var issues=d&&Array.isArray(d.issues)?d.issues.map(function(it){
-        var sid=it.sectionId||null;
-        var q=String(it.quote||'');
-        var hay=sid?aiSecText(sid):docTxt;
-        var low=!!q&&aiNormText(hay).indexOf(aiNormText(q))<0;
-        return {id:aiKey(sid||'',it.reason||''),sectionId:sid,sectionTitle:STATE.framework.find(function(f){return f.id===sid;})?(STATE.framework.find(function(f){return f.id===sid;})).title:'',severity:(it.severity==='high'||it.severity==='medium'||it.severity==='low')?it.severity:'medium',reason:String(it.reason||''),quote:q,lowConfidence:low,suggestion:String(it.suggestion||'')};
-      }):[];
-      if(!d){issues.push({id:aiKey(k,'missing'),sectionId:null,sectionTitle:'',severity:'medium',reason:'该维度未能评估（AI 未返回）',suggestion:'请重试深度体检。'});}
-      out.push({id:k,name:d&&d.name?d.name:DIM_META[k].label,score:score,note:String(d&&d.note||''),weight:cfg.enabled?cfg.weight:0,issues:issues});
-      if(cfg.enabled){totalW+=cfg.weight;totalV+=score*cfg.weight;}
+      var wSum=0,vSum=0,issues=[],notes=[],seen={};
+      results.forEach(function(r){
+        var d=(r.resp&&Array.isArray(r.resp.dimensions)?r.resp.dimensions:[]).filter(function(x){return x&&x.id===k;})[0];
+        if(d&&!isNaN(+d.score)){wSum+=r.len;vSum+=(+d.score)*r.len;}
+        (d&&Array.isArray(d.issues)?d.issues:[]).forEach(function(it){
+          var sid=it.sectionId||null;
+          var q=String(it.quote||'');
+          var hay=sid?aiSecText(sid):aiDocText();
+          var low=!!q&&aiNormText(hay).indexOf(aiNormText(q))<0;
+          var key=aiKey(sid||'',it.reason||'');
+          if(seen[key])return;seen[key]=1;
+          issues.push({id:key,sectionId:sid,sectionTitle:STATE.framework.find(function(f){return f.id===sid;})?(STATE.framework.find(function(f){return f.id===sid;})).title:'',severity:(it.severity==='high'||it.severity==='medium'||it.severity==='low')?it.severity:'medium',reason:String(it.reason||''),quote:q,lowConfidence:low,suggestion:String(it.suggestion||'')});
+        });
+        if(d&&d.note)notes.push(String(d.note));
+      });
+      var score=wSum?aiRound(vSum/wSum):0;
+      if(!wSum)issues.push({id:aiKey(k,'missing'),sectionId:null,sectionTitle:'',severity:'medium',reason:'该维度未能评估（AI 未返回）',suggestion:'请重试深度体检。'});
+      out.push({id:k,name:DIM_META[k].label,score:score,note:notes.join('；').slice(0,300),weight:cfg.enabled?cfg.weight:0,issues:issues});
     });
-    var total=totalW?aiRound(totalV/totalW):0;
-    var report={total:total,dimensions:out,summary:String(resp&&resp.summary||''),generatedAt:Date.now(),cached:false};
-    if(st)st.scoreCache={fingerprint:fp,report:aiDeep(report)};
-    return report;
+    var total=aiComputeTotal({dimensions:out});
+    var sumParts=results.map(function(r){return String(r.resp&&r.resp.summary||'').slice(0,60);}).filter(Boolean);
+    var summary='长文档分块评分：全文 '+String(text||'').length+' 字 / '+chunks.length+' 个分块。'+(sumParts.length?('｜'+sumParts.join('｜')):'');
+    return {total:total,dimensions:out,summary:summary,generatedAt:Date.now(),cached:false,chunked:true};
   });
 }
 function aiOptimizePrompt(text,scope,issues,target){
@@ -2735,6 +2801,9 @@ window.__AICtrl={
     genStart:aiGenStart,
     genPrompt:aiGenSectionPrompt,
     styleGuide:aiGenStyleGuide,
+    chunkDoc:aiChunkDoc,
+    scoreChunked:aiScoreChunked,
+    scoreNormalize:aiScoreNormalize,
     mdToHtml:aiMdToHtml,
     normItems:aiGenNormItems,
     normRows:aiGenNormRows,

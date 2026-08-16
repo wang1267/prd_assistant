@@ -79,6 +79,8 @@ function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + 
 try {
   const badge = await evalJs(`(document.getElementById('vbadge')||{}).textContent || ''`);
   check('dash v17.1x/17.2x 水印', /v17\.(1[6-9]|2\d)/.test(badge), badge);
+  const bootOv = await evalJs(`(()=>{ const p=document.getElementById('overviewPanel'); return p?getComputedStyle(p).display:'missing'; })()`);
+  check('总览浮层启动即隐藏（不糊屏）', bootOv==='none', String(bootOv));
 
   // 加载示例 → 触发 render（含 15 个自动节，验收黄）
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="sample"]'); if(b)b.click(); return true; })()`);
@@ -149,9 +151,9 @@ try {
   const ov1 = await evalJs(`(()=>{
     const panel=document.getElementById('overviewPanel');
     const txt=panel?panel.textContent:'';
-    return {open: !!panel&&panel.classList.contains('open'), btn: !!document.querySelector('[data-act="toggleoverview"]'), cards: document.querySelectorAll('.ov-card').length, avg: txt.indexOf('平均完成度')>=0};
+    return {open: !!panel&&panel.classList.contains('open'), disp: panel?getComputedStyle(panel).display:'', btn: !!document.querySelector('[data-act="toggleoverview"]'), cards: document.querySelectorAll('.ov-card').length, avg: txt.indexOf('平均完成度')>=0};
   })()`);
-  check('总览：侧栏按钮+浮层打开+项目卡与统计', ov1.open && ov1.btn && ov1.cards>=1 && ov1.avg, JSON.stringify(ov1));
+  check('总览：侧栏按钮+浮层打开(display:flex)+项目卡与统计', ov1.open && ov1.disp==='flex' && ov1.btn && ov1.cards>=1 && ov1.avg, JSON.stringify(ov1));
   const ovCard1 = await evalJs(`(()=>{
     const card=document.querySelector('.ov-card');
     const dots=card?card.querySelectorAll('.ov-dots i').length:0;

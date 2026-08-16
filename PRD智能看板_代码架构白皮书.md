@@ -159,6 +159,11 @@
 >   2. 修复：插列继承相邻列宽 `colW`（缺省 120px）并表头用 `document.createElement('th')` 替换；插行复制表头列宽；对 `style/replaceChild/createElement` 做防御性判断（兼容 vm shim 与真实 DOM）。
 >   3. 测试：新增 `tools/browser_check_rtbl.mjs`（5 断言：渲染带宽/拖拽落盘/刷新保留/插列继承宽+`<th>`+非挤扁/插行复制宽）；6 套回归 199 断言全绿。
 
+>   ⚠️ v17.22 变更提示（长文档分块评分 + 总览糊屏热修）：
+>   1. **分块评分**：新常量 `AI_SCORE_CHUNK_CHARS=5500`；`aiChunkDoc(text,limit)` 按 `^##\s*\[节id\]` 在节边界切块（整节不切断，超限有界=单节量）；`aiScoreChunked` 逐块 `aiAskJSON`（temperature 0、maxTokens 4000）→ 各维度按块内容长度加权聚合、问题跨块去重合并、引用幻觉校验照常 → 摘要含分块说明；`aiScore` 超阈值自动走分块，`aiScoreNormalize(resp)` 抽出单块归一逻辑，结果仍进 `p.ai.scoreCache`。`_test` 暴露 `chunkDoc/scoreChunked/scoreNormalize`。
+>   2. **糊屏热修**（用户反馈）：`.ov-panel` 此前只有 `position:fixed;inset:0`，无关闭态隐藏——启动即全屏半透明遮罩 + `backdrop-filter:blur(3px)`，整屏被罩且模糊；且程序化 `.click()` 不受遮罩拦截导致测试盲区。修复：默认 `display:none`、`.ov-panel.open` 才 `display:flex`，去掉背景模糊；`browser_check_dash.mjs` 新增启动即隐藏/打开 flex 断言。
+>   3. 测试：新增 `tools/regress_v1722.js`（8 断言）；`browser_check_dash.mjs` 增至 23 断言；6 套回归 199 断言全绿。
+
 ---
 
 ## 0. 阅读导览
@@ -184,7 +189,7 @@
 | 790–975 | `<body>` | 顶栏按钮群、侧边栏（项目按钮+分组面板+目录）、main、modals、隐藏 file input、mediaBar、图片缩放柄 |
 | 976–3784 | `<script>`（主脚本） | **block1（核心，~2800 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、媒体条 |
 | 3966–4003 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.21） |
+| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.22） |
 | 4006–4015 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
 | 4016–4275 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
 | 4300–7050 | `<script id="ai-controller">` | **block6（v17.15）**：AI 助手（设置/评分/优化/结构对齐/撰写/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |
