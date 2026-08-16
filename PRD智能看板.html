@@ -505,6 +505,32 @@
   .dash-sum-line b.ok{color:var(--green)}
   .dash-sum-line b.bad{color:var(--red)}
   @media(max-width:900px){.dash-dims{grid-template-columns:1fr}.dash-panel{grid-column:1/-1!important}}
+  /* v17.17 多项目总览：全屏浮层 + 项目健康卡 */
+  .ov-panel{position:fixed;inset:0;z-index:59;background:rgba(20,24,30,.42);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;padding:34px 22px;overflow:auto}
+  .ov-panel .ov-inner{width:100%;max-width:1180px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 22px 60px rgba(0,0,0,.28);padding:20px 22px}
+  .ov-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .ov-head b{font-family:var(--serif);font-size:20px}
+  .ov-head .muted{flex:1}
+  .ov-head button{border:1px solid var(--line);background:transparent;border-radius:8px;color:var(--ink-2);font-size:15px;cursor:pointer;padding:2px 9px}
+  .ov-head button:hover{border-color:var(--red);color:var(--red)}
+  .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px}
+  .ov-card{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:var(--bg);cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s}
+  .ov-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--brand)}
+  .ov-top{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  .ov-top b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ov-grp{font-size:10.5px;color:var(--ink-3);border:1px solid var(--line);border-radius:999px;padding:0 7px;flex:0 0 auto}
+  .ov-metric{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-bottom:9px}
+  .ov-comp,.ov-risk,.ov-ai{font-weight:600}
+  .ov-comp.ok{color:var(--green)} .ov-comp.warn{color:var(--yellow)} .ov-comp.bad{color:var(--red)}
+  .ov-risk.ok{color:var(--green)} .ov-risk.bad{color:var(--red)}
+  .ov-ai{color:var(--brand)}
+  .ov-dots{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:9px}
+  .ov-dots i{width:11px;height:11px;border-radius:3px}
+  .ov-dots i.green{background:var(--green)}
+  .ov-dots i.yellow{background:var(--yellow)}
+  .ov-dots i.red{background:var(--red)}
+  .ov-meta{font-size:11px}
+  .ov-empty{padding:36px 0;text-align:center;color:var(--ink-3)}
   /* 缺口清单表格 */
   .gap-table-wrap{overflow-x:auto}
   .gap-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
@@ -896,6 +922,7 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
   <aside id="sidebar">
     <div class="sidebar-brand"><span class="brand-mark"></span><span class="brand-text">PRD 智能看板</span></div>
     <div class="proj-bar" data-act="gohome"><span class="name" id="curProjName">← 返回主页</span><span class="chev">‹</span></div>
+    <button type="button" class="pp-toggle" data-act="toggleoverview" title="所有项目健康度总览（不切换项目）" style="margin-bottom:8px"><span class="ic">◫</span><span class="pt-name">总览</span><span class="chev">›</span></button>
     <div class="pp-wrap">
       <button type="button" class="pp-toggle" data-act="toggleprojpanel" title="项目与分组"><span class="ic">▦</span><span class="pt-name" id="ppToggleName">项目</span><span class="chev">▾</span></button>
       <div id="projPanel"></div>
@@ -2103,7 +2130,14 @@ function autoGenImport(text){
   const secs=parseAutoGen(text);
   if(!secs.length){toast('未识别到可导入的标题（需含 #~### 标题）');return;}
   const fw=[],data={};
-  secs.forEach((s,i)=>{const sid='ag'+(i+1);fw.push({id:sid,title:s.title,type:'text',required:false,weight:1});data[sid]={html:s.html,cards:s.cards};});
+  secs.forEach((s,i)=>{
+    const sid='ag'+(i+1);
+    // v17.17：按标题关键词给自动节补「必填」语义，导入/示例文档也能触发 R-SPEC-01 红线（此前全部 required:false → 完成度恒 100%）
+    const t=String(s.title||'').replace(/\s/g,'');
+    const required=/目的|背景|简介|概述|目标|范围|边界|功能需求|功能点|非功能|性能|安全|可用性|接口|验收|自测|测试标准|用户|使用者|角色|场景|风险|权限/.test(t);
+    fw.push({id:sid,title:s.title,type:'text',required:required,weight:1});
+    data[sid]={html:s.html,cards:s.cards};
+  });
   const p=currentProj();
   STATE.framework=fw;p.framework=fw;p.data=data;p.autoGen=true;DATA=data;
   save();render();
@@ -2439,6 +2473,13 @@ function bindStatic(){
       case 'doRename':{const n=document.getElementById('rnName').value.trim();if(!n){toast('名称不能为空');break;}if(renameCtx.type==='proj'){renameProject(renameCtx.id,n);}else if(renameCtx.type==='fw'){const pr=(STATE.frameworkPresets||[]).find(x=>x.id===renameCtx.id);if(pr){pr.name=n;save();renderNewProjFrameworks();toast('已重命名框架「'+n+'」');}}else if(renameCtx.type==='grp'){const g=(STATE.groups||[]).find(x=>x.id===renameCtx.id);if(g){g.name=n;save();renderSidebar();toast('已重命名分组「'+n+'」');}}closeModal('renameModal');break;}
       case 'delproj':{closeProjMenu();const p=STATE.projects.find(x=>x.id===id);if(p&&confirm('确定删除项目「'+p.name+'」？此操作不可撤销。'))deleteProject(id);break;}
       case 'gohome':STATE.activeProjectId=null;drillOpen=null;save();render();closeSidebar();break;
+      case 'toggleoverview':toggleOverview();break;
+      case 'ovclose':{const ov=document.getElementById('overviewPanel');if(ov)ov.classList.remove('open');break;}
+      case 'ovopen':{
+        const ov=document.getElementById('overviewPanel');if(ov)ov.classList.remove('open');
+        const pj=STATE.projects.find(x=>x.id===id);if(pj&&STATE.activeProjectId!==pj.id){STATE.activeProjectId=pj.id;drillOpen=null;save();render();}
+        break;
+      }
       case 'sidebartoggle':openSidebar();break;
       case 'sidebarclose':closeSidebar();break;
       case 'expmd':{closeProjMenu();const p=STATE.projects.find(x=>x.id===id);if(p)download(p.name+'.md',projectMD(p),'text/markdown;charset=utf-8');break;}
@@ -3389,8 +3430,69 @@ function loadSample(){
 }
 
 /* ============ 启动 ============ */
+/* ============ 总览（v17.17：多项目健康度看板） ============ */
+function healthForProject(p){
+  if(!p)return null;
+  const savedFw=STATE.framework,savedData=DATA,savedActive=STATE.activeProjectId;
+  try{
+    STATE.framework=p.framework||[];
+    DATA=p.data||{};
+    STATE.activeProjectId=p.id;
+    return runHealth();
+  }catch(e){return null;}
+  finally{
+    STATE.framework=savedFw;DATA=savedData;STATE.activeProjectId=savedActive;
+  }
+}
+function renderOverview(){
+  const panel=document.getElementById('overviewPanel');if(!panel)return;
+  const projects=STATE.projects||[];
+  const stats=projects.map(p=>({p,h:healthForProject(p)}));
+  const avg=stats.length?Math.round(stats.reduce((a,s)=>a+(s.h?s.h.metrics.completion:0),0)/stats.length):0;
+  const redProj=stats.filter(s=>s.h&&s.h.metrics.risk>0).length;
+  const aiCount=projects.filter(p=>p.ai&&p.ai.lastReport).length;
+  let html='<div class="ov-head"><b>总览</b><span class="muted">'+projects.length+' 个项目 · 平均完成度 '+avg+'% · 有风险项目 '+redProj+' · 有 AI 总评 '+aiCount+'</span><button data-act="ovclose" title="关闭">×</button></div>';
+  if(!projects.length){
+    html+='<div class="ov-empty">还没有项目。点击「＋ 新建项目」、导入 Word/MD，或到 AI 面板用「✍ AI 撰写」从描述生成草稿。</div>';
+  }else{
+    html+='<div class="ov-grid">';
+    stats.forEach(s=>{
+      const p=s.p;
+      if(!s.h){html+='<div class="ov-card"><div class="ov-top"><b>'+esc(p.name)+'</b></div><div class="muted">健康度计算失败</div></div>';return;}
+      const m=s.h.metrics;
+      const grp=(STATE.groups||[]).find(g=>g.id===p.groupId);
+      const dots=(p.framework||[]).map(f=>{
+        const e=s.h.sec[f.id]?s.h.sec[f.id].effective:'green';
+        return '<i class="'+e+'" title="'+esc(f.title)+'"></i>';
+      }).join('');
+      const ai=p.ai&&p.ai.lastReport?p.ai.lastReport:null;
+      html+='<div class="ov-card" data-act="ovopen" data-id="'+esc(p.id)+'" title="点击打开项目">'
+        +'<div class="ov-top"><b>'+esc(p.name)+'</b>'+(grp?'<span class="ov-grp">'+esc(grp.name)+'</span>':'')+'</div>'
+        +'<div class="ov-metric"><span class="ov-comp '+(m.completion>=100?'ok':m.completion>=60?'warn':'bad')+'">完成度 '+m.completion+'%</span><span class="ov-risk '+(m.risk?'bad':'ok')+'">红节 '+m.risk+'</span>'+(ai?'<span class="ov-ai">AI '+ai.total+'</span>':'')+'</div>'
+        +'<div class="ov-dots">'+dots+'</div>'
+        +'<div class="ov-meta muted">'+(p.updatedAt?new Date(p.updatedAt).toLocaleString():'未更新')+'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+  }
+  panel.innerHTML='<div class="ov-inner">'+html+'</div>';
+  panel.classList.add('open');
+}
+function toggleOverview(){
+  const panel=document.getElementById('overviewPanel');if(!panel)return;
+  if(panel.classList.contains('open'))panel.classList.remove('open');
+  else renderOverview();
+}
+function injectOverviewPanel(){
+  if(document.getElementById('overviewPanel'))return;
+  const d=document.createElement('div');
+  d.id='overviewPanel';d.className='ov-panel';
+  d.addEventListener('click',e=>{if(e.target===d)d.classList.remove('open');});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')d.classList.remove('open');});
+  document.body.appendChild(d);
+}
 function init(){
-  load();bindStatic();initMediaBar();initTblResize();if(window.__syncViewBanner)window.__syncViewBanner();
+  load();injectOverviewPanel();bindStatic();initMediaBar();initTblResize();if(window.__syncViewBanner)window.__syncViewBanner();
   // 内容编辑失焦保存（合并而非整体替换：保住 rows/cards/items 等结构化数据，避免表格内容"莫名消失"）
   document.addEventListener('blur',e=>{
     const t=e.target.closest('[data-act="editable"]');
@@ -4131,6 +4233,10 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
       if(pill){var m=pill.className.match(/\b(green|yellow|red)\b/);if(m)lvl=m[1];}
       var comp=null;
       try{if(typeof HEALTH!=='undefined'&&HEALTH&&HEALTH.metrics)comp=HEALTH.metrics.completion;}catch(e){}
+      var risk=0;
+      try{if(typeof HEALTH!=='undefined'&&HEALTH&&HEALTH.metrics)risk=HEALTH.metrics.risk||0;}catch(e){}
+      var aiTxt='';
+      try{var cp=typeof currentProj==='function'?currentProj():null;if(cp&&cp.ai&&cp.ai.lastReport)aiTxt=' · AI 总评 '+cp.ai.lastReport.total+' 分';}catch(e){}
       var labelMap={green:'健康',yellow:'需关注',red:'风险'};
       var label=labelMap[lvl]||'健康';
       var cnt=0;try{if(typeof STATE!=='undefined'&&STATE&&STATE.framework)cnt=STATE.framework.length;}catch(e){}
@@ -4139,7 +4245,7 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
       var compStr=comp!=null?('完成度 '+comp+'%'):(pill&&pill.querySelector('.txt')?pill.querySelector('.txt').textContent:'');
       var b=document.createElement('div');b.className='report-banner';
       b.innerHTML='<div class="rb-kicker">PRD 健康体检报告</div>'
-        +'<div class="rb-meta">生成于 '+ds+' · 共 '+cnt+' 个框架节</div>'
+        +'<div class="rb-meta">生成于 '+ds+' · 共 '+cnt+' 个框架节 · 风险红节 '+risk+aiTxt+'</div>'
         +'<div class="rb-verdict '+lvl+'"><span class="rb-dot"></span>整体：'+label+' · '+(compStr||'—')+'</div>';
       hc.appendChild(b);
     }catch(e){}
@@ -4152,7 +4258,7 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
   sync();
 })();
 </script>
-<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.16 · 看板总览升级</div>
+<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.17 · 多项目总览</div>
 <!-- v16.6 Floating UI (MIT, https://floating-ui.com) ??????????/??/??/????????? -->
 <script>
 /*! @floating-ui/core v1.6.9 (MIT) */

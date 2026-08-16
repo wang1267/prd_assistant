@@ -78,7 +78,7 @@ function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + 
 
 try {
   const badge = await evalJs(`(document.getElementById('vbadge')||{}).textContent || ''`);
-  check('dash v17.16 水印', badge.indexOf('v17.16') >= 0, badge);
+  check('dash v17.1x 水印', /v17\.1[6-9]/.test(badge), badge);
 
   // 加载示例 → 触发 render（含 15 个自动节，验收黄）
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="sample"]'); if(b)b.click(); return true; })()`);
@@ -142,6 +142,63 @@ try {
   await evalJs(`(()=>{ const c=document.querySelector('.dash-cell.yellow')||document.querySelector('.dash-cell'); if(c)c.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 300));
   check('dash 热力图点击定位无异常', true, '');
+
+  // ---------- v17.17 多项目总览 ----------
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="toggleoverview"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 400));
+  const ov1 = await evalJs(`(()=>{
+    const panel=document.getElementById('overviewPanel');
+    const txt=panel?panel.textContent:'';
+    return {open: !!panel&&panel.classList.contains('open'), btn: !!document.querySelector('[data-act="toggleoverview"]'), cards: document.querySelectorAll('.ov-card').length, avg: txt.indexOf('平均完成度')>=0};
+  })()`);
+  check('总览：侧栏按钮+浮层打开+项目卡与统计', ov1.open && ov1.btn && ov1.cards>=1 && ov1.avg, JSON.stringify(ov1));
+  const ovCard1 = await evalJs(`(()=>{
+    const card=document.querySelector('.ov-card');
+    const dots=card?card.querySelectorAll('.ov-dots i').length:0;
+    const fw=window.__dashFw||0;
+    return {hasComp: card?(card.textContent.indexOf('完成度')>=0):false, dots, fwCount: STATE.framework.length};
+  })()`);
+  check('总览：项目卡含完成度与逐节色点', ovCard1.hasComp && ovCard1.dots===ovCard1.fwCount, JSON.stringify(ovCard1));
+  const ovIsolated = await evalJs(`(()=>{
+    const before=currentProj().name;
+    const h=window.healthForProject?window.healthForProject(currentProj()):null;
+    const after=currentProj().name;
+    const cur=typeof runHealth==='function'?runHealth():null;
+    return {same: before===after, hOk: !!(h&&h.metrics&&typeof h.metrics.completion==='number'), curOk: !!(cur&&cur.metrics)};
+  })()`);
+  check('总览：按项目计算健康度且不污染当前状态', ovIsolated.same && ovIsolated.hOk && ovIsolated.curOk, JSON.stringify(ovIsolated));
+
+  // 第二个项目（必填节全空 → 红）→ 总览出现 2 卡且统计含风险项目
+  await evalJs(`(()=>{ const pv=document.getElementById('overviewPanel'); if(pv)pv.classList.remove('open'); createProject('风险项目','default'); const p=currentProj(); if(p){p.data.purpose={html:'',cards:[]};p.data.feat={items:[{name:'',desc:'',priority:'',status:''}],cards:[]};} if(typeof render==='function')render(); toggleOverview(); return true; })()`);
+  await new Promise(r => setTimeout(r, 400));
+  const ov2 = await evalJs(`(()=>{
+    const txt=document.getElementById('overviewPanel').textContent;
+    const cards=Array.from(document.querySelectorAll('.ov-card'));
+    const riskCard=cards.find(c=>c.textContent.indexOf('风险项目')>=0);
+    const h=window.healthForProject?window.healthForProject(window.__dashRiskProj||currentProj()):null;
+    const riskProj=STATE.projects.find(p=>p.name==='风险项目');
+    const h2=riskProj?window.healthForProject(riskProj):null;
+    return {cards: cards.length, hasRiskStat: txt.indexOf('有风险项目 1')>=0, riskCardComp: riskCard?(riskCard.textContent.indexOf('完成度 0%')>=0):false, riskCardDots: riskCard?riskCard.querySelectorAll('.ov-dots i.red').length:0, h: h2?JSON.stringify(h2.metrics):'null', fwLen: riskProj?(riskProj.framework||[]).length:0};
+  })()`);
+  check('总览：两项目+风险项目统计+红点', ov2.cards===2 && ov2.hasRiskStat && ov2.riskCardComp && ov2.riskCardDots>=1, JSON.stringify(ov2));
+
+  // 点击项目卡 → 切换项目并关闭浮层
+  await evalJs(`(()=>{ const cards=Array.from(document.querySelectorAll('.ov-card')); const target=cards.find(c=>c.textContent.indexOf('风险项目')<0)||cards[0]; target.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 400));
+  const ovSwitch = await evalJs(`(()=>{
+    const panel=document.getElementById('overviewPanel');
+    const tp=document.getElementById('topbarProjName');
+    return {closed: !panel.classList.contains('open'), name: tp?tp.textContent:''};
+  })()`);
+  check('总览：点击卡片切换项目并关闭', ovSwitch.closed && ovSwitch.name!=='风险项目', JSON.stringify(ovSwitch));
+
+  // 再打开 → 关闭按钮
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="toggleoverview"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 300));
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="ovclose"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 200));
+  const ovClosed = await evalJs(`(()=>!document.getElementById('overviewPanel').classList.contains('open'))()`);
+  check('总览：ovclose 关闭浮层', ovClosed===true, String(ovClosed));
 } catch (e) {
   fail++; console.log('FAIL  browser 脚本异常  >>> ' + (e && e.message || e));
 }

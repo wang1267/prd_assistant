@@ -114,6 +114,12 @@ try {
   console.log('UI_FACTS ' + JSON.stringify(facts, null, 1));
   await shot('02_sample_editor');
 
+  // 打开多项目总览
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="toggleoverview"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 600));
+  await shot('06_overview');
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="ovclose"]'); if(b)b.click(); return true; })()`);
+
   // 打开 AI 面板
   await evalJs(`(()=>{ if(window.__AICtrl) window.__AICtrl.openPanel(); return true; })()`);
   await new Promise(r => setTimeout(r, 600));

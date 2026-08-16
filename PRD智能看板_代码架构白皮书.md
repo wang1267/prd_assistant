@@ -132,6 +132,13 @@
 >   6. 新样式全部走 CSS 变量（`--card/--line/--green/--yellow/--red/--ink-*`），深浅色/拟态自动适配；900px 以下 `.dash-panel` 全宽、维度条单列。
 >   7. 测试：新增 `tools/browser_check_dash.mjs`（8 断言：hero/热力图/AI 卡/摘要/定位）；6 套回归 170 + v17.15 22 断言全绿；其余浏览器检查全绿。
 
+>   ⚠️ v17.17 变更提示（多项目总览 + 自动框架必填语义）：
+>   1. **总览入口**：侧栏骨架新增 `.pp-toggle[data-act="toggleoverview"]`；`injectOverviewPanel()` 在 `init()` 注入全屏浮层 `#overviewPanel.ov-panel`（z-index 59，点击背板/Escape/`ovclose` 关闭）；bindStatic 新增 `toggleoverview/ovclose/ovopen`（`ovopen` 切换项目并关闭，项目级操作不入撤销栈）。
+>   2. **healthForProject(p)**：try/finally 临时切换 `STATE.framework=p.framework`、`DATA=p.data`、`STATE.activeProjectId=p.id` → `runHealth()` → 恢复；同步执行无重入，不污染当前项目。`renderOverview()` 生成统计头 + `.ov-grid` 项目卡（完成度/红节/AI 总评/`.ov-dots` 逐节迷你色点带 title/更新时间）。
+>   3. **自动框架必填语义**：`autoGenImport` 按标题关键词（目的/背景/简介/概述/目标/范围/边界/功能需求/功能点/非功能/性能/安全/可用性/接口/验收/自测/测试标准/用户/使用者/角色/场景/风险/权限）判定 `required`，修复导入/示例文档 R-SPEC-01 永不命中、完成度恒 100% 的缺陷。
+>   4. **视图态横幅**（block2 `sync`）：`rb-meta` 增加「风险红节 N」与「AI 总评 X 分」。
+>   5. 测试：`browser_check_dash.mjs` 增至 14 断言（含总览打开/项目卡/色点/隔离性/两项目统计/切换/关闭）；6 套回归 170 + v17.15 22 断言全绿。
+
 ---
 
 ## 0. 阅读导览
@@ -157,7 +164,7 @@
 | 790–975 | `<body>` | 顶栏按钮群、侧边栏（项目按钮+分组面板+目录）、main、modals、隐藏 file input、mediaBar、图片缩放柄 |
 | 976–3784 | `<script>`（主脚本） | **block1（核心，~2800 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、媒体条 |
 | 3966–4003 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.16） |
+| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.17） |
 | 4006–4015 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
 | 4016–4275 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
 | 4300–7050 | `<script id="ai-controller">` | **block6（v17.15）**：AI 助手（设置/评分/优化/结构对齐/撰写/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |

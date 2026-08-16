@@ -1078,7 +1078,14 @@ function autoGenImport(text){
   const secs=parseAutoGen(text);
   if(!secs.length){toast('未识别到可导入的标题（需含 #~### 标题）');return;}
   const fw=[],data={};
-  secs.forEach((s,i)=>{const sid='ag'+(i+1);fw.push({id:sid,title:s.title,type:'text',required:false,weight:1});data[sid]={html:s.html,cards:s.cards};});
+  secs.forEach((s,i)=>{
+    const sid='ag'+(i+1);
+    // v17.17：按标题关键词给自动节补「必填」语义，导入/示例文档也能触发 R-SPEC-01 红线（此前全部 required:false → 完成度恒 100%）
+    const t=String(s.title||'').replace(/\s/g,'');
+    const required=/目的|背景|简介|概述|目标|范围|边界|功能需求|功能点|非功能|性能|安全|可用性|接口|验收|自测|测试标准|用户|使用者|角色|场景|风险|权限/.test(t);
+    fw.push({id:sid,title:s.title,type:'text',required:required,weight:1});
+    data[sid]={html:s.html,cards:s.cards};
+  });
   const p=currentProj();
   STATE.framework=fw;p.framework=fw;p.data=data;p.autoGen=true;DATA=data;
   save();render();
@@ -1414,6 +1421,13 @@ function bindStatic(){
       case 'doRename':{const n=document.getElementById('rnName').value.trim();if(!n){toast('名称不能为空');break;}if(renameCtx.type==='proj'){renameProject(renameCtx.id,n);}else if(renameCtx.type==='fw'){const pr=(STATE.frameworkPresets||[]).find(x=>x.id===renameCtx.id);if(pr){pr.name=n;save();renderNewProjFrameworks();toast('已重命名框架「'+n+'」');}}else if(renameCtx.type==='grp'){const g=(STATE.groups||[]).find(x=>x.id===renameCtx.id);if(g){g.name=n;save();renderSidebar();toast('已重命名分组「'+n+'」');}}closeModal('renameModal');break;}
       case 'delproj':{closeProjMenu();const p=STATE.projects.find(x=>x.id===id);if(p&&confirm('确定删除项目「'+p.name+'」？此操作不可撤销。'))deleteProject(id);break;}
       case 'gohome':STATE.activeProjectId=null;drillOpen=null;save();render();closeSidebar();break;
+      case 'toggleoverview':toggleOverview();break;
+      case 'ovclose':{const ov=document.getElementById('overviewPanel');if(ov)ov.classList.remove('open');break;}
+      case 'ovopen':{
+        const ov=document.getElementById('overviewPanel');if(ov)ov.classList.remove('open');
+        const pj=STATE.projects.find(x=>x.id===id);if(pj&&STATE.activeProjectId!==pj.id){STATE.activeProjectId=pj.id;drillOpen=null;save();render();}
+        break;
+      }
       case 'sidebartoggle':openSidebar();break;
       case 'sidebarclose':closeSidebar();break;
       case 'expmd':{closeProjMenu();const p=STATE.projects.find(x=>x.id===id);if(p)download(p.name+'.md',projectMD(p),'text/markdown;charset=utf-8');break;}
@@ -2364,8 +2378,69 @@ function loadSample(){
 }
 
 /* ============ 启动 ============ */
+/* ============ 总览（v17.17：多项目健康度看板） ============ */
+function healthForProject(p){
+  if(!p)return null;
+  const savedFw=STATE.framework,savedData=DATA,savedActive=STATE.activeProjectId;
+  try{
+    STATE.framework=p.framework||[];
+    DATA=p.data||{};
+    STATE.activeProjectId=p.id;
+    return runHealth();
+  }catch(e){return null;}
+  finally{
+    STATE.framework=savedFw;DATA=savedData;STATE.activeProjectId=savedActive;
+  }
+}
+function renderOverview(){
+  const panel=document.getElementById('overviewPanel');if(!panel)return;
+  const projects=STATE.projects||[];
+  const stats=projects.map(p=>({p,h:healthForProject(p)}));
+  const avg=stats.length?Math.round(stats.reduce((a,s)=>a+(s.h?s.h.metrics.completion:0),0)/stats.length):0;
+  const redProj=stats.filter(s=>s.h&&s.h.metrics.risk>0).length;
+  const aiCount=projects.filter(p=>p.ai&&p.ai.lastReport).length;
+  let html='<div class="ov-head"><b>总览</b><span class="muted">'+projects.length+' 个项目 · 平均完成度 '+avg+'% · 有风险项目 '+redProj+' · 有 AI 总评 '+aiCount+'</span><button data-act="ovclose" title="关闭">×</button></div>';
+  if(!projects.length){
+    html+='<div class="ov-empty">还没有项目。点击「＋ 新建项目」、导入 Word/MD，或到 AI 面板用「✍ AI 撰写」从描述生成草稿。</div>';
+  }else{
+    html+='<div class="ov-grid">';
+    stats.forEach(s=>{
+      const p=s.p;
+      if(!s.h){html+='<div class="ov-card"><div class="ov-top"><b>'+esc(p.name)+'</b></div><div class="muted">健康度计算失败</div></div>';return;}
+      const m=s.h.metrics;
+      const grp=(STATE.groups||[]).find(g=>g.id===p.groupId);
+      const dots=(p.framework||[]).map(f=>{
+        const e=s.h.sec[f.id]?s.h.sec[f.id].effective:'green';
+        return '<i class="'+e+'" title="'+esc(f.title)+'"></i>';
+      }).join('');
+      const ai=p.ai&&p.ai.lastReport?p.ai.lastReport:null;
+      html+='<div class="ov-card" data-act="ovopen" data-id="'+esc(p.id)+'" title="点击打开项目">'
+        +'<div class="ov-top"><b>'+esc(p.name)+'</b>'+(grp?'<span class="ov-grp">'+esc(grp.name)+'</span>':'')+'</div>'
+        +'<div class="ov-metric"><span class="ov-comp '+(m.completion>=100?'ok':m.completion>=60?'warn':'bad')+'">完成度 '+m.completion+'%</span><span class="ov-risk '+(m.risk?'bad':'ok')+'">红节 '+m.risk+'</span>'+(ai?'<span class="ov-ai">AI '+ai.total+'</span>':'')+'</div>'
+        +'<div class="ov-dots">'+dots+'</div>'
+        +'<div class="ov-meta muted">'+(p.updatedAt?new Date(p.updatedAt).toLocaleString():'未更新')+'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+  }
+  panel.innerHTML='<div class="ov-inner">'+html+'</div>';
+  panel.classList.add('open');
+}
+function toggleOverview(){
+  const panel=document.getElementById('overviewPanel');if(!panel)return;
+  if(panel.classList.contains('open'))panel.classList.remove('open');
+  else renderOverview();
+}
+function injectOverviewPanel(){
+  if(document.getElementById('overviewPanel'))return;
+  const d=document.createElement('div');
+  d.id='overviewPanel';d.className='ov-panel';
+  d.addEventListener('click',e=>{if(e.target===d)d.classList.remove('open');});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')d.classList.remove('open');});
+  document.body.appendChild(d);
+}
 function init(){
-  load();bindStatic();initMediaBar();initTblResize();if(window.__syncViewBanner)window.__syncViewBanner();
+  load();injectOverviewPanel();bindStatic();initMediaBar();initTblResize();if(window.__syncViewBanner)window.__syncViewBanner();
   // 内容编辑失焦保存（合并而非整体替换：保住 rows/cards/items 等结构化数据，避免表格内容"莫名消失"）
   document.addEventListener('blur',e=>{
     const t=e.target.closest('[data-act="editable"]');
