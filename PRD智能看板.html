@@ -4342,7 +4342,7 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
   sync();
 })();
 </script>
-<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.18 · 模板库与热力下钻</div>
+<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.19 · AI 按模板风格撰写</div>
 <!-- v16.6 Floating UI (MIT, https://floating-ui.com) ??????????/??/??/????????? -->
 <script>
 /*! @floating-ui/core v1.6.9 (MIT) */
@@ -6449,11 +6449,20 @@ function aiGenTypeSchema(type){
   };
   return schemas[type]||schemas.text;
 }
-function aiGenSectionPrompt(sid,desc,fwList){
+function aiGenStyleGuide(style){
+  var guides={
+    standard:'【模板风格：标准 PRD】全篇遵循：①每个必填节都要有实质内容；②量化目标必须给数字+判定方式；③验收项可"是/否"判定并尽量带指标；④功能需求带优先级 P0-P4 与状态；⑤上线含灰度/回滚/监控。',
+    agile:'【模板风格：精简敏捷 PRD】全篇遵循：①聚焦本次迭代要交付的内容，篇幅精简；②范围必须写清"做/不做"（明确排除项防蔓延）；③验收聚焦可量化验收项；④上线计划写发布时间窗/灰度/回滚/监控。',
+    hardware:'【模板风格：智能硬件/车规】全篇遵循：①安全优先：功能安全等级、故障降级策略、敏感指令需二次确认；②环境与法规：高低温/湿度/振动/EMC 等环境试验与认证要求（如车规 AEC-Q、CCC）；③接口必须写协议/字段/依赖服务；④量化指标给上下限与测量方式。'
+  };
+  return guides[style]||'';
+}
+function aiGenSectionPrompt(sid,desc,fwList,styleGuide){
   var s=STATE.framework.find(function(x){return x.id===sid;});
   if(!s)return null;
   var type=(s.type==='timeline')?'text':s.type;
   var schema=aiGenTypeSchema(type);
+  var styleLine=String(styleGuide||'').trim()?('6. 风格约束：'+styleGuide+'\n'):'';
   return {
     system:'你是资深的 PRD（产品需求文档）撰写专家。根据用户提供的产品描述，为指定章节撰写中文内容。\n'
       +'硬性要求：\n'
@@ -6461,7 +6470,8 @@ function aiGenSectionPrompt(sid,desc,fwList){
       +'2. 内容必须具体、可落地、可验证；可量化的指标必须给出具体数字与判定标准。\n'
       +'3. 严禁编造产品描述中不存在的关键事实；不确定的部分用"（建议：…）"标注，不得写成既定事实。\n'
       +'4. 输出结构必须严格符合：'+schema.shape+'\n'
-      +'5. 写作提示：'+schema.tips,
+      +'5. 写作提示：'+schema.tips+'\n'
+      +styleLine,
     user:'【产品描述】\n'+desc+'\n\n【全部章节】\n'+fwList+'\n\n【本章节】\n章节 id：'+s.id+'；标题：'+s.title+'；类型：'+(s.type==='timeline'?'text':s.type)+(s.required?'（必填）':'（可选）')+'\n\n按上述要求输出 JSON。'
   };
 }
@@ -6501,7 +6511,7 @@ function aiGenSection(sid,desc,opts){
   if(!s)return Promise.resolve(null);
   var type=(s.type==='timeline')?'text':s.type;
   var fwList=STATE.framework.map(function(x){return x.id+'「'+x.title+'」'+(x.type==='timeline'?'text':x.type);}).join('；');
-  var p=aiGenSectionPrompt(sid,desc,fwList);
+  var p=aiGenSectionPrompt(sid,desc,fwList,opts&&opts.styleGuide);
   return aiAskJSON([{role:'system',content:p.system},{role:'user',content:p.user}],{temperature:0.5,onStatus:opts&&opts.onStatus,onDelta:opts&&opts.onDelta,timeout:120000,maxTokens:2500}).then(function(resp){
     if(!resp||typeof resp!=='object')return null;
     var ch=null;
@@ -6528,6 +6538,7 @@ function aiGenStart(){
   var nm=document.getElementById('aiGenName');
   var descEl=document.getElementById('aiGenDesc');
   var fwSel=document.getElementById('aiGenFw');
+  var styleSel=document.getElementById('aiGenStyle');
   var stLine=document.getElementById('aiGenStatus');
   var name=(nm&&nm.value||'').trim()||'AI 草稿';
   var text=(descEl&&descEl.value||'').trim();
@@ -6538,7 +6549,8 @@ function aiGenStart(){
   aiGlobalAbort=new AbortController();
   aiCancelFlag=false;
   aiStatus='';aiStatusLog=[];
-  var dbg={at:Date.now(),name:name,fwId:(fwSel&&fwSel.value)||'default',sections:0,ok:0,failed:[],steps:[]};
+  var styleGuide=aiGenStyleGuide(styleSel&&styleSel.value||'');
+  var dbg={at:Date.now(),name:name,fwId:(fwSel&&fwSel.value)||'default',style:(styleSel&&styleSel.value)||'',sections:0,ok:0,failed:[],steps:[]};
   function finishModal(){try{closeModal('aiGenModal');}catch(e){var mm=document.getElementById('aiGenModal');if(mm)mm.classList.remove('open');}}
   try{createProject(name,fwSel?fwSel.value:null);}catch(e){aiBusy=false;aiToast('创建项目失败：'+(e&&e.message||e));return;}
   finishModal();
@@ -6551,7 +6563,7 @@ function aiGenStart(){
     if(idx>=secs.length)return finish();
     var s=secs[idx++];
     aiSetStatus('正在撰写第 '+idx+'/'+secs.length+' 节：'+s.title+'…');
-    return aiGenSection(s.id,text,{onStatus:aiSetStatus}).then(function(ch){
+    return aiGenSection(s.id,text,{onStatus:aiSetStatus,styleGuide:styleGuide}).then(function(ch){
       if(ch){changes.push(ch);dbg.ok++;dbg.sections++;aiStatusLog.push('✓ '+s.title+'：已生成');}
       else{dbg.sections++;dbg.failed.push(s.title);aiStatusLog.push('— '+s.title+'：本次未生成内容（可稍后手动补写或用一键优化）');}
       return next();
@@ -7212,6 +7224,9 @@ function aiInjectPanel(){
     +'<div class="field"><label>项目名称</label><input id="aiGenName" placeholder="例如：智能座舱语音助手"></div>'
     +'<div class="field"><label>产品/功能描述（至少 10 个字）</label><textarea id="aiGenDesc" rows="6" style="width:100%;box-sizing:border-box" placeholder="例如：为智能座舱新增免唤醒连续对话能力，支持一句话多意图、可打断修正；目标指标：唤醒率≥95%、端到端延迟≤1.5s、连续对话≥5轮…"></textarea></div>'
     +'<div class="field"><label>框架</label><select id="aiGenFw"></select></div>'
+    +'<div class="field"><label>模板风格（约束生成内容的取舍）</label><select id="aiGenStyle">'
+    +'<option value="">不约束</option><option value="standard">标准 PRD</option><option value="agile">精简敏捷 PRD</option><option value="hardware">智能硬件 / 车规</option>'
+    +'</select></div>'
     +'<div id="aiGenStatus" class="muted" style="margin-top:4px"></div>'
     +'</div><div class="m-foot"><button data-ai="genclose">取消</button><button class="primary" data-ai="genstart">开始生成</button></div></div>';
   document.body.appendChild(gm);
@@ -7334,6 +7349,8 @@ window.__AICtrl={
     applyDiffNow:aiApplyDiffItemNow,
     genSection:aiGenSection,
     genStart:aiGenStart,
+    genPrompt:aiGenSectionPrompt,
+    styleGuide:aiGenStyleGuide,
     mdToHtml:aiMdToHtml,
     normItems:aiGenNormItems,
     normRows:aiGenNormRows,

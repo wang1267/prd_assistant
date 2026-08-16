@@ -103,6 +103,7 @@ try {
     document.getElementById('aiGenName').value='端到端草稿';
     document.getElementById('aiGenDesc').value='为智能座舱新增免唤醒连续对话能力，支持一句话多意图、随时打断修正；目标：唤醒率≥95%、延迟≤1.5s、连续对话≥5轮。';
     document.getElementById('aiGenFw').value='minimal';
+    document.getElementById('aiGenStyle').value='hardware';
     window.__aiQ=[
       JSON.stringify({html:'## 背景\\n本功能降低驾驶分心。'}),
       '{}',
@@ -113,10 +114,12 @@ try {
       JSON.stringify({html:'无补充。'})
     ];
     window.__aiConsumed=[];
+    window.__aiBodies=[];
     window.__origFetch=window.fetch;
     window.fetch=(u,o)=>{
       const content=window.__aiQ.length?window.__aiQ.shift():'{}';
       window.__aiConsumed.push(content.slice(0,60));
+      if(o&&o.body)window.__aiBodies.push(JSON.parse(o.body));
       const enc=new TextEncoder();
       const bytes=enc.encode('data: '+JSON.stringify({choices:[{delta:{content}}]})+'\\n\\ndata: [DONE]\\n\\n');
       let pos=0;
@@ -135,6 +138,12 @@ try {
   check('browser 草稿生成：6 节待确认且全部校验通过', gen.gen && gen.items === 6 && gen.allOk && gen.label, JSON.stringify(gen));
   console.log('GEN_DEBUG ' + gen.dbg);
   console.log('CONSUMED ' + await evalJs(`JSON.stringify(window.__aiConsumed||[])`));
+  const styled = await evalJs(`(()=>{
+    const b=window.__aiBodies||[];
+    const first=b[0]&&b[0].messages&&b[0].messages[0]&&b[0].messages[0].content||'';
+    return {has: first.indexOf('【模板风格：智能硬件/车规】')>=0&&first.indexOf('功能安全等级')>=0, dbgStyle: (window.__AICtrl._test.state().lastGenDebug||{}).style||''};
+  })()`);
+  check('browser 撰写按硬件模板风格：请求注入风格约束', styled.has && styled.dbgStyle==='hardware', JSON.stringify(styled));
 
   // 全部接受 → 正文立即变化 + 版本归档
   await evalJs(`(()=>{ const b=document.querySelector('[data-ai="acceptall"]'); if(!b)return false; b.click(); return true; })()`);

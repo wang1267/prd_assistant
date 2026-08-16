@@ -144,6 +144,11 @@
 >   2. **热力图下钻**：`renderDashboard` 的 `.dash-cell` 由 `data-act="goto"` 改为 `data-act="opensec"`（bindStatic 已有 case，滚动定位 + 展开判分明细）。
 >   3. 测试：`browser_check_dash.mjs` 增至 17 断言（模板弹窗/3 预设/套用硬件模板含安全与环境/色块下钻）；6 套回归 170 + v17.15 22 断言全绿。
 
+>   ⚠️ v17.19 变更提示（AI 撰写按模板风格约束生成）：
+>   1. `aiGenStyleGuide(style)` 返回标准/敏捷/车规三套紧凑风格指南（'' 表示不约束）；`aiGenSectionPrompt(sid,desc,fwList,styleGuide)` 在 system 提示追加「风格约束」；`aiGenSection` 透传 `opts.styleGuide`；`aiGenStart` 读取 `#aiGenStyle` 并写入 `p.ai.lastGenDebug.style`。
+>   2. `#aiGenModal` 新增「模板风格」下拉（不约束/standard/agile/hardware）；`__AICtrl._test` 暴露 `genPrompt/styleGuide`。
+>   3. 测试：新增 `tools/regress_v1719.js`（7 断言：风格指南/prompt 注入/请求体透传）；`browser_check_gen.mjs` 增至 6 断言（请求体含功能安全等级、诊断 style=hardware）；6 套回归 170 + v17.15 22 断言全绿。
+
 ---
 
 ## 0. 阅读导览
@@ -169,7 +174,7 @@
 | 790–975 | `<body>` | 顶栏按钮群、侧边栏（项目按钮+分组面板+目录）、main、modals、隐藏 file input、mediaBar、图片缩放柄 |
 | 976–3784 | `<script>`（主脚本） | **block1（核心，~2800 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、媒体条 |
 | 3966–4003 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.18） |
+| 4004 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.19） |
 | 4006–4015 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
 | 4016–4275 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
 | 4300–7050 | `<script id="ai-controller">` | **block6（v17.15）**：AI 助手（设置/评分/优化/结构对齐/撰写/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |
