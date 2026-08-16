@@ -78,7 +78,7 @@ function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + 
 
 try {
   const badge = await evalJs(`(document.getElementById('vbadge')||{}).textContent || ''`);
-  check('dash v17.1x 水印', /v17\.1[6-9]/.test(badge), badge);
+  check('dash v17.1x/17.2x 水印', /v17\.(1[6-9]|2\d)/.test(badge), badge);
 
   // 加载示例 → 触发 render（含 15 个自动节，验收黄）
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="sample"]'); if(b)b.click(); return true; })()`);
@@ -217,6 +217,34 @@ try {
   await new Promise(r => setTimeout(r, 200));
   const drill = await evalJs(`(()=>{ const c=document.querySelector('.dash-cell'); return {act: c?c.dataset.act:''}; })()`);
   check('热力图：色块点击=opensec（定位并展开判分明细）', drill.act==='opensec', JSON.stringify(drill));
+
+  // ---------- v17.20 自定义模板存取 + 总览排序 ----------
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="tpl"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 250));
+  await evalJs(`(()=>{ const ed=document.getElementById('tplEditor'); if(ed)ed.value='# 我的车规模板\\n\\n## 安全需求\\n功能安全等级 ASIL B。'; window.__tplSaveName='我的车规模板'; const b=document.querySelector('[data-act="tpl-saveas"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 250));
+  const c1 = await evalJs(`(()=>{ const sel=document.getElementById('tplPreset'); const opts=Array.from(sel.options).map(o=>o.value); const saved=localStorage.getItem('prdKanbanTplCustom')||''; return {opts: opts.length, hasCustom: opts.some(v=>v.indexOf('custom:')===0), stored: saved.indexOf('我的车规模板')>=0}; })()`);
+  check('自定义模板：保存后入下拉+本地存储', c1.opts===4 && c1.hasCustom && c1.stored, JSON.stringify(c1));
+  await evalJs(`(()=>{ const sel=document.getElementById('tplPreset'); const cv=Array.from(sel.options).find(o=>o.value.indexOf('custom:')===0); if(cv){sel.value=cv.value;const b=document.querySelector('[data-act="tpl-preset"]');b.click();} return true; })()`);
+  await new Promise(r => setTimeout(r, 200));
+  const c2 = await evalJs(`(()=>{ const v=(document.getElementById('tplEditor')||{}).value||''; return {has: v.indexOf('我的车规模板')>=0 && v.indexOf('功能安全等级')>=0}; })()`);
+  check('自定义模板：套用生效', c2.has, JSON.stringify(c2));
+  await evalJs(`(()=>{ window.__tplDelOk=true; const b=document.querySelector('[data-act="tpl-delcustom"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 200));
+  const c3 = await evalJs(`(()=>{ const sel=document.getElementById('tplPreset'); return {opts: sel.options.length, stored: (localStorage.getItem('prdKanbanTplCustom')||'').indexOf('我的车规模板')<0}; })()`);
+  check('自定义模板：删除后下拉恢复 3 项', c3.opts===3 && c3.stored, JSON.stringify(c3));
+  await evalJs(`(()=>{ const b=document.querySelector('#tplModal .x'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 200));
+
+  await evalJs(`(()=>{ if(typeof toggleOverview==='function')toggleOverview(); return true; })()`);
+  await new Promise(r => setTimeout(r, 300));
+  const s1 = await evalJs(`(()=>{ const cards=Array.from(document.querySelectorAll('.ov-card')); return {first: cards[0]?cards[0].textContent.indexOf('风险项目')>=0:false, mode: window.ovSortMode}; })()`);
+  check('总览排序：默认风险优先(风险项目在前)', s1.first && s1.mode===0, JSON.stringify(s1));
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="ovsort"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 250));
+  const s2 = await evalJs(`(()=>{ const b=document.querySelector('[data-act="ovsort"]'); return {mode: window.ovSortMode, label: b?b.textContent:''}; })()`);
+  check('总览排序：点击切换模式+标签更新', s2.mode===1 && s2.label.indexOf('完成度升序')>=0, JSON.stringify(s2));
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="ovclose"]'); if(b)b.click(); return true; })()`);
 } catch (e) {
   fail++; console.log('FAIL  browser 脚本异常  >>> ' + (e && e.message || e));
 }

@@ -80,7 +80,7 @@ function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + 
 
 try {
   const badge = await evalJs(`(document.getElementById('vbadge')||{}).textContent || ''`);
-  check('browser v17.1x 水印', /v17\.1[5-9]/.test(badge), badge);
+  check('browser v17.1x/17.2x 水印', /v17\.(1[5-9]|2\d)/.test(badge), badge);
 
   // 预置 AI 设置（Key 只进独立键）
   await evalJs(`(()=>{

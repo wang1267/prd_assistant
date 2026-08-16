@@ -1038,6 +1038,8 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
         </select>
       </label>
       <button data-act="tpl-preset" title="把选中预设套用到编辑区（原内容先自动存入草稿）">套用预设</button>
+      <button data-act="tpl-saveas" title="把当前编辑区内容存为自定义模板">存为模板</button>
+      <button data-act="tpl-delcustom" title="删除当前选中的自定义模板（内置模板不可删）">删模板</button>
       <button data-act="tpl-regen" title="重新按当前框架生成默认模板（会覆盖编辑区内容）">↻ 生成默认模板</button>
       <button data-act="tpl-importfile" title="导入 .md / .txt / .docx 文件作为模板内容">⇪ 导入文件</button>
       <button data-act="tpl-save" title="把当前内容存为草稿，下次打开自动恢复">保存草稿</button>
@@ -2484,6 +2486,7 @@ function bindStatic(){
       case 'delproj':{closeProjMenu();const p=STATE.projects.find(x=>x.id===id);if(p&&confirm('确定删除项目「'+p.name+'」？此操作不可撤销。'))deleteProject(id);break;}
       case 'gohome':STATE.activeProjectId=null;drillOpen=null;save();render();closeSidebar();break;
       case 'toggleoverview':toggleOverview();break;
+      case 'ovsort':ovSortMode=(ovSortMode+1)%3;renderOverview();break;
       case 'ovclose':{const ov=document.getElementById('overviewPanel');if(ov)ov.classList.remove('open');break;}
       case 'ovopen':{
         const ov=document.getElementById('overviewPanel');if(ov)ov.classList.remove('open');
@@ -2507,6 +2510,8 @@ function bindStatic(){
       case 'copytpl':copyTpl();break;
       case 'tpl-regen':tplRegen();break;
       case 'tpl-preset':tplApplyPreset();break;
+      case 'tpl-saveas':tplSaveAsCustom();break;
+      case 'tpl-delcustom':tplDeleteCustom();break;
       case 'tpl-save':tplSaveDraft();break;
       case 'tpl-loaddraft':tplLoadDraft();break;
       case 'tpl-importfile':tplImportFile();break;
@@ -3298,12 +3303,50 @@ const TPL_PRESETS={
 function tplApplyPreset(){
   const sel=document.getElementById('tplPreset');
   const key=sel?sel.value:'standard';
-  const text=TPL_PRESETS[key];
+  const text=key.indexOf('custom:')===0?((tplCustomList().find(x=>x.id===key.slice(7))||{}).text||''):TPL_PRESETS[key];
   const el=document.getElementById('tplEditor');
   if(!text||!el)return;
   if(el.value.trim())localStorage.setItem(TPL_DRAFT_KEY,el.value); // 先自动备份，防误丢
   el.value=text;tplEditorInput();
   toast('已套用「'+(sel&&sel.selectedOptions[0]?sel.selectedOptions[0].textContent:'模板')+'」（原内容已自动存入草稿）');
+}
+function tplCustomList(){
+  try{const a=JSON.parse(localStorage.getItem('prdKanbanTplCustom')||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}
+}
+function tplRenderPresets(){
+  const sel=document.getElementById('tplPreset');if(!sel)return;
+  let html='<option value="standard">标准 PRD（14 节）</option><option value="agile">精简敏捷 PRD（7 节）</option><option value="hardware">智能硬件 / 车规</option>';
+  tplCustomList().forEach(c=>{html+='<option value="custom:'+esc(c.id)+'">★ '+esc(c.name)+'（自定义）</option>';});
+  sel.innerHTML=html;
+}
+function tplSaveAsCustom(){
+  const el=document.getElementById('tplEditor');
+  const text=(el&&el.value||'').trim();
+  if(!text){toast('编辑区为空，无法保存为模板');return;}
+  let name=window.__tplSaveName!==undefined?String(window.__tplSaveName):prompt('模板名称：');
+  if(name==null)return;
+  const nm=String(name).trim()||('自定义模板 '+(tplCustomList().length+1));
+  const list=tplCustomList();
+  list.push({id:'c'+Date.now().toString(36),name:nm,text:text,at:Date.now()});
+  try{localStorage.setItem('prdKanbanTplCustom',JSON.stringify(list));}catch(e){toast('保存失败（本地存储空间不足）');return;}
+  tplRenderPresets();
+  const sel=document.getElementById('tplPreset');
+  if(sel)sel.value='custom:'+list[list.length-1].id;
+  toast('已保存自定义模板「'+nm+'」');
+}
+function tplDeleteCustom(){
+  const sel=document.getElementById('tplPreset');if(!sel)return;
+  const v=sel.value||'';
+  if(v.indexOf('custom:')!==0){toast('内置模板不可删除');return;}
+  const id=v.slice(7);
+  const list=tplCustomList();
+  const item=list.find(x=>x.id===id);
+  if(!item)return;
+  const ok=window.__tplDelOk!==undefined?!!window.__tplDelOk:confirm('删除自定义模板「'+item.name+'」？');
+  if(!ok)return;
+  try{localStorage.setItem('prdKanbanTplCustom',JSON.stringify(list.filter(x=>x.id!==id)));}catch(e){toast('删除失败');return;}
+  tplRenderPresets();
+  toast('已删除「'+item.name+'」');
 }
 function tplPlaceholder(type){
   if(type==='feat')return '| 功能点 | 描述 | 优先级 | 状态 |\n| --- | --- | --- | --- |\n|  |  |  |  |\n';
@@ -3328,6 +3371,7 @@ function showTpl(){
   const draft=localStorage.getItem(TPL_DRAFT_KEY);
   el.value=(draft!=null&&draft.length)?draft:tplDefaultText();
   tplEditorInput();
+  tplRenderPresets();
   openModal('tplModal');
   setTimeout(()=>{el.focus();el.setSelectionRange(0,0);},60);
 }
@@ -3532,10 +3576,20 @@ function renderOverview(){
   const panel=document.getElementById('overviewPanel');if(!panel)return;
   const projects=STATE.projects||[];
   const stats=projects.map(p=>({p,h:healthForProject(p)}));
+  // v17.20 总览排序：0=风险优先(红节在前，再按完成度升序) 1=完成度升序 2=最近更新降序
+  stats.sort(function(a,b){
+    const ma=a.h?a.h.metrics:null,mb=b.h?b.h.metrics:null;
+    const ra=ma?ma.risk:0,rb=mb?mb.risk:0;
+    if(ovSortMode===0){if(ra!==rb)return rb-ra;return (ma?ma.completion:0)-(mb?mb.completion:0);}
+    if(ovSortMode===1)return (ma?ma.completion:0)-(mb?mb.completion:0);
+    return (b.p.updatedAt||0)-(a.p.updatedAt||0);
+  });
   const avg=stats.length?Math.round(stats.reduce((a,s)=>a+(s.h?s.h.metrics.completion:0),0)/stats.length):0;
   const redProj=stats.filter(s=>s.h&&s.h.metrics.risk>0).length;
   const aiCount=projects.filter(p=>p.ai&&p.ai.lastReport).length;
-  let html='<div class="ov-head"><b>总览</b><span class="muted">'+projects.length+' 个项目 · 平均完成度 '+avg+'% · 有风险项目 '+redProj+' · 有 AI 总评 '+aiCount+'</span><button data-act="ovclose" title="关闭">×</button></div>';
+  const sortLbl=ovSortMode===0?'风险优先':ovSortMode===1?'完成度升序':'最近更新';
+  let html='<div class="ov-head"><b>总览</b><span class="muted">'+projects.length+' 个项目 · 平均完成度 '+avg+'% · 有风险项目 '+redProj+' · 有 AI 总评 '+aiCount+'</span>'
+    +'<button data-act="ovsort" title="切换排序方式">排序：'+sortLbl+' ▾</button><button data-act="ovclose" title="关闭">×</button></div>';
   if(!projects.length){
     html+='<div class="ov-empty">还没有项目。点击「＋ 新建项目」、导入 Word/MD，或到 AI 面板用「✍ AI 撰写」从描述生成草稿。</div>';
   }else{
@@ -3567,6 +3621,7 @@ function toggleOverview(){
   if(panel.classList.contains('open'))panel.classList.remove('open');
   else renderOverview();
 }
+var ovSortMode=0;
 function injectOverviewPanel(){
   if(document.getElementById('overviewPanel'))return;
   const d=document.createElement('div');
@@ -4342,7 +4397,7 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
   sync();
 })();
 </script>
-<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.19 · AI 按模板风格撰写</div>
+<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.20 · 自定义模板与总览排序</div>
 <!-- v16.6 Floating UI (MIT, https://floating-ui.com) ??????????/??/??/????????? -->
 <script>
 /*! @floating-ui/core v1.6.9 (MIT) */
