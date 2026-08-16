@@ -1,0 +1,5 @@
+node_modules/
+.workbuddy/
+tools/grid_check.png
+tools/ui_shots/
+*.log
