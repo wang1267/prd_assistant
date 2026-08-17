@@ -80,6 +80,28 @@ try {
   const badge = await evalJs(`(document.getElementById('vbadge')||{}).textContent || ''`);
   check('dash v17.1x/17.2x 水印', /v17\.(1[6-9]|2\d)/.test(badge), badge);
 
+  // ---------- v17.25 顶栏收纳：设置/评论/框架移入「更多」 ----------
+  const more1 = await evalJs(`(()=>{
+    const ta=document.getElementById('topActions');
+    return {
+      topHasSettings: !!ta.querySelector(':scope > [data-act="settings"]'),
+      topHasComments: !!ta.querySelector(':scope > [data-act="comments"]'),
+      topHasManagefw: !!ta.querySelector(':scope > [data-act="managefw"]'),
+      moreSettings: !!document.querySelector('#ddMore [data-act="settings"]'),
+      moreComments: !!document.querySelector('#ddMore [data-act="comments"]'),
+      moreManagefw: !!document.querySelector('#ddMore [data-act="managefw"]')
+    };
+  })()`);
+  check('顶栏收纳：设置/评论/框架已移入「更多」', more1.topHasSettings===false && more1.topHasComments===false && more1.topHasManagefw===false && more1.moreSettings && more1.moreComments && more1.moreManagefw, JSON.stringify(more1));
+  await evalJs(`(()=>{ const b=document.querySelector('#ddMore .top-dd-trigger'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 150));
+  await evalJs(`(()=>{ const b=document.querySelector('#ddMore [data-act="settings"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 250));
+  const more2 = await evalJs(`(()=>{ const m=document.getElementById('settingsModal'); return !!m&&m.classList.contains('open'); })()`);
+  check('更多→设置 打开设置弹窗', more2===true, String(more2));
+  await evalJs(`(()=>{ const b=document.querySelector('#settingsModal .x'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 150));
+
   // ---------- v17.23 新手引导 + 默认框架精简 ----------
   // v17.24：引导移入「更多 → 帮助」，不再首启自动弹出
   await evalJs(`(()=>{ const b=document.querySelector('#ddMore .top-dd-trigger'); if(b)b.click(); return true; })()`);

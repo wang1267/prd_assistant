@@ -184,6 +184,11 @@
 >   6. 测试清单（截至 v17.24，全绿）：10 套 node 回归（`regress_v162~166`、`v170`、`v1715`、`v1719`、`v1722`、`v1723`）+ 6 个浏览器端到端（`browser_check.mjs` / `browser_check_grid.mjs` / `browser_check_ai.mjs` 19 / `browser_check_gen.mjs` 6 / `browser_check_dash.mjs` 27 / `browser_check_rtbl.mjs` 5）+ `screenshot_ui.mjs` 截图基线；**210 项 node 断言 + 57 项浏览器断言**。
 >   7. 设计权威文档：方案设计请读《[PRD智能看板_方案设计.md](PRD智能看板_方案设计.md)》（v17.24 整合版）；旧三份方案已归档。
 
+>   ⚠️ v17.25 变更提示（顶栏收纳到更多）：
+>   1. 「设置 / 评论 / 框架」按钮从顶栏移入「更多 ▾」菜单（`#ddMore`：设置 / 评论 / 框架 / 帮助 / PRD 模板 / 重置看板），`data-act` 不变（settings/comments/managefw），bindStatic 零改动；
+>   2. 视图态 CSS：`#ddMore` 不再整体隐藏，改为只藏管理类菜单项（`tpl/reset/managefw`），评审视图保留 设置/评论/帮助；
+>   3. 测试：`browser_check_dash.mjs` 增至 29 断言（顶栏无直排按钮 + 更多内三项存在 + 更多→设置弹窗）；10 套回归 210 断言全绿。
+
 ---
 
 ## 0. 阅读导览
@@ -208,7 +213,7 @@
 | ~800–~1080 | `<style id="comment-style">` 等 | 评论划线/气泡/列表面板样式、body 骨架（顶栏/侧边栏/modals/向导） |
 | 1080–4434 | `<script>`（主脚本） | **block1（核心，~3350 行）**：常量、状态、健康度、渲染、事件、表格、导入导出、模板、总览、示例 |
 | 4435 | `<script id="view-mode-controller">` | **block2**：视图态注入「PRD 健康体检报告」横幅 |
-| ~4440 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.24） |
+| ~4440 | `<div id="vbadge">` | **版本水印**（左下角），每次发版必须更新（当前 v17.25） |
 | ~4470 | `<script>` ×2 | **block3-4**：Floating UI（core 1.6.9 + dom 1.6.13，MIT，内联无网络） |
 | 4489 | `<script id="comment-controller">` | **block5**：评论系统（划线、气泡、列表、清理） |
 | 4749–7555 | `<script id="ai-controller">` | **block6（v17.24）**：AI 助手（设置/评分/优化/对齐/撰写/分块/风格/版本/审阅），独立 IIFE，见文首 v17.x 变更提示 |

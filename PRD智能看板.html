@@ -872,8 +872,6 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
   <div class="top-actions" id="topActions">
     <button data-act="undo" id="btnUndo">撤销</button>
     <button data-act="edit" id="btnEdit">完成编辑</button>
-    <button data-act="managefw" id="btnManageFw" title="增加 / 删除框架节（含「其他」兜底节）">框架</button>
-    <button data-act="comments" id="btnComments" title="查看全部评论">评论</button>
 
     <div class="top-dropdown" id="ddInsert">
       <button class="top-dd-trigger" type="button" aria-haspopup="true">插入<span class="caret">▾</span></button>
@@ -886,6 +884,9 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
     <div class="top-dropdown" id="ddMore">
       <button class="top-dd-trigger" type="button" aria-haspopup="true">更多<span class="caret">▾</span></button>
       <div class="top-dd-menu" role="menu">
+        <button data-act="settings" role="menuitem">设置</button>
+        <button data-act="comments" role="menuitem">评论</button>
+        <button data-act="managefw" role="menuitem" title="增加 / 删除框架节（含「其他」兜底节）">框架</button>
         <button data-act="help" role="menuitem">帮助</button>
         <button data-act="tpl" role="menuitem">PRD 模板</button>
         <button data-act="reset" role="menuitem">重置看板</button>
@@ -911,9 +912,6 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
       </div>
     </div>
 
-    <button class="top-icon-btn" data-act="settings" title="设置" type="button" aria-label="设置">
-      <svg viewBox="0 0 18 18" fill="none" width="18" height="18"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.5v2M9 14.5v2M3.3 3.3l1.4 1.4M13.3 13.3l1.4 1.4M1.5 9h2M14.5 9h2M3.3 14.7l1.4-1.4M13.3 4.7l1.4-1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-    </button>
   </div>
 </div>
 
@@ -4376,11 +4374,13 @@ init();
 <style id="view-mode-style">
 /* ===== 视图模式（领导视图 / 只读报告）===== */
 html.view-mode #btnUndo,
-html.view-mode #btnManageFw,
-html.view-mode #ddMore,
 html.view-mode #ddImport,
 html.view-mode .pp-add,
 html.view-mode .pp-grp-add{ display:none !important; }
+/* v17.25：设置/评论/帮助已移入「更多」——评审视图保留它们，只藏管理类菜单项 */
+html.view-mode #ddMore [data-act="tpl"],
+html.view-mode #ddMore [data-act="reset"],
+html.view-mode #ddMore [data-act="managefw"]{ display:none !important; }
 html.view-mode #topbar{ position:sticky; top:0; z-index:40; }
 html.view-mode #topbar::after{
   content:''; position:absolute; left:0; right:0; top:0; height:3px;
@@ -4474,7 +4474,7 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
   sync();
 })();
 </script>
-<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.24 · 帮助入口与标准示例</div>
+<div id="vbadge" style="position:fixed;left:8px;bottom:8px;z-index:99999;background:#1f3a45;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;opacity:.85;pointer-events:none">v17.25 · 顶栏收纳到更多</div>
 <!-- v16.6 Floating UI (MIT, https://floating-ui.com) ??????????/??/??/????????? -->
 <script>
 /*! @floating-ui/core v1.6.9 (MIT) */
