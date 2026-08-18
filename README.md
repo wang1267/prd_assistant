@@ -81,7 +81,6 @@
 ## 在线预览
 
 - [WorkBuddy 部署](https://375d5387ed3d4e1a88fe045982899438.app.workbuddy.link/)
-- [CloudStudio 部署](https://cf75ee77a73a4e80844fd2d0b30ad68c.bj2.agentos-app.net)
 
 ## 功能入口
 
