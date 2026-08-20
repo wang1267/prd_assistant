@@ -1,0 +1,8 @@
+.workbuddy/
+source.html
+latest.html
+newest.html
+preview.html
+*.tmp
+.DS_Store
+Thumbs.db
