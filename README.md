@@ -89,7 +89,6 @@
 
 - [GitHub Pages](https://wang1267.github.io/prd_assistant/) — 跟随仓库自动更新（当前 v18.38）
 - [CloudStudio 部署](https://3eb5980152e54747bb2df474763d25df.app.workbuddy.link) — 最新部署（v18.38）
-- [WorkBuddy 发布](https://375d5387ed3d4e1a88fe045982899438.app.workbuddy.link) — 平台发布版（v18.32，更新请在平台重新发布）
 
 ## 功能入口
 
