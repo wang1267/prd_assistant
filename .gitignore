@@ -6,3 +6,5 @@ preview.html
 *.tmp
 .DS_Store
 Thumbs.db
+deploy/
+deploy/
