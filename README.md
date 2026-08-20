@@ -107,11 +107,15 @@
 ## 项目结构
 
 ```
-├── PRD智能看板.html      # 主应用（单文件）
-├── index.html            # GitHub Pages 跳转页
-├── AGENTS.md             # AI Agent 交接说明
-├── tools/                # 辅助工具
-└── PRD智能看板_*.md      # 方案设计 / 架构白皮书 / 交接文档
+├── PRD智能看板.html           # 主应用（单文件，v18.38）
+├── PRD智能看板_方案设计.md     # 方案设计（唯一权威，含演进历史）
+├── PRD智能看板_交接文档.md     # 交接文档（上手与运维）
+├── PRD智能看板_代码架构白皮书.md # 代码架构白皮书（代码级认知）
+├── index.html                 # GitHub Pages 跳转页
+├── README.md                  # 项目简介
+├── docs/                      # 开发守则（AGENTS.md）
+├── archive/                   # 归档：历史方案文档（v17.0/v17.1/v17.2）
+└── tools/                     # 辅助工具（回归测试/浏览器检查/截图）
 ```
 
 ## License
