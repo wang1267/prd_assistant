@@ -1427,7 +1427,7 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
       <div id="tabAI" style="display:none"></div>
     </div>
   </div>
-  <div class="m-foot"><!-- 版本号：每次更迭在此更新 --><span class="set-ver" id="settingsVer">版本 v18.37 · 全局 emoji 全部替换为线性 SVG 图标（思考/角色/状态/按钮/徽章）+ 思考块改名「深度思考」并支持实时自动下翻（思考到哪看到哪）</span><button data-act="closemodal">关闭</button></div>
+  <div class="m-foot"><!-- 版本号：每次更迭在此更新 --><span class="set-ver" id="settingsVer">版本 v18.38 · 健康度阈值统一 ≥80% 绿（顶部胶囊/指标卡/总览/AI 总评）+ 方案设计文档整合为唯一权威版（旧方案文档归档 archive/）</span><button data-act="closemodal">关闭</button></div>
 </div></div>
 
 <div class="modal" id="wizardModal"><div class="box">
@@ -2030,7 +2030,7 @@ function renderDashboard(){
     const up=diff>0;
     return '<div class="card-delta '+(up?'up':'down')+'">'+(up?'▲ +':'▼ ')+Math.abs(diff)+unit+' 较上次</div>';
   };
-  const compTag=m.completion>=100?'<span class="tag green">满分</span>':(m.completion>=60?'<span class="tag yellow">进行中</span>':'<span class="tag red">偏低</span>');
+  const compTag=m.completion>=80?'<span class="tag green">良好</span>':(m.completion>=60?'<span class="tag yellow">进行中</span>':'<span class="tag red">偏低</span>');
   const riskTag=m.risk>0?'<span class="tag red">有风险</span>':'<span class="tag green">安全</span>';
   const consTag=m.consistency>0?'<span class="tag yellow">'+m.consistency+' 项</span>':'<span class="tag green">一致</span>';
 
@@ -2052,10 +2052,10 @@ function renderDashboard(){
   if(aiReport){
     const dims=aiReport.dimensions||[];
     const g=gradeOf(aiReport.total,m.completion);
-    html+='<div class="dash-panel dash-ai" style="grid-column:1/3"><div class="dash-panel-h"><b>AI 深度总评</b><span class="pill-grade g-'+g+'">'+g+' 级</span><span class="pill-st '+(aiReport.total>=85?'lv-green':aiReport.total>=60?'lv-yellow':'lv-red')+'">'+aiReport.total+' 分</span></div>'
+    html+='<div class="dash-panel dash-ai" style="grid-column:1/3"><div class="dash-panel-h"><b>AI 深度总评</b><span class="pill-grade g-'+g+'">'+g+' 级</span><span class="pill-st '+(aiReport.total>=80?'lv-green':aiReport.total>=60?'lv-yellow':'lv-red')+'">'+aiReport.total+' 分</span></div>'
       +(aiReport.summary?'<div class="dash-ai-sum">'+esc(aiReport.summary)+'</div>':'')
       +'<div class="dash-dims">'+dims.slice(0,6).map(function(d,i){
-        const dv=aiReport.total>=85?'ok':aiReport.total>=60?'warn':'bad';
+        const dv=aiReport.total>=80?'ok':aiReport.total>=60?'warn':'bad';
         return '<div class="dash-dim" data-act="dimdrill" data-i="'+i+'"><span>'+esc(d.name)+'</span><div class="dash-dim-bar"><i class="'+dv+'" style="width:'+Math.max(0,Math.min(100,d.score||0))+'%"></i></div><b>'+d.score+'</b><span class="dd-chev">▶</span></div>';
       }).join('')+'</div>'
       +'<div class="dim-details">'+dims.slice(0,6).map(function(d,i){return '<div class="dim-detail" id="dimd-'+i+'" style="display:none"></div>';}).join('')+'</div>'
@@ -2361,7 +2361,7 @@ function openSection(id){
 /* ============ 局部刷新（编辑/改色/订正后，不重建编辑器） ============ */
 function updateHealthPill(){
   const pill=document.getElementById('topbarHealthPill');if(!pill)return;
-  if(currentProj()&&HEALTH){const m=HEALTH.metrics;const lvl=m.risk>0?'red':(m.completion<100||m.consistency>0)?'yellow':'green';pill.className='topbar-health-pill '+lvl;pill.querySelector('.txt').textContent='健康度 '+m.completion+'%';pill.style.display='';}
+  if(currentProj()&&HEALTH){const m=HEALTH.metrics;const lvl=m.risk>0?'red':(m.completion>=80)?'green':(m.completion>=60?'yellow':'red');pill.className='topbar-health-pill '+lvl;pill.querySelector('.txt').textContent='健康度 '+m.completion+'%';pill.style.display='';}
   else{pill.style.display='none';}
 }
 function refreshHealthUI(){
@@ -4563,10 +4563,10 @@ function renderOverview(){
         const e=s.h.sec[f.id]?s.h.sec[f.id].effective:'green';
         return '<i class="'+e+'" title="'+esc(f.title)+'"></i>';
       }).join('');
-      const ai=p.ai&&p.ai.lastReport?p.ai.lastReport:null;const ovGrade=m.risk>0?'C':(m.completion>=100?'A':'B');const ovGradeCls=m.risk>0?'c':(m.completion>=100?'a':'b');
+      const ai=p.ai&&p.ai.lastReport?p.ai.lastReport:null;const ovGrade=m.risk>0?'C':(m.completion>=80?'A':'B');const ovGradeCls=m.risk>0?'c':(m.completion>=80?'a':'b');
       html+='<div class="ov-card" data-act="ovopen" data-id="'+esc(p.id)+'" title="点击打开项目">'
         +'<div class="ov-top"><b>'+esc(p.name)+'</b>'+(grp?'<span class="ov-grp">'+esc(grp.name)+'</span>':'')+'<span class="ov-pill ov-pill--'+ovGradeCls+'">'+ovGrade+'</span></div>'
-        +'<div class="ov-metric"><span class="ov-comp '+(m.completion>=100?'ok':m.completion>=60?'warn':'bad')+'">完成度 '+m.completion+'%</span><span class="ov-risk '+(m.risk?'bad':'ok')+'">红节 '+m.risk+'</span>'+(ai?'<span class="ov-ai">AI '+ai.total+'</span>':'')+'</div>'
+        +'<div class="ov-metric"><span class="ov-comp '+(m.completion>=80?'ok':m.completion>=60?'warn':'bad')+'">完成度 '+m.completion+'%</span><span class="ov-risk '+(m.risk?'bad':'ok')+'">红节 '+m.risk+'</span>'+(ai?'<span class="ov-ai">AI '+ai.total+'</span>':'')+'</div>'
         +'<div class="ov-dots">'+dots+'</div>'
         +'<div class="ov-meta muted">'+(p.updatedAt?new Date(p.updatedAt).toLocaleString():'未更新')+'</div>'
         +'</div>';
@@ -8167,7 +8167,7 @@ function aiRenderPanel(){
     var r=st.lastReport;
     var ds=new Date(r.generatedAt).toLocaleString();
     html+='<div class="ai-sec"><div class="ai-sec-h">AI 深度体检 <span class="muted">'+ds+(r.cached?' · 内容未变化，使用缓存':'')+'</span></div>'
-      +'<div class="ai-total">总分 <b class="'+(r.total>=85?'lv-green':r.total>=60?'lv-yellow':'lv-red')+'">'+r.total+'</b><small>/100</small></div>'
+      +'<div class="ai-total">总分 <b class="'+(r.total>=80?'lv-green':r.total>=60?'lv-yellow':'lv-red')+'">'+r.total+'</b><small>/100</small></div>'
       +(r.summary?'<div class="ai-sum">'+aiEsc(r.summary)+'</div>':'');
     r.dimensions.forEach(function(d){
       var open=aiUi.dimOpen[d.id];

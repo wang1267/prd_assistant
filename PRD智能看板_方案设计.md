@@ -1,7 +1,7 @@
 # PRD 智能看板 · 方案设计（整合版）
 
-> 状态：**已实现至 v17.24** · 版本：v1.0 · 日期：2026-08-16
-> 本文件整合原《AI 方案设计（v17.0）》《v17.1 方案设计（可信度）》《v17.2 方案设计（结构对齐 + 演进记录）》为**唯一权威设计文档**；三份旧文档已归档保留历史。
+> 状态：**已实现至 v18.38** · 版本：v2.0 · 更新：2026-08-20
+> 本文件为**唯一权威方案设计文档**，整合《AI 方案设计（v17.0）》《v17.1 方案设计（可信度）》《v17.2 方案设计（结构对齐 + 演进记录）》；旧文档已归档至 `archive/`。
 > 配套：[交接文档](PRD智能看板_交接文档.md)（上手与运维）、[代码架构白皮书](PRD智能看板_代码架构白皮书.md)（代码级认知）。演进历史见 §12。
 
 ---
@@ -97,6 +97,7 @@ Rule = { id, dim, desc, level:'red'|'yellow', weight, enabled, scope, threshold?
 - **定位**：按「节类型 / 标题关键词」匹配，自定义框架、改过标题也能命中；不写死节 id。
 - **人工审核通道**：下钻面板「忽略/已订正」+ 节色块「手动改色」永久保留，不因 AI 存在而消失。
 - 完成度 = 必填节绿色占比；风险数 = 红节数；一致性问题数、人工覆盖数单独统计。
+- **健康度颜色阈值**（v18.38）：完成度 ≥80 → 绿（良好）/ ≥60 → 黄（待完善）/ <60 → 红（风险）；存在红节时整体判红。顶部健康度胶囊、驾驶舱指标卡、多项目总览、AI 总评分色统一使用该阈值。
 
 ---
 
@@ -151,6 +152,24 @@ Rule = { id, dim, desc, level:'red'|'yellow', weight, enabled, scope, threshold?
 - **风格约束**（v17.19）：`aiGenStyleGuide(style)` 生成紧凑风格指南注入每节 prompt（车规含功能安全等级/故障降级/敏感指令二次确认/环境法规/接口协议/指标上下限）；
 - **确认与写入**：产出进 `pendingDiffs`（`gen:true`，面板标题「AI 撰写草稿」），逐条接受/修改/拒绝/暂缓 + 全部接受；接受后 `replaceSection/replaceRows/replaceItems` 写正文；
 - **回滚**：草稿版本 `transform:true`，「恢复」=回到生成前空白；恢复前自动存「恢复前快照」，恢复该快照可找回草稿。
+
+### 5.8 多角色评审（v18.33）
+
+- **5 角色人设**：产品经理（定位/目标/范围/优先级）、研发（技术可行性/成本/依赖）、测试（验收/覆盖/边界）、设计（交互/多模态一致性/反馈）、项目经理（排期/里程碑/风险/资源）；
+- **评审流程**：勾选角色 → 逐角色调 AI 评审真实 PRD 内容（`rvFetchStream` 直连 OpenAI 兼容 API，流式 + 15s 空闲超时）→ 结果按 `- [high|medium|low] 意见（章节：xxx）` Markdown 格式解析归一；
+- **结果展示**：按角色分组（严重级 pill + 意见 + 涉及章节），失败单角色降级为错误条目不中断整体；评审历史本机持久化（最多 20 条，可复看/删除/清空），支持跨项目评审；
+- **架构说明**：`rvRun` 通过 `window.__AICtrl.getSettings()` 取配置、`__AICtrl._test.docText()` 取文档、直接 fetch 实现流式——绕过 ai-controller IIFE 抽象（该抽象只暴露任务级 API，不暴露底层 chat）。
+
+### 5.9 深度思考（v18.36）
+
+- **思考过程采集**：`aiChatOnce` 流式解析 `reasoning_content` / `reasoning` / `thinking` 字段（DeepSeek-R1 / 智谱 thinking / OpenAI 兼容全覆盖），经独立 `onReasoning` 回调传出，不污染正常输出；
+- **可折叠思考块**：统一 `<details>` 组件（参考 Open WebUI / AI SDK / Streamlit R1 方案）——流式时自动展开 + **自动滚动到最新内容**（`aiScrollThinkBody`），完成后自动收起可手动翻阅；标题带字数统计，流式时黄色脉动点；
+- **接入范围**：AI 对话（侧栏/浮动共用消息系统）、AI 设计对话（aiDesSend）、多角色评审（rvThinkHtml）全部统一。
+
+### 5.10 全局 SVG 图标（v18.37）
+
+- **ICONS 常量**（主 script 顶部）：20+ 线性描边 SVG（brain/check/x/warn/bolt/robot/clipboard/star/target/gear/flask/palette/cal/ban/up/refresh/upload/pencil + 大尺寸变体），界面零 emoji；
+- **替换范围**：思考块/评审角色/状态徽章/空状态/工具栏按钮/富文本链接等全部 UI 图标；textContent 场景（状态栏/日志）去符号改纯文字；导出内容与解析格式符号保留。
 
 ---
 
@@ -253,6 +272,13 @@ Rule = { id, dim, desc, level:'red'|'yellow', weight, enabled, scope, threshold?
 | v17.23 | 新手引导焕新 + 移除「带小卡片 8 节」默认框架（含老数据迁移） |
 | v17.24 | 引导移入「更多→帮助」、示例改标准 14 节、总览切换数据丢失修复 |
 | v17.25 | 顶栏收纳：设置 / 评论 / 框架移入「更多」菜单（评审视图保留设置/评论/帮助） |
+| v18.32 | 修复 AI 面板生成时/后关闭异常（清除 inline transform 副作用）+ 接受/拒绝后常驻绿/红状态色（已拒绝也可撤销） |
+| v18.33 | **多角色评审接真实 AI**（5 角色按视角流式评审）+ 流式空闲超时（15s 无数据自动中断）+ 浅色模式接受/拒绝按钮颜色修复 |
+| v18.34 | 修复评审 TDZ bug（`st` 早于 const 声明被引用） |
+| v18.35 | 评审重构：`__AICtrl` + 直连 fetch 流式（绕过 IIFE 抽象）+ Markdown 结果解析 |
+| v18.36 | **深度思考**可折叠组件全板块接入（流式自动展开 + 完成后可翻阅） |
+| v18.37 | 全局 emoji → 线性 SVG + 深度思考自动下翻（思考到哪看到哪）+ 上线前 QA 通过 |
+| v18.38 | 健康度阈值统一 ≥80 绿 + 方案设计文档整合（归档旧方案文档） |
 
 ---
 
@@ -267,6 +293,15 @@ Rule = { id, dim, desc, level:'red'|'yellow', weight, enabled, scope, threshold?
 | 截图基线 | `screenshot_ui.mjs` | 首页/看板/总览/模板/撰写/设置，深浅色 |
 
 截至 v17.24：**210 项 node 断言 + 57 项浏览器断言全绿，控制台零报错**。浏览器脚本在受限沙箱内须以 PowerShell `Start-Process` 拉起 Edge/Chrome（`--no-sandbox --disable-breakpad --disable-crash-reporter --remote-allow-origins=*`）。
+
+**上线前 QA（v18.37 起，脚本在 `.workbuddy/qa/`）**：
+
+| 脚本 | 覆盖 |
+| --- | --- |
+| `qa-runtime.js`（jsdom） | 全 script 块真实执行、0 未捕获错误、DOM 结构完整性 |
+| `qa-flow.js`（jsdom） | 加载示例→健康度、设置/版本号、评审 5 角色 + SVG 图标、无 Key 拦截、AI 面板渲染、浮动面板、导出 MD |
+| `qa-regression.js` | 上次修复回归（流式超时/按钮颜色/TDZ/__AICtrl/深度思考滚动/SVG/版本号） |
+| 静态分析（node 内联） | 8 script 块语法、132 data-act + 40 data-ai 事件分发全覆盖、getElementById ID 存在性、跨 IIFE 调用干净、XSS 转义抽查 |
 
 ---
 
