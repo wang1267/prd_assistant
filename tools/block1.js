@@ -408,7 +408,7 @@ function renderPlaceholder(){
 function renderSidebar(){
   const proj=currentProj();
   const cp=document.getElementById('curProjName');if(cp)cp.textContent=proj?'← 返回主页':'PRD 项目';
-  const tp=document.getElementById('topbarProjName');if(tp)tp.textContent=proj?proj.name:'PRD 智能看板';
+  const tp=document.getElementById('topbarProjName');if(tp)tp.textContent=proj?proj.name:'需求文档工作台';
   updateHealthPill();
   const pp=document.getElementById('projPanel');
   const ptn=document.getElementById('ppToggleName');

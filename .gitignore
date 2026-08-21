@@ -8,3 +8,6 @@ preview.html
 Thumbs.db
 deploy/
 deploy/
+tools/prd-promo-video/node_modules/
+tools/prd-promo-video/_backup_before_desensitize_v18.38.html
+tools/prd-promo-video/package-lock.json

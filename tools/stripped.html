@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD 智能看板</title>
+<title>需求文档工作台</title>
 <style>
   :root{
     --brand:#1f3a45; --brand-soft:#e8edee; --brand-line:#c5d2d6;
@@ -795,7 +795,7 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
 <div id="topbar">
   <div class="topbar-left">
     <button class="top-icon-btn" id="sidebarToggle" data-act="sidebartoggle" type="button" aria-label="打开目录"><svg viewBox="0 0 18 18" width="18" height="18" fill="none"><path d="M2 5h14M2 9h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
-    <span class="topbar-proj-name" id="topbarProjName">PRD 智能看板</span>
+    <span class="topbar-proj-name" id="topbarProjName">需求文档工作台</span>
     <span class="topbar-health-pill" id="topbarHealthPill" style="display:none"><span class="dot"></span><span class="txt">健康度 —</span></span>
   </div>
   <div class="top-actions" id="topActions">
@@ -852,7 +852,7 @@ html[data-theme="light"] .cmt-list-modal{background:#fff;color:#1f3a45}
 
 <div id="layout">
   <aside id="sidebar">
-    <div class="sidebar-brand"><span class="brand-mark"></span><span class="brand-text">PRD 智能看板</span></div>
+    <div class="sidebar-brand"><span class="brand-mark"></span><span class="brand-text">需求文档工作台</span></div>
     <div class="proj-bar" data-act="gohome"><span class="name" id="curProjName">← 返回主页</span><span class="chev">‹</span></div>
     <div class="pp-wrap">
       <button type="button" class="pp-toggle" data-act="toggleprojpanel" title="项目与分组"><span class="ic">▦</span><span class="pt-name" id="ppToggleName">项目</span><span class="chev">▾</span></button>
@@ -1399,7 +1399,7 @@ function renderPlaceholder(){
 function renderSidebar(){
   const proj=currentProj();
   const cp=document.getElementById('curProjName');if(cp)cp.textContent=proj?'← 返回主页':'PRD 项目';
-  const tp=document.getElementById('topbarProjName');if(tp)tp.textContent=proj?proj.name:'PRD 智能看板';
+  const tp=document.getElementById('topbarProjName');if(tp)tp.textContent=proj?proj.name:'需求文档工作台';
   updateHealthPill();
   const pp=document.getElementById('projPanel');
   const ptn=document.getElementById('ppToggleName');

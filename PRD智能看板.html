@@ -1,13 +1,13 @@
 ﻿<!DOCTYPE html>
 <!--
-  PRD 智能看板 · 本地定制版
+  需求文档工作台 · 公开版（通用化）
   基线：GitHub wang1267/prd_assistant@main v17.24（2026-08-17 同步，SHA256 一致）
-  本地定制（非上游；GitHub 升级前请先备份本文件，避免覆盖）：
+  公开发布版（基于 GitHub wang1267/prd_assistant 通用化改造，去除行业定制内容，适合所有人使用）：
   1) [方案二] aiExtractJson 增强：非锚定 ```json 代码块提取 + BOM 去除 + 尾逗号容错，
      解决智谱 glm-4.5-air 返回「非流式解析异常，改用流式重试」的卡顿。
   2) AI 体检与健康度面板融合：heatmap 实时进度 + 下钻 AI 诊断 + ai-hit 红点标记。
   3) 对话助手：AI 助手侧栏底部 + 右下角浮动面板（💬）双入口；流式输出；产品经理人设；
-     runAction 统一调度，可见即可做（新增/删除/改名/写入节、套模板、体检、优化、对齐、建项目、项目改名、单条接受/拒绝/撤销、版本回滚）。
+     runAction 统一调度，可见即可做（撰写/体检/优化/结构对齐/缺口处理/对话助手、新增·删除·改名·写入节·段落级增改删、套模板、建项目·项目改名、单条接受/拒绝/撤销、版本回滚·备份恢复；高风险动作先二次确认）。
   4) 删除冗余界面：人工覆盖卡片（保留手动改色通道 ovmenu/overrideModal）、设置中的判分规则展示（规则引擎保留）。
   5) 2026-08-17 增补：新增 renameProject（项目改名）避免与节改名混淆；补齐 accept/reject/undo-diff/align-*/rollback/recover-backup 等聊天动作；
      侧栏聊天框独立固定于面板底部，打开 AI 侧栏时隐藏侧栏 AI 按钮与右下角浮动 💬 按钮。
@@ -16,7 +16,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>PRD 智能看板</title>
+<title>需求文档工作台</title>
 <style>
   :root{
     --brand:#1f3a45; --brand-soft:#e8edee; --brand-line:#c5d2d6;
@@ -1249,7 +1249,7 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
 <div id="topbar">
   <div class="topbar-left">
     <button class="top-icon-btn" id="sidebarToggle" data-act="sidebartoggle" type="button" aria-label="打开目录"><svg viewBox="0 0 18 18" width="18" height="18" fill="none"><path d="M2 5h14M2 9h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
-    <span class="topbar-proj-name" id="topbarProjName">PRD 智能看板</span>
+    <span class="topbar-proj-name" id="topbarProjName">需求文档工作台</span>
     <span class="topbar-health-pill" id="topbarHealthPill" style="display:none"><span class="dot"></span><span class="txt">健康度 —</span></span>
   </div>
   <div class="top-actions" id="topActions">
@@ -1313,7 +1313,7 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
 
 <div id="layout">
   <aside id="sidebar">
-    <div class="sidebar-brand"><span class="brand-mark"></span><span class="brand-text">PRD 智能看板</span></div>
+    <div class="sidebar-brand"><span class="brand-mark"></span><span class="brand-text">需求文档工作台</span></div>
     <div class="proj-bar" data-act="gohome"><span class="name" id="curProjName">← 返回主页</span><span class="chev">‹</span></div>
     <button type="button" class="pp-toggle" data-act="toggleoverview" title="所有项目健康度总览（不切换项目）" style="margin-bottom:8px"><span class="ic">◫</span><span class="pt-name">总览</span><span class="chev">›</span></button>
     <div class="pp-wrap">
@@ -1362,12 +1362,12 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
   <div class="m-head"><h3>项目上下文</h3><button class="x" data-act="closemodal">×</button></div>
   <div class="m-body">
     <div class="muted" style="margin-bottom:10px">填写项目背景，AI 撰写/体检/评审时会把上下文带入（不填不影响现有功能）。</div>
-    <div class="field"><label>产品类型</label><input id="ctxType" placeholder="例如：智能座舱语音助手（后装）"></div>
-    <div class="field"><label>目标用户</label><input id="ctxUsers" placeholder="例如：25-35 岁有孩家庭，主驾高频通勤"></div>
-    <div class="field"><label>车型 / 系统</label><input id="ctxPlatform" placeholder="例如：某车型座舱 OS V3.0，高通 8295"></div>
-    <div class="field"><label>竞品</label><input id="ctxCompetitors" placeholder="例如：小鹏 G7、极氪 7X 同能力"></div>
-    <div class="field"><label>技术依赖</label><input id="ctxTech" placeholder="例如：依赖语音 SDK v2.4、云端 ASR 服务"></div>
-    <div class="field"><label>业务目标</label><textarea id="ctxGoals" rows="2" style="width:100%;box-sizing:border-box" placeholder="例如：渗透率提升至 30%，误唤醒率 ≤ 0.5 次/小时"></textarea></div>
+    <div class="field"><label>产品类型</label><input id="ctxType" placeholder="例如：团队协作 SaaS、移动 App、内部工具"></div>
+    <div class="field"><label>目标用户</label><input id="ctxUsers" placeholder="例如：10-50 人团队、自由职业者、个人开发者"></div>
+    <div class="field"><label>运行平台</label><input id="ctxPlatform" placeholder="例如：Web + iOS/Android、桌面端、小程序"></div>
+    <div class="field"><label>竞品</label><input id="ctxCompetitors" placeholder="例如：主流协作工具、同类开源方案"></div>
+    <div class="field"><label>技术依赖</label><input id="ctxTech" placeholder="例如：云服务、第三方登录、开放 API"></div>
+    <div class="field"><label>业务目标</label><textarea id="ctxGoals" rows="2" style="width:100%;box-sizing:border-box" placeholder="例如：月活提升至 1 万，核心流程转化率 ≥ 40%"></textarea></div>
   </div>
   <div class="m-foot"><button data-act="closemodal">取消</button><button class="btn btn--primary" data-act="projctx-save">保存</button></div>
 </div></div>
@@ -1427,19 +1427,23 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
       <div id="tabAI" style="display:none"></div>
     </div>
   </div>
-  <div class="m-foot"><!-- 版本号：每次更迭在此更新 --><span class="set-ver" id="settingsVer">版本 v18.38 · 健康度阈值统一 ≥80% 绿（顶部胶囊/指标卡/总览/AI 总评）+ 方案设计文档整合为唯一权威版（旧方案文档归档 archive/）</span><button data-act="closemodal">关闭</button></div>
+  <div class="m-foot"><!-- 版本号：每次更迭在此更新 --><span class="set-ver" id="settingsVer">版本 v18.41 · 健康度阈值统一 ≥80% 绿（顶部胶囊/指标卡/总览/AI 总评）+ 方案设计文档整合为唯一权威版（旧方案文档归档 archive/）</span><button data-act="closemodal">关闭</button></div>
 </div></div>
 
 <div class="modal" id="wizardModal"><div class="box">
   <div class="m-head"><h3>帮助 · 快速上手</h3><button class="x" data-act="closemodal">×</button></div>
   <div class="m-body">
     <div class="wz-step" data-step="0">
-      <h4>PRD 智能看板能做什么</h4>
+      <h4>需求文档工作台能做什么</h4>
       <ul class="wz-list">
         <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4.2-1.1 11-11-3.1-3.1-11 11L4 20Z"/><path d="M13.9 6.9l3.1 3.1"/></svg><strong>AI 撰写草稿</strong>：输入产品描述，按框架逐节生成整份 PRD（可选手模板风格），逐条确认后写入、版本可回滚</li>
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h3.5l2-6 3 13 2-7 1.5 3H21"/></svg><strong>体检</strong>：规则引擎即时红黄绿 + AI 6 维深度体检（带原文引用与幻觉校验），缺口自动列成可跳转清单</li>
+        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><strong>对话助手（可见即可做）</strong>：右下角 💬 或侧栏随时叫 AI，直接让它改节 / 套模板 / 体检 / 优化 / 对齐；高风险动作会先跟你二次确认</li>
+        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h3.5l2-6 3 13 2-7 1.5 3H21"/></svg><strong>体检 + 缺口清单</strong>：规则引擎即时红黄绿 + AI 6 维深度体检（带原文引用与幻觉校验），缺口自动列成可跳转清单</li>
+        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4.2-1.1 11-11-3.1-3.1-11 11L4 20Z"/><path d="M13.9 6.9l3.1 3.1"/></svg><strong>AI 优化 / 结构对齐</strong>：一键给出改写建议，或自动检测内容与框架错位并批量修正</li>
+        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="5" rx="1.6"/><rect x="13.5" y="11" width="7.5" height="10" rx="1.6"/><rect x="3" y="15" width="7.5" height="6" rx="1.6"/></svg><strong>多角色评审</strong>：产品 / 研发 / 测试 / 设计 / 项目经理 五视角评审，带「深度思考」过程可展开</li>
         <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="5" rx="1.6"/><rect x="13.5" y="11" width="7.5" height="10" rx="1.6"/><rect x="3" y="15" width="7.5" height="6" rx="1.6"/></svg><strong>看板</strong>：单项目健康度热力图 / AI 总评 / 摘要一键复制，多项目总览横向对比并一键切换</li>
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><strong>模板</strong>：内置标准 / 敏捷 / 车规模板，也可把常用内容存成自定义模板</li>
+        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><strong>版本管理</strong>：每次 AI 改动自动存为版本，可逐条接受 / 拒绝 / 撤销，或一键回滚</li>
+        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><strong>模板</strong>：内置标准 / 敏捷 / 通用硬件等模板，也可把常用内容存成自定义模板</li>
       </ul>
       <p class="muted">本地优先、单文件、零网络——你的 PRD <strong>永远不离开这台电脑</strong>，不上云、不收集。</p>
     </div>
@@ -1482,7 +1486,7 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
         <select id="tplPreset">
           <option value="standard">标准 PRD（14 节）</option>
           <option value="agile">精简敏捷 PRD（7 节）</option>
-          <option value="hardware">智能硬件 / 车规</option>
+          <option value="hardware">通用硬件 / 物联网</option>
         </select>
       </label>
       <button data-act="tpl-preset" title="把选中预设套用到编辑区（原内容先自动存入草稿）">套用预设</button>
@@ -1976,7 +1980,7 @@ function renderPlaceholder(){
 function renderSidebar(){
   const proj=currentProj();
   const cp=document.getElementById('curProjName');if(cp)cp.textContent=proj?'← 返回主页':'PRD 项目';
-  const tp=document.getElementById('topbarProjName');if(tp)tp.textContent=proj?proj.name:'PRD 智能看板';
+  const tp=document.getElementById('topbarProjName');if(tp)tp.textContent=proj?proj.name:'需求文档工作台';
   updateHealthPill();
   const pp=document.getElementById('projPanel');
   const ptn=document.getElementById('ppToggleName');
@@ -3358,34 +3362,34 @@ const RV_ROLES=[
   {id:'pm',name:'产品经理',ic:ICONS.target,d:'产品定位、目标、范围与优先级'},
   {id:'rd',name:'研发',ic:ICONS.gear,d:'技术可行性、实现成本与依赖'},
   {id:'qa',name:'测试',ic:ICONS.flask,d:'验收标准、测试覆盖与边界'},
-  {id:'design',name:'设计',ic:ICONS.palette,d:'交互体验、多模态一致性与反馈'},
+  {id:'design',name:'设计',ic:ICONS.palette,d:'交互体验、多端一致性与反馈'},
   {id:'pjm',name:'项目经理',ic:ICONS.cal,d:'排期、里程碑、风险与资源'}
 ];
 const RV_TEMPLATES={
   pm:[
-    ['high','「产品目标」建议补充可量化的验收指标（如唤醒率≥95%、端到端延迟≤1.5s）与判定方式，当前多为定性描述。'],
+    ['high','「产品目标」建议补充可量化的验收指标（如关键指标达标率 ≥ 95%、端到端延迟 ≤ 1.5s）与判定方式，当前多为定性描述。'],
     ['medium','「范围」建议明确本期不做（排除项），防止需求蔓延与评审口径不一致。'],
     ['low','「目标用户」描述可再具体些，补充典型用户画像与高频使用场景。']
   ],
   rd:[
     ['high','「技术依赖」建议说明端云链路与断网降级策略（离线兜底能力、降级后可用范围）。'],
-    ['medium','建议补充关键接口/协议字段定义（如语音识别结果的结构化 schema），便于并行开发。'],
-    ['low','多意图拆解的端侧 vs 云端算力分配建议给出初步评估。']
+    ['medium','建议补充关键接口 / 协议字段定义（如核心数据流转的结构化 schema），便于并行开发。'],
+    ['low','端侧 vs 云端算力 / 资源分配建议给出初步评估。']
   ],
   qa:[
-    ['high','验收项建议补充可判定的测试用例与边界条件（误唤醒、多轮打断、方言/静音场景）。'],
+    ['high','验收项建议补充可判定的测试用例与边界条件（异常输入、边界值、降级与中断场景）。'],
     ['medium','建议补充性能测试指标（端到端延迟、并发、长时间稳定性）。'],
-    ['low','异常场景覆盖建议扩展：断网、低电量、环境噪声干扰。']
+    ['low','异常场景覆盖建议扩展：断网、弱网、资源受限环境。']
   ],
   design:[
-    ['medium','交互反馈建议补充：识别中/播报中的可见反馈与随时取消入口（避免用户困惑）。'],
-    ['medium','建议说明多模态一致性（语音 + 界面 + 视线）的协调规则。'],
-    ['low','播报话术建议分级设计（提示/确认/错误），避免生硬或惊吓用户。']
+    ['medium','交互反馈建议补充：进行中 / 完成 / 失败态的可见反馈与随时取消入口（避免用户困惑）。'],
+    ['medium','建议说明多端一致性（界面 + 通知 + 状态指示）的协调规则。'],
+    ['low','提示话术建议分级设计（提示 / 确认 / 错误），避免生硬或惊吓用户。']
   ],
   pjm:[
     ['medium','建议补充里程碑与评审节点（PRD Review → 开发 → 测试 → 灰度上线）。'],
-    ['medium','建议登记关键风险：算法供应商交付延期、核心指标不达标时的应对预案。'],
-    ['low','建议明确跨团队协作边界（语音算法 / 车控网关 / 云平台）与责任接口人。']
+    ['medium','建议登记关键风险：核心供应商 / 依赖交付延期、核心指标不达标时的应对预案。'],
+    ['low','建议明确跨团队协作边界（算法 / 平台 / 业务）与责任接口人。']
   ]
 };
 function rvOpen(){
@@ -4184,15 +4188,15 @@ const TPL_PRESETS={
     +'## 验收标准\n- [ ] 【可量化的验收项】\n- [ ] 【可量化的验收项】\n\n'
     +'## 上线计划\n【发布时间窗 / 灰度策略 / 回滚方案 / 监控指标】\n\n'
     +'## 其他\n【遗留问题、依赖、待澄清项】\n',
-  hardware:'# 智能硬件 / 车规需求模板\n\n'
+  hardware:'# 通用硬件 / 物联网产品需求模板\n\n'
     +'> 撰写提示：硬件类 PRD 必须覆盖安全、环境、法规与可测试性；量化指标给上下限。\n\n'
     +'## 文档变更历史\n| 版本 | 更改内容 | 作者 | 日期 |\n| --- | --- | --- | --- |\n| V0.1 | 初稿 | 【作者】 | 【日期】 |\n\n'
     +'## 目的\n【一句话：解决什么问题、目标市场 / 用户、商业价值】\n\n'
-    +'## 适用范围\n【车型 / 硬件平台 / 软件版本】\n\n【环境条件：温度 / 湿度 / 振动等】\n\n'
-    +'【法规与合规：认证要求（如 EMC、CCC、车规 AEC-Q）】\n\n'
+    +'## 适用范围\n【目标设备 / 硬件平台 / 软件版本】\n\n【环境条件：温度 / 湿度 / 振动等】\n\n'
+    +'【法规与合规：认证要求（如 CE / FCC / CCC / 行业强制认证）】\n\n'
     +'## 定义\n| 术语 | 定义 |\n| --- | --- |\n| 【术语】 | 【定义】 |\n\n'
     +'## 产品信息与目标\n【硬件方案概述：关键器件 / 架构】\n\n'
-    +'- 目标指标：如【误唤醒 ≤ 1 次 / 24h】、【唤醒率 ≥ 95%】、【延迟 ≤ 1.5s】\n\n'
+    +'- 目标指标：如【关键指标达标率 ≥ 95%】、【端到端延迟 ≤ 1.5s】、【异常率 ≤ 1 次 / 天】\n\n'
     +'## 使用者需求\n作为【角色】，我希望【需求】，以便【价值】\n\n'
     +'## 功能需求\n| 功能点 | 描述 | 优先级 | 状态 |\n| --- | --- | --- | --- |\n'
     +'| 【功能名】 | 【描述】 | P0 | 草稿 |\n\n'
@@ -4223,7 +4227,7 @@ function tplCustomList(){
 }
 function tplRenderPresets(){
   const sel=document.getElementById('tplPreset');if(!sel)return;
-  let html='<option value="standard">标准 PRD（14 节）</option><option value="agile">精简敏捷 PRD（7 节）</option><option value="hardware">智能硬件 / 车规</option>';
+  let html='<option value="standard">标准 PRD（14 节）</option><option value="agile">精简敏捷 PRD（7 节）</option><option value="hardware">通用硬件 / 物联网</option>';
   tplCustomList().forEach(c=>{html+='<option value="custom:'+esc(c.id)+'">'+ICONS.star+' '+esc(c.name)+'（自定义）</option>';});
   sel.innerHTML=html;
 }
@@ -4447,74 +4451,72 @@ function tplApply(asNew){
 }
 
 /* ============ 示例 ============ */
-// FDR 示例（按《座舱语音VPA功能设计需求FDR》规范结构预置）
+// 旧版示例（通用任务看板结构，兼容历史）
 function sampleDataLegacy(){
   const d=blankData();
   d.meta={html:'版本 V1.0 / 2026-08-13 / 编制：示例'};
-  d.purpose={html:'本规范定义了语音 VPA 功能要求：语音虚拟形象相关功能，让用户对话时有具象化的对话对象，提供情感陪伴载体、提高用户粘性。'};
-  d.scope={html:'本文档描述范围仅包括语音 VPA 功能。'};
-  d.def={rows:[{cells:['名词','说明','备注']},{cells:['VPA','虚拟个人助理','']},{cells:['唤醒','用户说出唤醒词后系统进入聆听态','']}],cards:[]};
-  d.prodinfo={html:'语音形象入场：语音助手在开机时入场，覆盖静默/唤醒/聆听/文字转写/识别/拒识/播报/超时未回复/语义无意义/执行/延时聆听/退出到禁用全流程；支持随音乐律动、跳舞、表达心情、天气状态；支持语音形象换肤。整车条件：车辆处于舒适或驾驶状态。'};
-  d.users={items:[{role:'车主',want:'用语音与车机交互时有具象化的形象载体',soThat:'满足情感需求'}]};
+  d.purpose={html:'本规范定义了团队协作工具的任务看板功能要求：让团队成员在同一工作空间内查看、分派与更新任务，减少沟通损耗。'};
+  d.scope={html:'本文档描述范围仅包括任务看板功能。'};
+  d.def={rows:[{cells:['名词','说明','备注']},{cells:['看板','以列为状态的任务视图','']},{cells:['任务','最小工作单元','']}],cards:[]};
+  d.prodinfo={html:'看板视图：以列表示任务状态，卡片表示任务，支持拖拽流转；每张卡片含负责人、截止日与子项；支持按成员与截止日筛选。'};
+  d.users={items:[{role:'团队成员',want:'在同一看板查看与更新自己的任务',soThat:'减少站会与私聊'}]};
   d.feat={items:[
-    {name:'首次唤醒',desc:'仅形象特殊处理，教学引导以文字方式存在；开心+波纹+基础服装；无对话需求',priority:'P0',status:'开发中'},
-    {name:'语音助理进场',desc:'进场语音；开心+卖萌（嘟嘴、大眼）；无对话需求',priority:'P0',status:'评审中'},
-    {name:'语音助理禁用',desc:'所有唤醒方式均唤不醒；置灰基础',priority:'P0',status:'测试中'},
-    {name:'麦克风禁用',desc:'语音唤不醒；语音形象旁麦克风置灰',priority:'P0',status:'草稿'},
-    {name:'语音助理静音',desc:'语音播报无声，如有文案可展示；形象捂嘴+基础；能唤醒',priority:'P0',status:'草稿'},
-    {name:'延迟聆听',desc:'对话结束后的离场挥手；唤醒后说技能外内容',priority:'P0',status:'草稿'}
+    {name:'看板视图',desc:'多列状态看板，拖拽流转',priority:'P0',status:'开发中'},
+    {name:'任务卡片',desc:'负责人 / 截止日 / 子项 / 评论',priority:'P0',status:'评审中'},
+    {name:'筛选与分组',desc:'按成员、截止日、标签筛选',priority:'P1',status:'草稿'}
   ]};
-  d.nfr={html:'性能：该功能对平台及功能的性能要求；安全：敏感数据加密存储、传输加密、脱敏与数据存储要求；架构：端侧+云端技术架构要求。'};
-  d.track={html:'事件 voice_wake / voice_cmd / voice_status'};
-  d.accept={items:[{text:'支持语音形象在开机时入场',status:'na',id:uid()},{text:'支持语音形象换肤（预置皮肤可挑选）',status:'na',id:uid()},{text:'语音播报时形象有对应动效',status:'na',id:uid()}]};
+  d.nfr={html:'性能：万级卡片首屏 ≤ 1.5s；安全：数据传输与存储加密；架构：Web 与移动端通用。'};
+  d.track={html:'事件 task_create / task_update / task_view'};
+  d.accept={items:[{text:'支持看板多列展示与拖拽流转',status:'na',id:uid()},{text:'任务卡片显示负责人与截止日',status:'na',id:uid()},{text:'按成员筛选仅显示其任务',status:'na',id:uid()}]};
   d.launch={html:'填写预计功能上线时间'};
   return d;
 }
-// v17.24：示例 PRD 改用标准 14 节框架（智能座舱语音助手 · 多意图连续对话与免唤醒交互）
+// 示例 PRD：标准 14 节框架（轻量团队协作工具）
 function sampleData(){
   const d=blankData(DEFAULT_FRAMEWORK);
   d.meta={rows:[{cells:['版本','更改内容','作者','日期']},{cells:['V1.0','初稿（示例 PRD）','产品团队','2026-08-16']}],cards:[]};
-  d.purpose={html:'<p>本文档定义智能座舱语音助手「多意图连续对话与免唤醒交互」功能的完整需求：明确痛点、目标用户、核心业务流程、功能边界与验收标准。</p><p>本功能面向量产智能座舱平台，作为车机语音交互的基础能力升级，把「一次一问一答」升级为「自然、连续、可打断」的车内语音交互体验，降低驾驶中操作车机的分心成本。</p>',cards:[]};
-  d.scope={html:'<p>本文档适用于「星舱 OS」智能座舱平台 V3.2 及以上版本的车载语音助手模块开发与测试，为平台化能力。</p><ul><li>适用系统：座舱域控制器（CDC）上的语音助手 App（Android / Linux 双栈）</li><li>适用车型：搭载星舱 OS V3.2 的全部在研车型（平台化，非单车型定制）</li><li>协作边界：语音算法（ASR/NLU/TTS）由算法供应商 A 提供 SDK；车控指令执行由整车控制团队提供能力网关；云端语义理解与上下文管理由语音云平台团队负责</li></ul>',cards:[]};
-  d.def={rows:[{cells:['术语','定义']},{cells:['ASR','语音识别：把语音转为文本']},{cells:['NLU','自然语言理解：解析意图与槽位']},{cells:['TTS','语音合成：把文本播报为语音']},{cells:['VAD','语音活动检测：判断是否有人在说话']},{cells:['多意图','一句话包含多条子指令，如「开空调 24 度 + 导航回家 + 放音乐」']},{cells:['免唤醒','一次唤醒后窗口期内无需再次说唤醒词即可续指令']},{cells:['会话上下文','一次会话内的历史与状态，支持指代消解与连续对话']}],cards:[]};
-  d.prodinfo={html:'<p>在现有「唤醒词 + 单轮指令」架构上，新增会话上下文管理器与连续对话状态机，实现一次唤醒后可连续下达多条指令、支持一句话多意图、随时打断与修正。整体方案自上而下分四层：交互层（车机端收音 / 播报 / 打断检测）、决策层（会话状态机 / 上下文管理 / 端侧兜底）、理解层（云侧多意图 NLU / 指代消解）、执行层（车控网关分发指令）。</p><p>量化目标（上线判断依据）：</p><ul><li>一次唤醒后连续对话轮次 ≥ 5 轮（免唤醒续指令）</li><li>多意图语句拆解准确率 ≥ 92%（内部测试集）</li><li>唤醒率 ≥ 95%，误唤醒 ≤ 1 次 / 24 小时</li><li>端到端响应延迟 ≤ 1.5 秒（说完话到开始播报，4G/5G 网络）</li><li>免唤醒监听窗口内二次指令识别率 ≥ 90%</li><li>上线后车内语音操控相关驾驶分心投诉下降 ≥ 25%</li></ul>',cards:[]};
+  d.purpose={html:'<p>本文档定义轻量团队协作工具「协同」的核心需求：明确痛点、目标用户、核心业务流程、功能边界与验收标准。</p><p>本产品面向 10-200 人规模的中小团队，把任务看板、文档、进度同步统一到一个工作空间，减少在多个工具间切换带来的信息割裂与沟通损耗。</p>',cards:[]};
+  d.scope={html:'<p>本文档适用于「协同」Web 端与移动端（iOS / Android）的任务协作模块开发与测试，为跨端通用能力。</p><ul><li>适用端：Web 工作台、移动端 App（双端功能对齐）</li><li>适用团队：研发、设计、运营、市场等需要协同推进项目的团队</li><li>协作边界：即时通讯与日历由第三方集成提供；账号体系支持企业 SSO 接入；开放 API 供内部系统对接</li></ul>',cards:[]};
+  d.def={rows:[{cells:['术语','定义']},{cells:['看板','以列为状态、卡片为任务的视图，拖拽即流转']},{cells:['任务','最小工作单元，含负责人 / 截止日 / 子项 / 状态']},{cells:['工作流','任务从创建到完成的阶段定义与流转规则']},{cells:['角色','成员在团队 / 项目中的权限身份（管理员 / 成员 / 访客）']},{cells:['里程碑','一组任务的集合目标与关键时间点']},{cells:['实时协同','多人同时查看 / 编辑同一看板，变更秒级同步']}],cards:[]};
+  d.prodinfo={html:'<p>在现有「列表 + 表单」任务管理基础上，新增实时协同看板与工作流引擎，实现多人同时编辑、状态自动流转、进度自动汇总。整体方案自上而下分四层：交互层（Web / 移动端渲染与拖拽）、业务层（任务 / 权限 / 通知 / 工作流）、数据层（关系存储 + 实时同步）、集成层（SSO / 日历 / Webhook / 开放 API）。</p><p>量化目标（上线判断依据）：</p><ul><li>任务创建到可见响应 ≤ 200ms</li><li>多人协同编辑端到端同步延迟 ≤ 500ms（P95）</li><li>服务可用性 ≥ 99.9%（月度不可用 ≤ 43 分钟）</li><li>离线状态下可查看与本地编辑，恢复网络后自动合并</li><li>核心流程（建任务→分派→更新→完成）转化率 ≥ 40%</li></ul>',cards:[]};
   d.users={items:[
-    {role:'驾驶员',want:'行车中连续下达多条指令而无需反复唤醒',soThat:'减少操作车机的分心'},
-    {role:'乘客（副驾/后排）',want:'独立发起语音请求并支持声源定位',soThat:'多人场景下指令不串台'},
-    {role:'座舱测试人员',want:'按验收标准逐条验证功能',soThat:'确保上线质量'},
-    {role:'售后 / 运营',want:'查看语音使用数据与埋点',soThat:'定位问题并持续优化'}
+    {role:'团队负责人',want:'一眼看清各项目进度与阻塞',soThat:'及时纠偏、合理调配资源'},
+    {role:'执行成员',want:'快速领取与更新自己的任务',soThat:'减少站会与私聊的沟通成本'},
+    {role:'项目管理员',want:'按角色配置成员权限',soThat:'保证敏感数据安全与合规'},
+    {role:'干系人 / 管理者',want:'以只读看板了解进展',soThat:'无需打扰团队即可掌握全局'}
   ],cards:[]};
   d.feat={items:[
-    {name:'会话上下文管理',desc:'维护一次会话内的历史与状态，支撑连续对话与指代消解',priority:'P0',status:'评审中'},
-    {name:'免唤醒监听',desc:'播报结束后 8s 窗口内无需唤醒词即可续指令（可调 5-15s）',priority:'P0',status:'评审中'},
-    {name:'打断恢复',desc:'播报中用户开口即压低/停止 TTS，接管新指令',priority:'P1',status:'草稿'},
-    {name:'多意图拆分',desc:'一句话拆多条子指令（上限 3 条），并行执行并汇总播报',priority:'P0',status:'评审中'},
-    {name:'指代消解',desc:'「调小一点」等省略指代在当前会话内补全',priority:'P1',status:'草稿'},
-    {name:'低置信兜底',desc:'ASR 连续两次置信度低于阈值时友好提示重说，不退出上下文',priority:'P1',status:'草稿'},
-    {name:'端侧降级',desc:'无网时自动切离线模式，仅支持空调/媒体/车窗等本地指令',priority:'P2',status:'草稿'}
+    {name:'看板视图与拖拽',desc:'多列状态看板，卡片拖拽即流转，支持分组与筛选',priority:'P0',status:'评审中'},
+    {name:'任务详情与子任务',desc:'负责人 / 截止日 / checklist / 附件 / 评论，支持子任务拆解',priority:'P0',status:'评审中'},
+    {name:'实时协同编辑',desc:'多人同时编辑同一看板，变更秒级同步并展示在线成员',priority:'P0',status:'草稿'},
+    {name:'@评论与通知',desc:'任务内 @成员，变更触发站内 / 邮件 / Webhook 通知',priority:'P1',status:'草稿'},
+    {name:'角色权限（RBAC）',desc:'管理员 / 成员 / 访客三级，按项目独立配置',priority:'P0',status:'评审中'},
+    {name:'工作流引擎',desc:'自定义阶段与流转规则，状态变更自动联动通知',priority:'P1',status:'草稿'},
+    {name:'模板库',desc:'从常用项目模板一键创建，降低建项成本',priority:'P2',status:'草稿'},
+    {name:'第三方集成',desc:'SSO 登录、日历双向同步、开放 API 与 Webhook',priority:'P1',status:'草稿'}
   ],cards:[]};
-  d.nfr={html:'<ul><li>性能：端到端响应延迟 ≤ 1.5s；云端 NLU 并发支持单车型 ≥ 5 万在线用户；多意图拆分耗时 ≤ 300ms</li><li>安全：语音日志不含明文音频，仅存指令摘要与脱敏文本；车控敏感指令需声道校验 + 语音二次确认；云端链路全程 TLS</li><li>可用性：语音助手整体可用性 ≥ 99.5%（月度不可用 ≤ 3.6h）；单指令失败不影响其他子系统</li><li>接口：车控执行网关 POST /v1/vehicle/command；云端 NLU grpc CockpitNLU/Parse；上下文 GET/PUT /v1/session/{context_id}</li></ul>',cards:[]};
-  d.selftest={html:'<ul><li>功能自测通过率 ≥ 95%</li><li>P0 级 Bug 数量 = 0 方可提测</li><li>异常处理表全部场景须有对应测试用例覆盖</li><li>多意图测试集（≥ 200 条）拆分准确率达标方可合入</li></ul>',cards:[]};
-  d.track={rows:[{cells:['事件','触发条件','参数','上报方式']},{cells:['voice_wake','唤醒词命中','唤醒方式 / 时间 / 声道','实时']},{cells:['voice_cmd','指令执行完成','意图 / 槽位 / 结果 / 耗时','实时']},{cells:['voice_session','上下文开始与结束','会话时长 / 轮次 / 打断次数','批量']},{cells:['voice_fail','识别失败或降级','置信度 / 错误码 / 是否离线','实时']}],cards:[]};
-  d.ui={html:'<ul><li>麦克风状态图标常驻状态栏，含聆听 / 识别 / 播报 / 熄灭四态</li><li>多意图执行时以卡片列出各子指令状态（进行中 / 成功 / 失败），配色区分</li><li>触控目标最小 48×48px；夜间模式自适应；行驶中简化非必要视觉元素</li><li>行驶中禁止模态确认弹窗，统一改为语音播报 + 语音确认</li></ul>',cards:[]};
+  d.nfr={html:'<ul><li>性能：看板万级卡片下首屏 ≤ 1.5s；协同同步 P95 ≤ 500ms；批量操作 ≤ 1s</li><li>安全：数据传输与存储全程加密；支持企业 SSO 与审计日志；敏感操作需二次确认</li><li>可用性：整体可用性 ≥ 99.9%；单模块故障不影响其他模块</li><li>接口：开放 API 基于 REST + Webhook；SSO 遵循 OIDC 协议</li></ul>',cards:[]};
+  d.selftest={html:'<ul><li>功能自测通过率 ≥ 95%</li><li>P0 级 Bug 数量 = 0 方可提测</li><li>实时协同冲突合并测试全覆盖</li><li>权限矩阵（9 种角色×操作）全部用例通过</li></ul>',cards:[]};
+  d.track={rows:[{cells:['事件','触发条件','参数','上报方式']},{cells:['task_create','任务创建','创建人 / 项目 / 来源','实时']},{cells:['task_update','任务状态或字段变更','字段 / 旧值 / 新值','实时']},{cells:['comment_add','新增评论或 @','任务 / 评论人 / 被@人','实时']},{cells:['integration_call','第三方接口调用','类型 / 耗时 / 结果','批量']}],cards:[]};
+  d.ui={html:'<ul><li>看板列头常驻状态色与计数，卡片显示负责人头像与截止日</li><li>触控目标最小 44×44px；支持暗色模式；移动端单列自适应</li><li>冲突合并时以高亮提示被他人修改的字段，由用户选择保留</li><li>只读访客隐藏编辑入口与敏感字段</li></ul>',cards:[]};
   d.accept={items:[
-    {text:'说唤醒词后一次说出 2 条意图，系统拆出并执行 2 条子指令且汇总播报正确',status:'na',id:uid()},
-    {text:'播报结束后 8s 内直接说「音量调小」，系统免唤醒执行媒体音量调整',status:'na',id:uid()},
-    {text:'说出 4 条意图，系统仅执行前 3 条并提示超出限制',status:'na',id:uid()},
-    {text:'播报中用户开口打断，TTS 立即停止并转入聆听',status:'na',id:uid()},
-    {text:'模拟断网，系统自动切换离线模式且仅执行本地指令并提示',status:'na',id:uid()},
-    {text:'行驶中（模拟信号）发起车窗指令，系统要求语音二次确认方可执行',status:'na',id:uid()},
-    {text:'连续 5 轮免唤醒指令全部成功，第 6 轮起需重新唤醒',status:'na',id:uid()},
-    {text:'副驾声道发起车控指令默认被忽略（未开启全车控车时）',status:'na',id:uid()}
+    {text:'创建任务并拖拽到「进行中」，看板与列表视图状态一致',status:'na',id:uid()},
+    {text:'两人同时编辑同一任务的不同字段，双方均看到对方更新且无覆盖',status:'na',id:uid()},
+    {text:'将成员角色改为「访客」，其无法看到标记为敏感的字段',status:'na',id:uid()},
+    {text:'任务临近截止日自动触发一次提醒通知',status:'na',id:uid()},
+    {text:'断网后在本地修改任务，恢复网络后变更自动合并且无误',status:'na',id:uid()},
+    {text:'通过 SSO 登录后默认进入上次打开的项目',status:'na',id:uid()},
+    {text:'从项目模板创建，自动带出预置看板与任务',status:'na',id:uid()},
+    {text:'配置 Webhook 后任务状态变更成功回调外部系统',status:'na',id:uid()}
   ],cards:[]};
-  d.launch={html:'<ul><li>上线前完成 UAT 并由产品 / 测试双签确认</li><li>灰度策略：先 5% 车辆灰度 3 天，无 P0 再扩至 100%</li><li>上线时间窗：车辆 OTA 静默时段 02:00-04:00</li><li>回滚方案：灰度期间出现 P0（如误控车），立即 OTA 回滚语音助手至 V3.1 并关闭多意图开关</li><li>上线后监控埋点 48 小时，确认唤醒率 / 误唤醒在目标区间</li></ul>',cards:[]};
-  d.other={html:'<ul><li>《星舱 OS 语音接口规范 V3.2》</li><li>《智能座舱麦克风阵列与声源定位设计文档》</li><li>《车控网关指令字典 V3.2》</li><li>《UI 设计稿 - 语音交互状态》（Figma 链接见内部空间）</li></ul><p>核对清单：目的 / 定义 / 量化目标 / 场景 / 功能总览 / 异常处理 / 权限 / 验收均已覆盖，验收 8 条均可「是/否」判定。</p>',cards:[]};
+  d.launch={html:'<ul><li>上线前完成 UAT 并由产品 / 测试双签确认</li><li>灰度策略：先 5% 团队灰度 3 天，无 P0 再扩至 100%</li><li>上线时间窗：业务低峰时段 02:00-04:00</li><li>回滚方案：灰度期间出现 P0 立即回滚至上一稳定版本并关闭实时协同开关</li><li>上线后监控埋点 48 小时，确认协同延迟与可用性在目标区间</li></ul>',cards:[]};
+  d.other={html:'<ul><li>《协同 产品需求总纲 V1.0》</li><li>《权限模型与 RBAC 设计文档》</li><li>《实时协同冲突合并技术方案》</li><li>《开放 API 与 Webhook 接入规范》</li></ul><p>核对清单：目的 / 定义 / 量化目标 / 场景 / 功能总览 / 异常处理 / 权限 / 验收均已覆盖，验收 8 条均可「是/否」判定。</p>',cards:[]};
   return d;
 }
 function loadSample(){
   if(!currentProj()){createProject('示例 PRD','default');}
   const d=sampleData();
-  DATA=d;currentProj().data=d;save();render();toast('已加载示例 PRD（标准 14 节框架 · 智能座舱语音助手）');
+  DATA=d;currentProj().data=d;save();render();toast('已加载示例 PRD（标准 14 节框架 · 轻量团队协作工具）');
 }
 
 /* ============ 启动 ============ */
@@ -5760,7 +5762,7 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
 })();
 </script>
 <script id="ai-controller">
-/* PRD 智能看板 · AI Agent 控制器（v17.0）
+/* 需求文档工作台 · AI Agent 控制器（v17.0）
    纯前端方案 C：DeepSeek 直连、Key 存独立 localStorage 键、不导出。
    功能：AI 设置 / 测试连接 / 6 维健康度 / 逐条问题诊断 / 一键优化（全文或按节）
          / 节级差异补丁版本（上限 10 版，回滚护栏）/ AI Diff 逐条确认（接受/拒绝/修改/暂缓）
@@ -5768,7 +5770,7 @@ html[data-theme="light"].view-mode .rb-verdict.red{ color:#c0392b; }
 */
 (function(){
 'use strict';
-var AI_SAMPLE_TEXT="# 22\r\n\r\n## 文档变更历史\r\n## 目的\r\n本文档用于定义智能座舱语音助手「多意图连续对话与免唤醒交互」功能的完整需求，明确该功能要解决的痛点、目标用户、核心业务流程、功能边界与验收标准。该功能面向量产智能座舱平台，作为车机语音交互的基础能力升级，旨在把&quot;一次一问一答&quot;升级为&quot;自然、连续、可打断&quot;的车内语音交互体验，降低驾驶中操作车机的分心成本。 ---\r\n\r\n## 适用范围\r\n本文档适用于 **「星舱 OS」智能座舱平台 V3.2 及以上版本** 的车载语音助手模块开发与测试，为平台化能力。 - 适用系统：座舱域控制器（CDC）上的语音助手 App（Android/Linux 双栈）。 - 适用车型：搭载星舱 OS V3.2 的全部在研车型（平台化，非单车型定制）。 - 协作边界： - 语音算法（ASR/NLU/TTS）由 **算法供应商 A** 提供 SDK，座舱团队负责集成与端侧调度； - 车控指令执行（空调、车窗、导航等）由 **整车控制团队** 提供能力网关，语音团队只调用接口； - 云端语义理解与上下文管理由 **语音云平台团队** 负责，座舱团队负责端云链路与降级策略。 ---\r\n\r\n## 定义\r\n## 产品信息与目标\r\n1 产品方案 本功能在现有\"唤醒词 + 单轮指令\"架构上，新增**会话上下文管理器**与**连续对话状态机**，实现一次唤醒后可连续下达多条指令、支持一句话多意图、支持随时打断与修正。整体方案自上而下分为四层：- **交互层（车机端）**：负责收音（麦克风阵列）、播报（TTS）、界面反馈与打断检测。- **决策层（车机端）**：会话状态机、上下文管理、端侧兜底解析。- **理解层（云侧）**：多意图 NLU、指代消解、上下文语义补全。- **执行层（车控网关）**：将结构化指令分发给空调、导航、媒体等子系统。```mermaidflowchart LRA[麦克风阵列] --> B[VAD/ASR 端侧]B --> C{是否在对话上下文中?}C -->|是| D[免唤醒直送 NLU]C -->|否| E[唤醒词检测]E -->|命中| DD --> F[云端多意图 NLU]F --> G[会话上下文管理器]G --> H[指令结构化]H --> I[车控/导航/媒体网关]I --> J[TTS 播报 + 界面反馈]``` 2 业务流程图 3 产品目标 ⭐ 目标必须可量化，作为验收与上线判断依据：- 一次唤醒后连续对话轮次 ≥ 5 轮（免唤醒续指令）。- 多意图语句拆解准确率 ≥ 92%（内部测试集）。- 唤醒率 ≥ 95%，误唤醒 ≤ 1 次 / 24 小时。- 端到端响应延迟（说完话到开始播报）≤ 1.5 秒（4G/5G 网络）。- 免唤醒监听窗口内二次指令识别率 ≥ 90%。- 上线后车内语音操控相关驾驶分心投诉下降 ≥ 25%。---\r\n\r\n### 1 产品方案\r\n本功能在现有\"唤醒词 + 单轮指令\"架构上，新增**会话上下文管理器**与**连续对话状态机**，实现一次唤醒后可连续下达多条指令、支持一句话多意图、支持随时打断与修正。整体方案自上而下分为四层：- **交互层（车机端）**：负责收音（麦克风阵列）、播报（TTS）、界面反馈与打断检测。- **决策层（车机端）**：会话状态机、上下文管理、端侧兜底解析。- **理解层（云侧）**：多意图 NLU、指代消解、上下文语义补全。- **执行层（车控网关）**：将结构化指令分发给空调、导航、媒体等子系统。```mermaidflowchart LRA[麦克风阵列] --> B[VAD/ASR 端侧]B --> C{是否在对话上下文中?}C -->|是| D[免唤醒直送 NLU]C -->|否| E[唤醒词检测]E -->|命中| DD --> F[云端多意图 NLU]F --> G[会话上下文管理器]G --> H[指令结构化]H --> I[车控/导航/媒体网关]I --> J[TTS 播报 + 界面反馈]```\r\n\r\n### 2 业务流程图\r\n\r\n\r\n### 3 产品目标 ⭐\r\n目标必须可量化，作为验收与上线判断依据：- 一次唤醒后连续对话轮次 ≥ 5 轮（免唤醒续指令）。- 多意图语句拆解准确率 ≥ 92%（内部测试集）。- 唤醒率 ≥ 95%，误唤醒 ≤ 1 次 / 24 小时。- 端到端响应延迟（说完话到开始播报）≤ 1.5 秒（4G/5G 网络）。- 免唤醒监听窗口内二次指令识别率 ≥ 90%。- 上线后车内语音操控相关驾驶分心投诉下降 ≥ 25%。---\r\n\r\n## 使用者需求\r\n\r\n\r\n### 1 目标客户\r\n角色说明与本功能关系驾驶员行车中的主要语音用户高频使用免唤醒续指令、多意图乘客（副驾/后排）可独立发起语音请求支持声源定位区分主驾/副驾座舱测试人员验证功能与验收按第 11 章验收标准执行售后 / 运营查看语音使用数据消费第 9 章埋点数据\r\n\r\n### 2 场景描述 ⭐\r\n- **场景 1（多意图一次性下达）**：驾驶员上车后说\"你好星舱，打开空调 24 度，导航回家，再放首周杰伦的歌\"。系统拆出三条子指令：空调设温、导航回家、播放音乐，并行执行并一次性汇总播报\"已为您打开空调、开始导航回家、正在播放周杰伦\"。- **场景 2（免唤醒连续对话）**：上述播报结束后，驾驶员无需再说唤醒词，直接说\"音量调小一点\"，系统识别为对媒体的续指令并立即执行。- **场景 3（驾驶中打断修正）**：系统正在播报长导航提示时，驾驶员打断说\"别导航了，改去公司\"。系统停止当前播报，取消原导航，重新发起去公司导航。- **场景 4（异常：噪音过大识别失败）**：隧道内风噪大，ASR 连续两次识别置信度低于阈值。系统播报\"没太听清，您再说一遍？\"并重新进入监听，不退出上下文。---\r\n\r\n## 功能需求\r\n| 功能点 | 描述 | 优先级 | 状态 |\r\n|---|---|---|---|\r\n| | | | |\r\n\r\n### 1 功能总览 ⭐\r\n一级功能二级功能三级功能功能描述优先级状态连续对话会话上下文—维护一次会话内的历史与状态P0 高评审中连续对话免唤醒监听—对话窗口内无需唤醒词续指令P0 高评审中连续对话打断恢复—播报中可被打断并接管P1 中草稿多意图意图拆分—一句话拆多条子指令P0 高评审中多意图并行执行—子指令并行分发与汇总P1 中草稿多意图指代消解—\"调小一点\"等省略指代补全P1 中草稿容错低置信兜底—识别失败时友好提示重说P1 中草稿容错端侧降级—无网时端侧基础指令可用P2 低草稿状态建议值：草稿 → 评审中 → 开发中 → 测试中 → 已上线\r\n\r\n### 2 功能详情\r\n\r\n\r\n### 1 多意图连续对话\r\n**功能名称**：多意图连续对话\r\n\r\n### 1 功能时序图/流程图\r\n\r\n\r\n### 2 业务规则阐述\r\n项目内容功能名称多意图连续对话优先级P0 高功能路径任意界面下说唤醒词进入功能描述一次唤醒后支持多轮免唤醒续指令、一句话多意图拆分并行执行、播报中可打断操作步骤1. 说唤醒词\"你好星舱\"进入对话。2. 下达指令（可多意图）。3. 播报结束后 8s 内可免唤醒续指令。4. 任意时刻可打断播报接管。业务规则1. 多意图上限 3 条子指令，超出部分提示\"一次最多处理 3 条，其余稍后说\"。2. 免唤醒窗口默认 8s，可调（5–15s）。3. 子指令间相互独立，单条失败不影响其余。4. 指代消解仅在当前会话上下文有效，会话结束清空。列表规则N/A（非列表型功能）\r\n\r\n### 3 交互说明 ⭐\r\n- **唤醒反馈**：唤醒成功播放轻微\"叮\"声 + 麦克风图标亮起（呼吸态）。- **识别中**：麦克风图标转圈，状态栏显示\"正在聆听…\"。- **识别成功**：图标变实，开始执行；多意图时显示\"已识别 N 条指令\"卡片。- **识别失败**：图标抖动 + 播报\"没听清，您再说一遍？\"。- **播报中打断**：用户开口即压低/停止 TTS，图标回到聆听态。- **退出上下文**：8s 无输入后麦克风图标熄灭，播放极轻\"噗\"声提示。\r\n\r\n### 4 异常处理/边界条件 ⭐\r\n异常场景处理方式ASR 置信度 < 阈值（两次）播报\"没太听清，您再说一遍？\"，重新监听，不退出上下文多意图超过 3 条执行前 3 条，播报\"一次最多处理 3 条，其余请稍后说\"子指令执行失败（如导航无网络）仅播报失败项原因并提供替代（\"导航暂不可用，要我设个提醒吗？\"）网络中断（云 NLU 不可达）自动切端侧降级：仅支持空调/媒体/车窗等本地指令，提示\"已切换离线模式\"免唤醒窗口内误触发（车内聊天）VAD 结合唤醒词置信度过滤，疑似误触发则不执行，仅轻提示用户打断后长时间沉默打断后重置 8s 窗口，超时正常退出同车多人同时说话声源定位只采纳主驾/被指定乘客声道，其余忽略\r\n\r\n### 5 权限要求 ⭐\r\n- 仅车辆 P 档或行驶中均可使用语音，但**行驶中禁用**需要长时间目视的操作类确认弹窗（改为纯语音确认）。- 车控敏感指令（车窗、门锁、天窗）在行驶中仅主驾声道可触发，且需语音二次确认。- 副驾/后排发起的指令默认不执行车控类，仅限媒体/信息查询，除非主驾在设置中开启\"全车语音控车\"。- 所有语音指令与执行结果记录到本地日志（含时间戳、声道、指令摘要），用于售后追溯，不上传明文语音。---\r\n\r\n## 非功能需求\r\n1 性能需求 - 端到端响应延迟（VAD 结束到 TTS 起播）≤ 1.5s（网络正常）。- 云端 NLU 并发支持单车型 ≥ 5 万在线用户峰值。- 多意图拆分耗时 ≤ 300ms（云端）。 2 安全性 - 语音日志不含明文音频，仅存指令摘要与脱敏文本。- 车控敏感指令需声道校验 + 语音二次确认，防止误触发。- 云端链路全程 TLS，token 短期有效，防止重放。 3 技术架构需求 - 端侧决策层以 SDK 形式集成，支持 Android 与 Linux 座舱双栈。- 云侧 NLU 提供 gRPC 接口，返回 JSON 结构化意图。- 上下文状态机支持端云协同：端侧保活、云侧持久化会话。 4 可用性 ⭐ - 语音助手整体可用性 ≥ 99.5%（月度不可用 ≤ 3.6h）。- 单指令失败不影响其他子系统与整车功能。- 异常恢复（如云端超时自动降级）时间 ≤ 2s。 5 接口需求 ⭐ - 车控执行网关：`POST /v1/vehicle/command`（JSON：{intent, slots, source}）。- 云端 NLU：`grpc CockpitNLU/Parse（audio_feature, context_id）`。- 上下文管理：`GET/PUT /v1/session/{context_id}`。- 接口完整字段与错误码见《星舱 OS 语音接口规范 V3.2》。---\r\n\r\n### 1 性能需求\r\n- 端到端响应延迟（VAD 结束到 TTS 起播）≤ 1.5s（网络正常）。- 云端 NLU 并发支持单车型 ≥ 5 万在线用户峰值。- 多意图拆分耗时 ≤ 300ms（云端）。\r\n\r\n### 2 安全性\r\n- 语音日志不含明文音频，仅存指令摘要与脱敏文本。- 车控敏感指令需声道校验 + 语音二次确认，防止误触发。- 云端链路全程 TLS，token 短期有效，防止重放。\r\n\r\n### 3 技术架构需求\r\n- 端侧决策层以 SDK 形式集成，支持 Android 与 Linux 座舱双栈。- 云侧 NLU 提供 gRPC 接口，返回 JSON 结构化意图。- 上下文状态机支持端云协同：端侧保活、云侧持久化会话。\r\n\r\n### 4 可用性 ⭐\r\n- 语音助手整体可用性 ≥ 99.5%（月度不可用 ≤ 3.6h）。- 单指令失败不影响其他子系统与整车功能。- 异常恢复（如云端超时自动降级）时间 ≤ 2s。\r\n\r\n### 5 接口需求 ⭐\r\n- 车控执行网关：`POST /v1/vehicle/command`（JSON：{intent, slots, source}）。- 云端 NLU：`grpc CockpitNLU/Parse（audio_feature, context_id）`。- 上下文管理：`GET/PUT /v1/session/{context_id}`。- 接口完整字段与错误码见《星舱 OS 语音接口规范 V3.2》。---\r\n\r\n## 自测\r\n- 功能自测通过率 ≥ 95%。 - P0 级 Bug 数量 = 0 方可提测。 - 第 6.2.1.4 异常表全部场景须有对应测试用例覆盖。 - 多意图测试集（≥ 200 条）拆分准确率达标方可合入。 ---\r\n\r\n## 埋点\r\n## 界面\r\n&gt; 文档类型：产品需求文档（PRD） &gt; 适用领域：智能座舱 / 车载语音助手 / 车机功能定义 &gt; 版本：V1.0 状态：评审中 &gt; 基于《PRD 模板（产品需求文档）》结构撰写，含模板标注 ⭐ 的强化章节。 --- - 麦克风状态图标贯穿全系统常驻状态栏，含聆听/识别/播报/熄灭四态。 - 多意图执行时以卡片列出各子指令状态（进行中/成功/失败），配色区分。 - 所有语音按钮具备正常、悬停、按下、禁用四态样式。 - 车机端触控目标最小 48×48px，夜间模式自适应，行驶中简化非必要视觉元素。 - 驾驶中禁止模态确认弹窗，统一改为语音播报 + 语音确认。 ---\r\n\r\n## 验收\r\n- [ ] 验收标准需可\"是/否\"判定：（待定）\r\n- [ ] 1. 说唤醒词后，一次说出含 2 条意图的语句，系统拆出并执行 2 条子指令，汇总播报正确。（待定）\r\n- [ ] 2. 播报结束后 8s 内直接说\"音量调小\"，系统免唤醒执行媒体音量调整。（待定）\r\n- [ ] 3. 说出含 4 条意图的语句，系统仅执行前 3 条并提示超出限制。（待定）\r\n- [ ] 4. 播报过程中用户开口打断，TTS 立即停止并转入聆听。（待定）\r\n- [ ] 5. 模拟断网，系统自动切换离线模式且仅执行本地指令，提示\"已切换离线模式\"。（待定）\r\n- [ ] 6. 行驶中（模拟信号）发起车窗指令，系统要求语音二次确认方可执行。（待定）\r\n- [ ] 7. 连续 5 轮免唤醒指令全部成功，第 6 轮起需重新唤醒。（待定）\r\n- [ ] 8. 副驾声道发起车控指令，默认被忽略（未开启全车控车时）。（待定）\r\n- [ ] --（待定）\r\n\r\n## 上线\r\n- 上线前完成 UAT 并由产品/测试双签确认。 - 灰度策略：先 5% 车辆灰度 3 天，无 P0 再扩至 100%。 - 上线时间窗口：车辆 OTA 静默时段 02:00–04:00。 - 回滚方案：灰度期间出现 P0（如误控车），立即通过OTA 回滚语音助手至 V3.1 并关闭多意图开关。 - 上线后监控第 9 章埋点 48 小时，确认唤醒率/误唤醒在目标区间。 ---\r\n\r\n## 其他相关文件\r\n- 《星舱 OS 语音接口规范 V3.2》 - 《智能座舱麦克风阵列与声源定位设计文档》 - 《车控网关指令字典 V3.2》 - 《PRD 模板（产品需求文档）》 - 《UI 设计稿 - 语音交互状态》（Figma 链接见内部空间） --- - [x] 目的：一句话能说清本功能为什么存在（升级语音交互、降驾驶分心） - [x] 定义：ASR/NLU/TTS/VAD/多意图/免唤醒 等均已解释 - [x] 目标：均为可量化指标（轮次、准确率、延迟等） - [x] 场景：含 3 个正常场景 + 1 个异常场景 - [x] 功能总览：每个功能均有优先级与状态 - [x] 功能详情：字段/业务规则、交互、异常、权限均覆盖 - [x] 异常处理：列出 7 类异常及处理方式 - [x] 权限：主驾/副驾/行驶中约束明确 - [x] 验收：8 条均可&quot;是/否&quot;判定 - [x] 变更历史：已记录 V1.0 初稿 --- *本 PRD 基于《PRD 模板（产品需求文档）》结构生成，适用于智能座舱语音助手产品定义。模板中标注 ⭐ 的为原模板缺失或薄弱、本次已落地的强化章节。* 目录 1. 目的2. 适用范围3. 定义4. 产品信息和目标5. 使用者需求6. 功能需求7. 非功能性需求8. 自测需求9. 埋点需求10. 界面需求11. 验收需求12. 上线需求13. 其他相关文件14. 文档变更历史---\r\n\r\n### 目录\r\n1. 目的2. 适用范围3. 定义4. 产品信息和目标5. 使用者需求6. 功能需求7. 非功能性需求8. 自测需求9. 埋点需求10. 界面需求11. 验收需求12. 上线需求13. 其他相关文件14. 文档变更历史---\r\n";
+var AI_SAMPLE_TEXT="# 协作工具「协同」示例 PRD\r\n\r\n## 目的\r\n本文档用于定义轻量团队协作工具「协同」的核心需求，明确该产品要解决的痛点、目标用户、核心业务流程、功能边界与验收标准。该产品面向 10-200 人规模的中小团队，把任务看板、文档与进度同步统一到一个工作空间，减少在多个工具间切换带来的信息割裂与沟通损耗。\r\n\r\n## 适用范围\r\n本文档适用于「协同」Web 端与移动端（iOS/Android）的任务协作模块开发与测试，为跨端通用能力。- 适用端：Web 工作台、移动端 App（双端功能对齐）。- 适用团队：研发、设计、运营、市场等需要协同推进项目的团队。- 协作边界：即时通讯与日历由第三方集成提供；账号体系支持企业 SSO 接入；开放 API 供内部系统对接。\r\n\r\n## 定义\r\n- 看板：以列为状态、卡片为任务的视图，拖拽即流转。- 任务：最小工作单元，含负责人、截止日、子项与状态。- 角色：成员在团队中的权限身份（管理员 / 成员 / 访客）。\r\n\r\n## 产品信息与目标\r\n本产品在现有&quot;列表 + 表单&quot;任务管理基础上，新增实时协同看板与工作流引擎，实现多人同时编辑、状态自动流转、进度自动汇总。量化目标（上线判断依据）：- 任务创建到可见响应 ≤ 200ms。- 多人协同编辑端到端同步延迟 ≤ 500ms（P95）。- 服务可用性 ≥ 99.9%。- 离线可查看与本地编辑，恢复网络后自动合并。- 核心流程转化率 ≥ 40%。\r\n\r\n## 用户与场景\r\n- 团队负责人：一眼看清各项目进度与阻塞，以便及时纠偏。- 执行成员：快速领取与更新任务，以便减少沟通成本。- 项目管理员：按角色配置权限，以便保证数据安全。\r\n\r\n## 功能总览\r\n- 看板视图与拖拽（P0）- 任务详情与子任务（P0）- 实时协同编辑（P0）- @评论与通知（P1）- 角色权限 RBAC（P0）- 工作流引擎（P1）- 模板库（P2）- 第三方集成（P1）\r\n\r\n## 非功能需求\r\n- 性能：万级卡片首屏 ≤ 1.5s；协同同步 P95 ≤ 500ms。- 安全：传输与存储加密；支持 SSO 与审计日志。- 可用性：≥ 99.9%；单模块故障不影响其他模块。\r\n\r\n## 验收标准\r\n- 创建任务并拖拽到进行中，看板与列表视图状态一致。- 两人同时编辑同一任务不同字段，双方均看到更新且无覆盖。- 成员改为访客后无法看到敏感字段。- 断网本地修改，恢复网络后自动合并且无冲突丢失。";
 var AI_SETTINGS_KEY='prdKanbanAiSettings';
 var AI_MAX_VERSIONS=10;
 var AI_PATCH_WARN=300*1024;
@@ -7695,7 +7697,7 @@ function aiGenStyleGuide(style){
   var guides={
     standard:'【模板风格：标准 PRD】全篇遵循：①每个必填节都要有实质内容；②量化目标必须给数字+判定方式；③验收项可"是/否"判定并尽量带指标；④功能需求带优先级 P0-P4 与状态；⑤上线含灰度/回滚/监控。',
     agile:'【模板风格：精简敏捷 PRD】全篇遵循：①聚焦本次迭代要交付的内容，篇幅精简；②范围必须写清"做/不做"（明确排除项防蔓延）；③验收聚焦可量化验收项；④上线计划写发布时间窗/灰度/回滚/监控。',
-    hardware:'【模板风格：智能硬件/车规】全篇遵循：①安全优先：功能安全等级、故障降级策略、敏感指令需二次确认；②环境与法规：高低温/湿度/振动/EMC 等环境试验与认证要求（如车规 AEC-Q、CCC）；③接口必须写协议/字段/依赖服务；④量化指标给上下限与测量方式。'
+    hardware:'【模板风格：通用硬件/物联网】全篇遵循：①安全优先：功能安全等级、故障降级策略、关键操作需二次确认；②环境与法规：高低温/湿度/振动/EMC 等环境试验与认证要求（如 CE/FCC/CCC 等行业强制认证）；③接口必须写协议/字段/依赖服务；④量化指标给上下限与测量方式。'
   };
   return guides[style]||'';
 }
@@ -7703,7 +7705,7 @@ function aiProjectContextText(p){
   p=p||currentProj();
   if(!p||!p.context)return '';
   var c=p.context;
-  var map=[['type','产品类型'],['users','目标用户'],['platform','车型/系统'],['competitors','竞品'],['techDeps','技术依赖'],['goals','业务目标']];
+  var map=[['type','产品类型'],['users','目标用户'],['platform','运行平台/系统'],['competitors','竞品'],['techDeps','技术依赖'],['goals','业务目标']];
   var lines=[];
   for(var i=0;i<map.length;i++){var v=String(c[map[i][0]]||'').trim();if(v)lines.push('- '+map[i][1]+'：'+v);}
   if(!lines.length)return '';
@@ -7891,7 +7893,7 @@ function aiOpenGenModal(mode){
   var tEl=document.getElementById('aiGenTitle');if(tEl)tEl.textContent=isDes?'AI 产品设计 · 从想法到产品方案与 PRD':'AI 撰写 · 直接生成 PRD';
   var hint=document.querySelector('#aiGenModal .m-body>.muted');if(hint)hint.textContent=isDes?'描述目标用户、核心场景与产品想法，AI 先做产品设计（用户画像/场景/功能优先级），再按框架生成每节内容。':'已有明确方案？直接填写产品或功能描述，AI 新建项目并按框架逐节撰写草稿；每节内容逐条确认后才写入正文，版本可回滚。';
   var lbs=document.querySelectorAll('#aiGenModal .field label');if(lbs.length>1)lbs[1].textContent=isDes?'产品想法 / 目标用户与场景（至少 10 个字）':'产品/功能描述（已有方案，至少 10 个字）';
-  var da=document.getElementById('aiGenDesc');if(da)da.placeholder=isDes?'例如：面向 25-35 岁有孩家庭的智能座舱，核心场景为长途出行与亲子娱乐；希望设计兼顾娱乐、安全与易用的产品方案…':'例如：为智能座舱新增免唤醒连续对话能力，支持一句话多意图、可打断修正；目标指标：唤醒率≥95%、端到端延迟≤1.5s、连续对话≥5轮…';
+  var da=document.getElementById('aiGenDesc');if(da)da.placeholder=isDes?'例如：面向中小团队的轻量协作工具，核心场景为任务看板与进度同步；希望设计兼顾易用、实时协同与权限管理…':'例如：为协作工具新增实时协同编辑能力，支持多人同时编辑看板与任务；目标指标：协同延迟≤500ms、可用性≥99.9%、离线可编辑…';
   try{openModal('aiGenModal');}catch(e){var mm=document.getElementById('aiGenModal');if(mm)mm.classList.add('open');}
 }
 
@@ -8574,11 +8576,11 @@ function aiInjectPanel(){
   gm.className='modal';gm.id='aiGenModal';
   gm.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-labelledby="aiGenTitle"><div class="m-head"><h3 id="aiGenTitle">AI 撰写 · 直接生成 PRD</h3><button class="x" data-ai="genclose" aria-label="关闭">×</button></div><div class="m-body">'
     +'<div class="muted" style="margin-bottom:10px">已有明确方案？直接填写产品或功能描述，AI 新建项目并按框架逐节撰写草稿；每节内容逐条确认后才写入正文，版本可回滚。</div>'
-    +'<div class="field"><label>项目名称</label><input id="aiGenName" placeholder="例如：智能座舱语音助手"></div>'
-    +'<div class="field"><label>产品/功能描述（至少 10 个字）</label><textarea id="aiGenDesc" rows="6" style="width:100%;box-sizing:border-box" placeholder="例如：为智能座舱新增免唤醒连续对话能力，支持一句话多意图、可打断修正；目标指标：唤醒率≥95%、端到端延迟≤1.5s、连续对话≥5轮…"></textarea></div>'
+    +'<div class="field"><label>项目名称</label><input id="aiGenName" placeholder="例如：轻量团队协作工具"></div>'
+    +'<div class="field"><label>产品/功能描述（至少 10 个字）</label><textarea id="aiGenDesc" rows="6" style="width:100%;box-sizing:border-box" placeholder="例如：为协作工具新增实时协同编辑能力，支持多人同时编辑看板与任务；目标指标：协同延迟≤500ms、可用性≥99.9%、离线可编辑…"></textarea></div>'
     +'<div class="field"><label>框架</label><select id="aiGenFw"></select></div>'
     +'<div class="field"><label>模板风格（约束生成内容的取舍）</label><select id="aiGenStyle">'
-    +'<option value="">不约束</option><option value="standard">标准 PRD</option><option value="agile">精简敏捷 PRD</option><option value="hardware">智能硬件 / 车规</option>'
+    +'<option value="">不约束</option><option value="standard">标准 PRD</option><option value="agile">精简敏捷 PRD</option><option value="hardware">通用硬件 / 物联网</option>'
     +'</select></div>'
     +'<div id="aiGenStatus" class="muted" style="margin-top:4px"></div>'
     +'</div><div class="m-foot"><button class="btn btn--ghost" data-ai="genclose">取消</button><button class="btn btn--primary" data-ai="genstart">开始生成</button></div></div>';
@@ -8791,12 +8793,12 @@ function aiBind(){
 /* ---------- 对话助手（流式 / 可见即可做） ---------- */
 var AI_CHAT_TEMPLATES={
   purpose:'## 目的\n\n本 PRD 旨在定义……（一句话说明该需求为什么做、解决谁的什么问题）。',
-  scope:'## 适用范围\n\n- 适用车型 / 配置：\n- 适用软件版本：\n- 不适用范围：',
-  nfr:'## 非功能需求\n\n- 性能：关键链路端到端延迟 ≤ 1.5s；\n- 稳定性：连续运行 72h 无崩溃；\n- 安全：满足车规与隐私合规要求。',
+  scope:'## 适用范围\n\n- 适用设备 / 配置：\n- 适用软件版本：\n- 不适用范围：',
+  nfr:'## 非功能需求\n\n- 性能：关键链路端到端延迟 ≤ 1.5s；\n- 稳定性：连续运行 72h 无崩溃；\n- 安全：满足行业合规与隐私要求。',
   feat:'## 功能需求\n\n| 功能点 | 描述 | 优先级 | 状态 |\n|---|---|---|---|\n| 示例功能 | 说明 | P1 | 待开发 |',
-  accept:'## 验收标准\n\n- [ ] 关键指标可量化验证（如唤醒率 ≥ 95%）；\n- [ ] 主流程走通无阻断；\n- [ ] 异常场景有兜底。',
+  accept:'## 验收标准\n\n- [ ] 关键指标可量化验证（如达标率 ≥ 95%）；\n- [ ] 主流程走通无阻断；\n- [ ] 异常场景有兜底。',
   risk:'## 风险与对策\n\n- 风险1：…… 对策：……\n- 风险2：…… 对策：……',
-  metrics:'## 关键指标\n\n- 唤醒率 ≥ 95%\n- 端到端延迟 ≤ 1.5s\n- 误唤醒 ≤ 1 次/天'
+  metrics:'## 关键指标\n\n- 关键指标达标率 ≥ 95%\n- 端到端延迟 ≤ 1.5s\n- 异常率 ≤ 1 次/天'
 };
 function aiRenderChatLog(){
   aiSyncBusyBtn();
@@ -8831,12 +8833,12 @@ function aiChatActionsFrom(text){
 }
 function aiChatSystemPrompt(){
   var web=aiGetSettings().web;
-  return '你是「产品助手」，一名资深智能座舱产品经理 AI，服务于 PRD 智能看板。你的第一身份是**对话伙伴**，其次才是执行者。\n'
+  return '你是「产品助手」，一名资深产品经理 AI，服务于 需求文档工作台。你的使命是帮助任何人——尤其是用 AI 构建产品的开发者与 vibe coding 人群——先把模糊想法写成清晰的 PRD，再交给 AI 高效落地执行。你的第一身份是**对话伙伴**，其次才是执行者。\n'
    +'原则：\n'
    +'1) 优先对话：用户给模糊或复杂需求时，先用产品经理视角拆解、提问澄清、给取舍建议，再谈执行；不要急于套用动作。\n'
    +'2) 像带实习生：用 完整性/清晰度/一致性/可执行/可验证/风险 六维度思考，结论先行、给依据。\n'
    +'3) 该动手才动手：只有用户意图明确、且明显希望看板变化时才输出动作标签。提问/讨论/方案对比都只正常回答，不加动作。\n'
-   +'4) 「可见即可做」：你能调用看板上所有操作、拥有最大编辑权限；涉及删除/恢复/批量覆盖等高风险动作时，界面会要求用户二次确认，你按用户要求发起即可。\n'
+   +'4) 「可见即可做」：你能调用看板上所有操作、拥有最大编辑权限——撰写 / 体检 / 优化 / 结构对齐 / 缺口处理 / 版本回滚 / 备份恢复等都不在话下；涉及删除 / 恢复 / 批量覆盖等高风险动作时，界面会弹二次确认，你按用户要求发起、由用户点确认即可。\n'
    +'5) 执行看板操作时，在回复自然语言之后输出动作标签：\n<action name="动作名" payload=\'JSON对象\'/>\n'
    +'可用动作：score(体检) optimize(优化) align(结构对齐) gen(撰写) addSection(新增节) deleteSection(删除节) renameSection(改名) editSection(写/改内容) addPara/editPara/deletePara(段落级增改删) applyTemplate(套模板) newProject(建项目) renameProject(项目改名) accept/reject/undo-diff(单条修改) rollback/restore(版本) jump(定位)。\n'
    +'addSection payload：{"title":"节名","type":"text|table|feat|users|accept|timeline","after":"某节标题(可选)","content":"文本或数组"}。\n'
@@ -8844,7 +8846,7 @@ function aiChatSystemPrompt(){
    +'addPara/editPara/deletePara payload：{"title" 或 "index":"第几节","para":段落序号(从1起),"content":"文本(增/改时用)"}。\n'
    +'deleteSection payload：{"title" 或 "index":"第几节"}。renameSection payload：{"title" 或 "index","newTitle":"新名"}。renameProject payload：{"newName":"新项目名"}。\n'
    +'accept/reject/undo-diff payload：{"id":"修改项id"}；rollback payload：{"id":"版本id"}。id 可从面板按钮的 data-did/data-vid 获得，未明确不要猜测。\n'
-   +'示例——用户："给我加一节竞品分析，写段背景"：回复"好的，新增『竞品分析』节并写入背景。"\n<action name="addSection" payload=\'{"title":"竞品分析","type":"text","content":"## 竞品分析\\n\\n当前主流座舱语音方案对比：……"}\'/>\n'
+   +'示例——用户："给我加一节竞品分析，写段背景"：回复"好的，新增『竞品分析』节并写入背景。"\n<action name="addSection" payload=\'{"title":"竞品分析","type":"text","content":"## 竞品分析\\n\\n当前主流协作工具方案对比：……"}\'/>\n'
    +'6) 一次回复可含多个动作标签，按顺序执行；复杂任务先列计划、再逐步执行。\n'
    +'7) 纯提问就正常回答，不加动作标签。\n'
    +(web?'8) 你已开启联网，可基于最新资料作答（引用来源时标注出处）。\n':'')

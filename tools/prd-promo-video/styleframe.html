@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>需求文档工作台 · 视觉方向对比</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px; overflow: hidden;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #1b2230 0%, #0c0e13 60%, #07080b 100%);
+    color: #e8ebf2;
+    font-family: "Noto Sans SC", system-ui, sans-serif;
+    display: flex; flex-direction: column; padding: 56px 72px;
+  }
+  .head { display: flex; align-items: baseline; gap: 18px; margin-bottom: 8px; }
+  .head h1 { font-family: "Noto Serif SC", serif; font-weight: 700; font-size: 40px; letter-spacing: 2px; }
+  .head .tag { font-size: 16px; color: #9aa1ad; letter-spacing: 4px; }
+  .sub { color: #9aa1ad; font-size: 17px; margin-bottom: 34px; }
+  .panels { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .panel {
+    position: relative; border-radius: 18px; overflow: hidden;
+    background: #111419; box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06);
+    display: flex; flex-direction: column;
+  }
+  .panel .frame {
+    flex: 1; overflow: hidden; position: relative; background: #0a0c10;
+  }
+  .panel .frame img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+  .panel.primary { box-shadow: 0 30px 90px rgba(31,58,69,.45), inset 0 0 0 1.5px rgba(108,170,180,.5); }
+  .label {
+    position: absolute; top: 18px; left: 18px; z-index: 3;
+    padding: 8px 16px; border-radius: 999px; font-size: 15px; letter-spacing: 2px;
+    backdrop-filter: blur(6px);
+  }
+  .panel.primary .label { background: rgba(31,58,69,.85); color: #eaf2f3; }
+  .panel.accent .label { background: rgba(108,99,255,.85); color: #fff; }
+  .badge { position: absolute; top: 18px; right: 18px; z-index: 3; font-size: 13px; color: #cdd3dd;
+    background: rgba(0,0,0,.4); padding: 6px 12px; border-radius: 999px; letter-spacing: 1px; }
+  .caption { padding: 20px 24px 22px; background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.35) 100%); }
+  .caption h2 { font-family: "Noto Serif SC", serif; font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+  .panel.primary .caption h2 { color: #f3f0ea; }
+  .panel.accent .caption h2 { color: #e9e7ff; }
+  .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chip { font-size: 14px; padding: 5px 12px; border-radius: 8px; background: rgba(255,255,255,.08); color: #cdd3dd; }
+  .panel.primary .chip { background: rgba(31,58,69,.4); color: #cfe2e4; }
+  .panel.accent .chip { background: rgba(108,99,255,.28); color: #ddd9ff; }
+  .voice { font-size: 15px; color: #aeb4bf; line-height: 1.5; }
+  .foot { margin-top: 30px; text-align: center; color: #7e8590; font-size: 15px; letter-spacing: 1px; }
+  .foot b { color: #cdd3dd; font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>需求文档工作台 · 宣传片视觉方向</h1>
+    <span class="tag">STYLEFRAME COMPARISON</span>
+  </div>
+  <div class="sub">真实看板截图（脱敏示例数据）· 两种调性直接对比 · 主视觉以方向 A 为主，方向 B 作科技段/转场点缀</div>
+
+  <div class="panels">
+    <div class="panel primary">
+      <div class="frame"><img src="shots/light-full.png" alt="方向A 浅色纸感" /></div>
+      <div class="label">方向 A · 主视觉</div>
+      <div class="badge">纸感 · 浅色</div>
+      <div class="caption">
+        <h2>纸感编辑部</h2>
+        <div class="chips"><span class="chip">莫兰迪纸 #faf9f7</span><span class="chip">衬线标题</span><span class="chip">墨绿点睛 #1f3a45</span><span class="chip">柔阴影·留白</span></div>
+        <div class="voice">旁白示例：「一份需求文档该有的样子——让 AI 替你写、替你审、替你把健康度管到位。」</div>
+      </div>
+    </div>
+
+    <div class="panel accent">
+      <div class="frame"><img src="shots/dark-full.png" alt="方向B 暗色科技" /></div>
+      <div class="label">方向 B · 点缀</div>
+      <div class="badge">拟态 · 暗色</div>
+      <div class="caption">
+        <h2>暗色拟态指挥中心</h2>
+        <div class="chips"><span class="chip">深空灰 #2D313A</span><span class="chip">紫光 #6C63FF</span><span class="chip">玻璃质感</span><span class="chip">微浮起</span></div>
+        <div class="voice">旁白示例：「暗色拟态指挥中心质感——冷静、精准，像在操控一块会思考的屏。」</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">以 <b>方向 A 纸感编辑部</b> 为全片主视觉，<b>方向 B 暗色科技</b> 用于「AI 评审 / 深度思考」等科技段的转场与光效点缀</div>
+</body>
+</html>

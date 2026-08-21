@@ -1,4 +1,4 @@
-// PRD 智能看板 · UI 截图工具（无头 Edge/Chrome + CDP）
+// 需求文档工作台 · UI 截图工具（无头 Edge/Chrome + CDP）
 // 用法：node tools/screenshot_ui.mjs [输出目录]
 // 说明：沙箱内 node 直接 spawn 浏览器会崩，这里用 PowerShell Start-Process 拉起（-WindowStyle Hidden），node 只做 CDP 客户端。
 import fs from 'node:fs';
