@@ -1238,7 +1238,7 @@ function bindTouchDrag(){
 }
 
 function moveFw(i,dir){if(!STATE.framework[i])return;const j=i+dir;if(j<0||j>=STATE.framework.length)return;const tmp=STATE.framework[i];STATE.framework[i]=STATE.framework[j];STATE.framework[j]=tmp;const p=currentProj();if(p)p.framework=deep(STATE.framework);save();renderFrameworkTab();if(currentProj())render();}
-function createProject(name,frameworkId){name=(name||'').trim();if(!name){toast('请输入项目名称');return;}let fw,autoGen=false;if(frameworkId==='__AUTO__'){fw=[];autoGen=true;}else{fw=deep(STATE.framework);if(frameworkId){const preset=(STATE.frameworkPresets||[]).find(x=>x.id===frameworkId);if(preset&&preset.framework&&preset.framework.length)fw=deep(preset.framework);}ensureCatchAll(fw);}const p={id:uid(),name:name,data:blankData(fw),overrides:{},corrections:{},framework:fw,autoGen:autoGen,context:{},updatedAt:Date.now()};STATE.projects.push(p);STATE.activeProjectId=p.id;STATE.framework=deep(fw);drillOpen=null;DATA=p.data;save();render();toast(autoGen?'已创建项目（自动生成框架：导入文档后将按标题生成结构，可能有误差，请核对）':'已创建项目');}
+function createProject(name,frameworkId){name=(name||'').trim();if(!name){toast('请输入项目名称');return;}let fw,autoGen=false;if(frameworkId==='__AUTO__'){fw=[];autoGen=true;}else if(frameworkId==='__IDEA_STANDARD__'){fw=deep(DEFAULT_FRAMEWORK);}else if(frameworkId==='__IDEA_MINIMAL__'){const compact=DEFAULT_PRESETS.find(x=>x.id==='minimal');fw=deep((compact&&compact.framework)||DEFAULT_FRAMEWORK);}else{fw=deep(STATE.framework);if(frameworkId){const preset=(STATE.frameworkPresets||[]).find(x=>x.id===frameworkId);if(preset&&preset.framework&&preset.framework.length)fw=deep(preset.framework);}ensureCatchAll(fw);}if(!autoGen)ensureCatchAll(fw);const p={id:uid(),name:name,data:blankData(fw),overrides:{},corrections:{},framework:fw,autoGen:autoGen,context:{},updatedAt:Date.now()};STATE.projects.push(p);STATE.activeProjectId=p.id;STATE.framework=deep(fw);drillOpen=null;DATA=p.data;save();render();toast(autoGen?'已创建项目（自动生成框架：导入文档后将按标题生成结构，可能有误差，请核对）':'已创建项目');}
 function deleteProject(id){const i=STATE.projects.findIndex(p=>p.id===id);if(i<0)return;STATE.projects.splice(i,1);if(STATE.activeProjectId===id)STATE.activeProjectId=STATE.projects.length?STATE.projects[0].id:null;render();save();}
 function renameProject(id,name){const p=STATE.projects.find(x=>x.id===id);if(p){p.name=name;delete p.sampleGuide;save();render();}}
 
@@ -1810,8 +1810,10 @@ function bindStatic(){
       case 'rvpick':{closeModal('reviewPickModal');switchProject(t.dataset.id);rvOpen();break;}
       case 'rvhist':rvShowHistory(+t.dataset.i);break;
       case 'rvback':{const rs=document.getElementById('rvResult');if(rs)rs.innerHTML='';break;}
-      case 'rvdel':{const pj=currentProj();if(pj&&pj.reviews){pj.reviews.splice(+t.dataset.i,1);save();rvRenderHistory();const rs=document.getElementById('rvResult');if(rs)rs.innerHTML='';toast('已删除该次评审');}break;}
-      case 'rvclear':{const pj=currentProj();if(pj&&pj.reviews&&pj.reviews.length&&confirm('确定清空该项目全部评审历史？')){pj.reviews=[];save();rvRenderHistory();const rs=document.getElementById('rvResult');if(rs)rs.innerHTML='';toast('已清空评审历史');}break;}
+      case 'rvdel':{const pj=currentProj(),r=pj&&pj.reviews&&pj.reviews[+t.dataset.i];if(pj&&r){rvRemoveReviewComments(pj,r.id);pj.reviews.splice(+t.dataset.i,1);save();rvRenderHistory();const rs=document.getElementById('rvResult');if(rs)rs.innerHTML='';toast('已删除该次评审及其 AI 评论');}break;}
+      case 'rvclear':{const pj=currentProj();if(pj&&pj.reviews&&pj.reviews.length&&confirm('确定清空该项目全部评审历史及其 AI 评论？')){pj.reviews.forEach(function(r){rvRemoveReviewComments(pj,r.id);});pj.reviews=[];save();rvRenderHistory();const rs=document.getElementById('rvResult');if(rs)rs.innerHTML='';toast('已清空评审历史及其 AI 评论');}break;}
+      case 'rvcomments':openCommentsPanel();break;
+      case 'rvautofix':rvOptimizeReview(+t.dataset.i);break;
       case 'review-go':rvRun();break;case 'np-rename':{const fwId=t.dataset.fwid;const pr=(STATE.frameworkPresets||[]).find(x=>x.id===fwId);if(!pr){toast('框架不存在');break;}renameCtx={type:'fw',id:fwId};document.getElementById('rnTitle').textContent='重命名框架';document.getElementById('rnLabel').textContent='框架名称';document.getElementById('rnName').value=pr.name||'';openModal('renameModal');break;}
       case 'doRename':{const n=document.getElementById('rnName').value.trim();if(!n){toast('名称不能为空');break;}if(renameCtx.type==='proj'){renameProject(renameCtx.id,n);}else if(renameCtx.type==='fw'){const pr=(STATE.frameworkPresets||[]).find(x=>x.id===renameCtx.id);if(pr){pr.name=n;save();renderNewProjFrameworks();toast('已重命名框架「'+n+'」');}}else if(renameCtx.type==='grp'){const g=(STATE.groups||[]).find(x=>x.id===renameCtx.id);if(g){g.name=n;save();renderSidebar();toast('已重命名分组「'+n+'」');}}closeModal('renameModal');break;}
       case 'delproj':{closeProjMenu();const p=STATE.projects.find(x=>x.id===id);if(p&&confirm('确定删除项目「'+p.name+'」？此操作不可撤销。'))deleteProject(id);break;}
@@ -2125,6 +2127,47 @@ const RV_TEMPLATES={
     ['low','建议明确跨团队协作边界（算法 / 平台 / 业务）与责任接口人。']
   ]
 };
+function rvSectionId(name){
+  var n=String(name||'').replace(/\s+/g,'').toLowerCase();
+  if(!n||/^(全局|global|未定位)/.test(n))return '';
+  var exact=(STATE.framework||[]).find(function(s){return String(s.title||'').replace(/\s+/g,'').toLowerCase()===n;});
+  var fuzzy=exact||(STATE.framework||[]).find(function(s){var t=String(s.title||'').replace(/\s+/g,'').toLowerCase();return t&&((n.indexOf(t)>=0)||(t.indexOf(n)>=0));});
+  return fuzzy?fuzzy.id:'';
+}
+function rvReviewCommentId(){return 'rv_'+Date.now().toString(36)+Math.floor(Math.random()*100000).toString(36);}
+function rvSyncReviewComments(pj,review){
+  if(!pj||!review||!review.id)return 0;
+  var count=0;
+  (review.groups||[]).forEach(function(group){
+    var role=group.role||{};
+    (group.items||[]).forEach(function(item){
+      var sid=rvSectionId(item.sec),cm={id:rvReviewCommentId(),text:String(item.txt||'').trim(),by:'AI 评审 · '+(role.name||'未命名角色'),at:review.at||Date.now(),source:'ai-review',reviewId:review.id,severity:item.sev||'medium',sectionTitle:item.sec||'全局'};
+      if(!cm.text)return;
+      if(sid){var sec=DATA[sid]||(DATA[sid]={});if(!sec.comments)sec.comments={};sec.comments[cm.id]=cm;}
+      else{pj.reviewComments=pj.reviewComments||[];pj.reviewComments.push(cm);}
+      count++;
+    });
+  });
+  return count;
+}
+function rvRemoveReviewComments(pj,reviewId){
+  if(!pj||!reviewId)return;
+  (STATE.framework||[]).forEach(function(sec){var c=DATA[sec.id];if(c&&c.comments)Object.keys(c.comments).forEach(function(cid){if(c.comments[cid]&&c.comments[cid].source==='ai-review'&&c.comments[cid].reviewId===reviewId)delete c.comments[cid];});});
+  if(pj.reviewComments)pj.reviewComments=pj.reviewComments.filter(function(cm){return !(cm&&cm.source==='ai-review'&&cm.reviewId===reviewId);});
+}
+function rvOptimizePayload(review){
+  var items=[];
+  (review.groups||[]).forEach(function(group){(group.items||[]).forEach(function(item){items.push({role:(group.role||{}).name||'AI 评审',severity:item.sev||'medium',text:String(item.txt||''),sectionId:rvSectionId(item.sec),sectionTitle:item.sec||'全局'});});});
+  return items;
+}
+function rvOptimizeReview(i){
+  var pj=currentProj(),review=pj&&pj.reviews&&pj.reviews[i],AIC=window.__AICtrl;
+  if(!review||!AIC||typeof AIC.runReviewOptimize!=='function'){toast('评审优化模块未加载，请刷新后重试');return;}
+  var items=rvOptimizePayload(review);if(!items.length){toast('本次评审没有可优化的建议');return;}
+  if(!confirm('AI 将根据本次评审生成修改，并自动应用通过结构校验与独立复核的内容。已锁定、校验失败或无法定位的章节不会被改动，且会保留版本记录。继续吗？'))return;
+  try{closeModal('reviewModal');}catch(e){}
+  AIC.runReviewOptimize({reviewId:review.id,reviewItems:items,autoApply:true});
+}
 function rvOpen(){
   const pj=currentProj();
   if(!pj){rvOpenPick();return;}
@@ -2144,6 +2187,7 @@ function rvOpen(){
 }
 function rvRenderGroupsHtml(groups,meta){
   const pjName=(meta&&meta.pjName)||'';
+  const actions=meta&&meta.reviewIndex!=null?'<div class="row-act" style="margin:0 0 10px"><button class="btn btn--secondary" data-act="rvcomments">在评论中查看</button><button class="btn btn--primary" data-act="rvautofix" data-i="'+meta.reviewIndex+'">根据评审一键优化并应用</button></div>':'';
   let html='';
   groups.forEach(function(g){
     const role=g.role;
@@ -2153,7 +2197,7 @@ function rvRenderGroupsHtml(groups,meta){
     }).join('');
     html+='<div class="rv-group"><div class="rv-group-h"><span>'+role.ic+'</span>'+esc(role.name)+'视角<span class="rv-cnt">'+items.length+' 条意见</span></div>'+items+'</div>';
   });
-  html+='<div class="muted" style="font-size:11.5px;margin-top:8px">评审由 AI 基于当前项目 PRD 内容生成，仅供参考，请结合项目实际情况判断后落实。</div>';
+  html+=actions+'<div class="muted" style="font-size:11.5px;margin-top:8px">评审意见已同步到评论：每条均带 AI 角色署名；无法精确对应原文的意见以章节级或全局评论展示。自动优化只会应用通过校验与独立复核的修改。</div>';
   return html;
 }
 function rvRenderHistory(){
@@ -2176,7 +2220,7 @@ function rvShowHistory(i){
   const st=document.getElementById('rvStatus');if(st)st.textContent='';
   const rs=document.getElementById('rvResult');if(!rs)return;
   rs.innerHTML='<div class="row-act" style="margin-bottom:10px"><button data-act="rvback">← 返回重新评审</button><span class="muted" style="font-size:12px">'+new Date(r.at).toLocaleString()+' · '+(r.roles||[]).length+' 个角色 · '+(r.roles||[]).map(function(id){const rr=RV_ROLES.find(function(x){return x.id===id;});return rr?rr.name:'';}).join(' / ')+'</span></div>'
-    +rvRenderGroupsHtml(r.groups||[],{pjName:pj.name});
+    +rvRenderGroupsHtml(r.groups||[],{pjName:pj.name,reviewIndex:i});
 }
 // 评审 fetch 流式调用（绕过 ai-controller IIFE 抽象，直接 fetch）
 function rvFetchStream(messages,callbacks,stg){
@@ -2187,7 +2231,7 @@ function rvFetchStream(messages,callbacks,stg){
   return fetch(base+'/chat/completions',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+String(stg.apiKey||'').trim()},
-    body:JSON.stringify({model:stg.model||'deepseek-chat',messages,stream:true,temperature:0.2}),
+    body:JSON.stringify({model:stg.model||stg.deepModel||'',messages,stream:true,temperature:0.2}),
     signal:ctrl.signal
   }).then(function(resp){
     if(!resp.ok)throw new Error('HTTP '+resp.status);
@@ -2266,6 +2310,11 @@ function rvRun(){
     toast('请先在 设置→AI 中配置 API Key');
     return;
   }
+  if(!String(stg.model||stg.deepModel||'').trim()){
+    if(st)st.textContent='未配置 AI 模型：请到 设置 → AI 填写标准模型或深度模型。';
+    toast('请先在 设置→AI 中填写模型名');
+    return;
+  }
   let docText='';
   try{
     docText = (AIC._test && typeof AIC._test.docText==='function') ? AIC._test.docText() : '';
@@ -2277,12 +2326,15 @@ function rvRun(){
   const runNext=function(){
     if(i>=sel.length){
       if(st)st.textContent='';
-      if(rs)rs.innerHTML=rvRenderGroupsHtml(groups,{pjName:pj.name});
       pj.reviews=pj.reviews||[];
-      pj.reviews.unshift({at:Date.now(),roles:sel,groups:groups});
-      if(pj.reviews.length>20)pj.reviews.length=20;
+      var review={id:rvReviewCommentId(),at:Date.now(),roles:sel,groups:groups};
+      pj.reviews.unshift(review);
+      if(pj.reviews.length>20)pj.reviews.splice(20).forEach(function(old){rvRemoveReviewComments(pj,old&&old.id);});
+      var commentCount=rvSyncReviewComments(pj,review);
       save();
       rvRenderHistory();
+      if(rs)rs.innerHTML=rvRenderGroupsHtml(groups,{pjName:pj.name,reviewIndex:0,commentCount:commentCount});
+      toast('评审完成：'+commentCount+' 条意见已同步到评论');
       return;
     }
     const rid=sel[i++];
@@ -2338,7 +2390,7 @@ function rvOpenPick(){
   const list=document.getElementById('rvPickList');if(!list)return;
   const ps=STATE.projects||[];
   if(!ps.length){
-    list.innerHTML='<div class="empty"><span class="e-ic">'+ICONS.starL+'</span><span class="e-t">还没有项目</span><span class="e-d">先导入一份 PRD，或从首页「创建新需求 / AI 产品设计」新建项目，再进行评审</span></div>';
+    list.innerHTML='<div class="empty"><span class="e-ic">'+ICONS.starL+'</span><span class="e-t">还没有项目</span><span class="e-d">先导入一份 PRD，或从首页「从空白开始 / 从想法开始」新建项目，再进行评审</span></div>';
   }else{
     let rows=ps.map(function(p){
       const ts=p.updatedAt?new Date(p.updatedAt).toLocaleDateString():'';
@@ -2383,6 +2435,8 @@ function openCommentsPanel(){
     if(c.comments){Object.keys(c.comments).forEach(cid=>{const cm=c.comments[cid];items.push({cid:cid,sec:sec.id,where:title,txt:cm.text,by:cm.by||'评审',at:cm.at||0});});}
     (c.cards||[]).forEach(function(card,ci){if(card.comments){Object.keys(card.comments).forEach(cid=>{const cm=card.comments[cid];items.push({cid:cid,sec:sec.id,card:ci,where:title+' · 卡片'+(ci+1),txt:cm.text,by:cm.by||'评审',at:cm.at||0});});}});
   });
+  const pj=currentProj();
+  (pj&&pj.reviewComments||[]).forEach(function(cm){items.push({cid:cm.id,sec:'',where:'全局建议',txt:cm.text,by:cm.by||'AI 评审',at:cm.at||0,review:true});});
   if(!items.length){toast('还没有评论');return;}
   items.sort(function(a,b){return (b.at||0)-(a.at||0);});
   const m=document.createElement('div');m.className='cmt-list-modal';
@@ -2397,14 +2451,15 @@ function openCommentsPanel(){
     if(!e.target.closest('.cmt-list-modal')){closeList();return;}
     if(e.target.closest('[data-act="cmtlistclose"]')){closeList();return;}
     const item=e.target.closest('.cmt-list-item');
-    if(item){const cid=item.dataset.cid;closeList();goCmt(cid);}
+    if(item){const cid=item.dataset.cid,sec=item.dataset.sec;closeList();goCmt(cid,sec);}
   }
   setTimeout(function(){document.addEventListener('click',outC);},0);
 }
-function goCmt(cid){
+function goCmt(cid,fallbackSec){
   const mk=document.querySelector('.cmt-hl[data-cid="'+cid+'"]');
   if(mk){if(window.__commentCtrl&&window.__commentCtrl.reveal)window.__commentCtrl.reveal(mk);else mk.click();}
-  else toast('该评论所在内容已变化，找不到划线位置');
+  else if(fallbackSec){try{openSection(fallbackSec);toast('已定位到相关章节；这是章节级 AI 评审意见，未对原文划线');}catch(e){toast('该评论所在内容已变化，找不到划线位置');}}
+  else toast('这是全局 AI 评审建议，没有对应的单一章节');
 }
 function closeOverrideQuick(){const m=document.getElementById('ovMenu');if(m)m.remove();}
 function openOverrideQuick(id){

@@ -113,6 +113,13 @@ try {
     return {compactState,comfortableState,restored:{body:document.body.getAttribute('data-density'),active:standard.classList.contains('on'),pressed:standard.getAttribute('aria-pressed'),text:(document.getElementById('densityCurrent')||{}).textContent||''}};
   })()`);
   check('设置密度：点击后即时更新选中态、说明与页面状态', !density.missing && density.compactState.body==='compact' && density.compactState.active && density.compactState.pressed==='true' && density.compactState.text.indexOf('紧凑')>=0 && density.comfortableState.body==='comfortable' && density.comfortableState.active && density.comfortableState.pressed==='true' && density.comfortableState.text.indexOf('宽松')>=0 && density.restored.body==='standard' && density.restored.active && density.restored.pressed==='true' && density.restored.text.indexOf('标准')>=0, JSON.stringify(density));
+  const modelSetup = await evalJs(`(()=>{
+    const tab=document.querySelector('#tierAdvanced [data-tab="ai"]');if(tab)tab.click();
+    const local=document.querySelector('[data-ai="preset-local-free"]');if(local)local.click();
+    const online=document.querySelector('[data-ai="preset-online"]');
+    return {tab:!!tab,local:!!local,online:!!online,provider:(document.getElementById('aiProvider')||{}).value||'',base:(document.getElementById('aiBaseUrl')||{}).value||'',model:(document.getElementById('aiModel')||{}).value||'',fast:(document.getElementById('aiFastModel')||{}).value||'',deep:(document.getElementById('aiDeepModel')||{}).value||'',key:(document.getElementById('aiKey')||{}).value||'',hint:(document.getElementById('aiConnStatus')||{}).textContent||''};
+  })()`);
+  check('AI 设置：默认引导用户配置，支持本地免费 Ollama 示例与快速/深度模型分档', modelSetup.tab && modelSetup.local && modelSetup.online && modelSetup.provider==='ollama' && modelSetup.base==='http://localhost:11434/v1' && modelSetup.model==='qwen3:8b' && modelSetup.fast==='qwen3:8b' && modelSetup.deep==='qwen3:8b' && modelSetup.key==='ollama' && modelSetup.hint.indexOf('ollama run qwen3:8b')>=0, JSON.stringify(modelSetup));
   await evalJs(`(()=>{ const b=document.querySelector('#settingsModal .x'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 150));
 
@@ -187,34 +194,79 @@ try {
     const skip=document.getElementById('aiDesSkip'); if(skip)skip.click();
     const sk=document.getElementById('aiDesSkeletonModal');
     const ed=document.getElementById('aiDesSkeletonEditor');
-    return {desOpen:!!(des&&des.classList.contains('open')), stateText:state?state.textContent:'', skOpen:!!(sk&&sk.classList.contains('open')), editor:ed?ed.value:'', confirm:!!document.querySelector('[data-ai="desskelconfirm"]')};
+    const name=document.getElementById('aiDesProjectName'),nameHint=document.getElementById('aiDesProjectNameHint'),framework=document.getElementById('aiDesFramework'),frameworkHint=document.getElementById('aiDesFrameworkHint');
+    return {desOpen:!!(des&&des.classList.contains('open')), stateText:state?state.textContent:'', skOpen:!!(sk&&sk.classList.contains('open')), editor:ed?ed.value:'', confirm:!!document.querySelector('[data-ai="desskelconfirm"]'),nameInput:!!name,nameValue:name?name.value:'',nameHint:nameHint?nameHint.textContent:'',framework:framework?framework.value:'',frameworkOptions:framework?Array.from(framework.options).map(o=>o.textContent).join(' / '):'',frameworkHint:frameworkHint?frameworkHint.textContent:''};
   })()`);
-  check('AI 澄清：展示理解/待确认/假设，并先打开可编辑方案确认层', !desGuide.desOpen && desGuide.stateText.indexOf('我已理解')>=0 && desGuide.stateText.indexOf('还需要确认')>=0 && desGuide.stateText.indexOf('AI 暂定假设')>=0 && desGuide.skOpen && desGuide.editor.indexOf('AI 建议（待确认）')>=0 && desGuide.confirm, JSON.stringify(desGuide));
+  check('AI 澄清：展示理解/待确认/假设，并先打开含用户命名权和通用目录的可编辑方案确认层', !desGuide.desOpen && desGuide.stateText.indexOf('我已理解')>=0 && desGuide.stateText.indexOf('还需要确认')>=0 && desGuide.stateText.indexOf('AI 暂定假设')>=0 && desGuide.skOpen && desGuide.editor.indexOf('AI 建议（待确认）')>=0 && desGuide.editor.indexOf('产品中的 AI 功能边界')>=0 && desGuide.confirm && desGuide.nameInput && desGuide.nameValue==='' && desGuide.nameHint.indexOf('不会自动采用')>=0 && desGuide.framework==='__IDEA_STANDARD__' && desGuide.frameworkOptions.indexOf('通用产品 PRD')>=0 && desGuide.frameworkOptions.indexOf('精简 MVP')>=0 && desGuide.frameworkHint.indexOf('不会继承旧项目')>=0, JSON.stringify(desGuide));
   await evalJs(`(()=>{ const b=document.querySelector('[data-ai="desskelclose"]'); if(b)b.click(); return true; })()`);
+  const isolatedIdeaFramework = await evalJs(`(()=>{
+    const before=deep(STATE);
+    STATE.framework=[{id:'legacy-ai',title:'AI 助手旧目录',type:'text',required:true,weight:1}];
+    createProject('目录隔离验证','__IDEA_STANDARD__');
+    const created=currentProj(),titles=(created&&created.framework||[]).map(s=>s.title);
+    STATE=before;refreshData();save();render();
+    return {count:titles.length,hasPurpose:titles.indexOf('目的')>=0,hasFeature:titles.indexOf('功能需求')>=0,hasAiLegacy:titles.some(x=>x.indexOf('AI 助手旧目录')>=0)};
+  })()`);
+  check('从想法开始：创建时隔离旧项目框架，始终落到通用产品目录', isolatedIdeaFramework.count===14 && isolatedIdeaFramework.hasPurpose && isolatedIdeaFramework.hasFeature && !isolatedIdeaFramework.hasAiLegacy, JSON.stringify(isolatedIdeaFramework));
   const desStream = await evalJs(`(async()=>{
-    const oldFetch=window.fetch,oldSettings=localStorage.getItem('prdKanbanAiSettings'),oldTest=window.__AI_TEST_MODE;
+    const oldFetch=window.fetch,oldSettings=localStorage.getItem('prdKanbanAiSettings'),oldTest=window.__AI_TEST_MODE,requests=[];
     window.__AI_TEST_MODE=true;
     localStorage.setItem('prdKanbanAiSettings',JSON.stringify({provider:'custom',apiKey:'test-key',baseUrl:'https://mock.local/v1',model:'mock-model'}));
-    window.fetch=()=>{const body='data: '+JSON.stringify({choices:[{delta:{content:'【我已理解】你想做一个喝水记录工具。\\n【还需确认】提醒频率。\\n【AI假设】无。\\n【进入下一题】你希望谁使用它？'}}]})+'\\n\\ndata: [DONE]\\n\\n';return Promise.resolve(new Response(body,{headers:{'Content-Type':'text/event-stream'}}));};
+    window.fetch=(url,opts)=>{requests.push(String(opts&&opts.body||''));const content=requests.length===1?'【我已理解】你想做一个喝水记录工具。\\n【已确认事实】- 想做喝水记录工具\\n【还需确认】使用者。\\n【AI假设】无。\\n【进入下一题】你希望谁使用它？':'【我已理解】这是给你自己使用的喝水记录工具。\\n【已确认事实】- 想做喝水记录工具\\n- 使用者是你自己\\n【还需确认】第一版最想完成的事。\\n【AI假设】无。\\n【进入下一题】第一版最想让它完成什么？';const body='data: '+JSON.stringify({choices:[{delta:{content}}]})+'\\n\\ndata: [DONE]\\n\\n';return Promise.resolve(new Response(body,{headers:{'Content-Type':'text/event-stream'}}));};
     aiDesignOpen();const input=document.getElementById('aiDesInput');if(input)input.value='我想记录每天喝水';const send1=document.getElementById('aiDesSendBtn');if(send1)send1.click();
     await new Promise(r=>setTimeout(r,120));
     const replyLog=(document.getElementById('aiDesLog')||{}).textContent||'',replyStop=getComputedStyle(document.getElementById('aiDesStop')).display;
+    const follow=document.getElementById('aiDesInput');if(follow)follow.value='我自己用';const sendFollow=document.getElementById('aiDesSendBtn');if(sendFollow)sendFollow.click();
+    await new Promise(r=>setTimeout(r,120));
+    const remembered=!!(requests[1]&&requests[1].indexOf('已完成问答')>=0&&requests[1].indexOf('问题：你希望谁使用它？')>=0&&requests[1].indexOf('回答：我自己用')>=0&&requests[1].indexOf('不得换一种说法重复提问')>=0);
+    aiDesState.turns=Array.from({length:9},(_,i)=>({question:'问题'+(i+1),answer:'回答'+(i+1)}));aiDesState.qa=aiDesState.turns.map(x=>x.answer);aiDesState.needs=['第一版范围'];aiDesState.checkpointAt=0;
+    const tenth=document.getElementById('aiDesInput');if(tenth)tenth.value='第十轮补充';const tenthSend=document.getElementById('aiDesSendBtn');if(tenthSend)tenthSend.click();
+    await new Promise(r=>setTimeout(r,120));
+    const checkpoint=document.getElementById('aiDesCheckpointModal'),checkpointOpen=!!(checkpoint&&checkpoint.classList.contains('open')),continueBtn=document.querySelector('[data-ai="descheckpointcontinue"]');if(continueBtn)continueBtn.click();
+    const checkpointClosed=!(checkpoint&&checkpoint.classList.contains('open'));
+    aiDesState.turns=Array.from({length:19},(_,i)=>({question:'问题'+(i+1),answer:'回答'+(i+1)}));aiDesState.qa=aiDesState.turns.map(x=>x.answer);aiDesState.needs=['第一版范围'];aiDesState.checkpointAt=10;
+    const twentieth=document.getElementById('aiDesInput');if(twentieth)twentieth.value='第二十轮补充';const twentiethSend=document.getElementById('aiDesSendBtn');if(twentiethSend)twentiethSend.click();
+    await new Promise(r=>setTimeout(r,120));
+    const generateBtn=document.querySelector('[data-ai="descheckpointgenerate"]');if(generateBtn)generateBtn.click();
+    const skeleton=document.getElementById('aiDesSkeletonModal'),checkpointGenerate=!!(skeleton&&skeleton.classList.contains('open'));
+    const checkpointAt=aiDesState.checkpointAt;
+    const skeletonClose=document.querySelector('[data-ai="desskelclose"]');if(skeletonClose)skeletonClose.click();
     aiDesignOpen();const input2=document.getElementById('aiDesInput');if(input2)input2.value='我想做一个简单工具';const send2=document.getElementById('aiDesSendBtn');if(send2)send2.click();const stop=document.getElementById('aiDesStop');if(stop)stop.click();
     await new Promise(r=>setTimeout(r,80));
     const stopLog=(document.getElementById('aiDesLog')||{}).textContent||'',stopDisplay=getComputedStyle(document.getElementById('aiDesStop')).display;
     window.fetch=oldFetch;if(oldSettings===null)localStorage.removeItem('prdKanbanAiSettings');else localStorage.setItem('prdKanbanAiSettings',oldSettings);window.__AI_TEST_MODE=oldTest;
     const close=document.querySelector('[data-ai="desclose"]');if(close)close.click();
-    return {reply:replyLog.indexOf('你希望谁使用它')>=0,replyStop,stopped:stopLog.indexOf('已停止本轮引导')>=0,stopDisplay};
+    return {reply:replyLog.indexOf('你希望谁使用它')>=0,replyStop,remembered,checkpointOpen,checkpointClosed,checkpointAt,hasContinue:!!continueBtn,hasGenerate:!!generateBtn,checkpointGenerate,stopped:stopLog.indexOf('已停止本轮引导')>=0,stopDisplay};
   })()`);
-  check('AI 澄清：流式首答会解除思考态；请求尚未开始时停止也能恢复操作', desStream.reply && desStream.replyStop==='none' && desStream.stopped && desStream.stopDisplay==='none', JSON.stringify(desStream));
+  check('AI 澄清：流式首答会解除思考态；下一轮携带问题-回答与事实记忆，不会遗忘；请求尚未开始时停止也能恢复操作', desStream.reply && desStream.replyStop==='none' && desStream.remembered && desStream.stopped && desStream.stopDisplay==='none', JSON.stringify(desStream));
+  check('AI 澄清：第 10 轮触发阶段检查，用户可继续完善或进入可编辑方案，不强制直接生成', desStream.checkpointAt===10 && desStream.checkpointClosed && desStream.hasContinue && desStream.hasGenerate && desStream.checkpointGenerate, JSON.stringify(desStream));
 
   // 加载示例 → 触发 render（标准 14 节框架，验收黄）
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="sample"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 1800));
   const sampleOk = await evalJs(`(()=>{ const p=currentProj(); return p?((p.data.purpose&&p.data.purpose.html||'').indexOf('核心需求')>=0 && (p.data.feat&&p.data.feat.items?p.data.feat.items.length:0)===8):false; })()`);
   check('示例加载后内容完整（标准 14 节）', sampleOk===true, String(sampleOk));
+  const assistantKnowledge = await evalJs(`(()=>{
+    const p=currentProj(),api=window.__AICtrl&&window.__AICtrl._test,knowledge=api&&api.chatKnowledge?api.chatKnowledge():'',prompt=api&&api.chatPrompt?api.chatPrompt():'';
+    const floatBtn=document.getElementById('aiFloatBtn');if(floatBtn)floatBtn.click();
+    const label=(document.getElementById('aiFloatKnowledge')||{}).textContent||'',quick=document.querySelectorAll('[data-ai="floatask"]');
+    const panel=document.getElementById('aiFloatPanel');if(panel&&panel.classList.contains('open')&&floatBtn)floatBtn.click();
+    return {hasApi:!!api,hasName:knowledge.indexOf(p.name)>=0,hasBody:knowledge.indexOf('功能需求')>=0,hasQuality:knowledge.indexOf('当前质量状态')>=0,teaches:prompt.indexOf('小白能懂的话')>=0,states:prompt.indexOf('当前已确认')>=0,label,quick:quick.length};
+  })()`);
+  check('项目助手：携带当前项目知识和质量状态，以小白语言回答并提供可见快捷入口', assistantKnowledge.hasApi && assistantKnowledge.hasName && assistantKnowledge.hasBody && assistantKnowledge.hasQuality && assistantKnowledge.teaches && assistantKnowledge.states && assistantKnowledge.label.indexOf('已读取')>=0 && assistantKnowledge.quick===3, JSON.stringify(assistantKnowledge));
   const sampleGuide = await evalJs(`(()=>{ const g=document.getElementById('sampleNext'); return {shown:!!g,edit:!!document.querySelector('[data-act="sample-edit"]'),health:!!document.querySelector('[data-act="sample-health"]'),rename:!!document.querySelector('[data-act="sample-rename"]')}; })()`);
   check('示例 PRD：展示可执行的下一步建议', sampleGuide.shown && sampleGuide.edit && sampleGuide.health && sampleGuide.rename, JSON.stringify(sampleGuide));
+  const reviewToComments = await evalJs(`(()=>{
+    const pj=currentProj(),review={id:'dash-review',at:Date.now(),roles:['pm','qa'],groups:[{role:RV_ROLES[0],items:[{sev:'high',txt:'目标需要明确量化验收方式。',sec:'目的'}]},{role:RV_ROLES[2],items:[{sev:'medium',txt:'补充异常输入的测试边界。',sec:'验收标准'}]}]};
+    const count=rvSyncReviewComments(pj,review),html=rvRenderGroupsHtml(review.groups,{pjName:pj.name,reviewIndex:0});
+    openCommentsPanel();const panel=document.querySelector('.cmt-list-modal'),panelText=panel?panel.textContent:'';if(panel)panel.remove();
+    const reviewStore=Object.values(DATA).flatMap(c=>Object.values(c&&c.comments||{})).concat(pj.reviewComments||{});
+    const roleStorage=reviewStore.some(c=>c&&c.by==='AI 评审 · 产品经理')&&reviewStore.some(c=>c&&c.by==='AI 评审 · 测试');
+    rvRemoveReviewComments(pj,review.id);
+    const remaining=Object.values(DATA).flatMap(c=>Object.values(c&&c.comments||{})).concat(pj.reviewComments||[]);
+    return {count,roleStorage,panelRole:panelText.indexOf('AI 评审 · 产品经理')>=0&&panelText.indexOf('AI 评审 · 测试')>=0,actions:html.indexOf('data-act="rvcomments"')>=0&&html.indexOf('data-act="rvautofix"')>=0,cleaned:!remaining.some(c=>c&&c.reviewId==='dash-review')};
+  })()`);
+  check('多角色评审：意见同步到评论并标清角色，提供评论查看与一键安全优化入口', reviewToComments.count===2 && reviewToComments.roleStorage && reviewToComments.panelRole && reviewToComments.actions && reviewToComments.cleaned, JSON.stringify(reviewToComments));
   const stage4 = await evalJs(`(()=>{
     const sid='purpose';
     const btn=document.querySelector('[data-ai="lock-section"][data-sid="'+sid+'"]');
