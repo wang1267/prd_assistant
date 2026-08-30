@@ -90,7 +90,7 @@ function check(name,cond,detail){results.push({name,pass:!!cond});console.log((c
     const gH=AI._test.styleGuide('hardware');
     const gA=AI._test.styleGuide('agile');
     const gN=AI._test.styleGuide('');
-    check('v17.19 风格指南：hardware 含安全/法规/接口', gH.indexOf('功能安全等级')>=0&&gH.indexOf('AEC-Q')>=0&&gH.indexOf('接口必须写协议')>=0, gH);
+    check('当前硬件风格指南含安全/法规/接口', gH.indexOf('功能安全等级')>=0&&gH.indexOf('环境与法规')>=0&&gH.indexOf('接口必须写协议')>=0, gH);
     check('v17.19 风格指南：agile 含排除项', gA.indexOf('排除项')>=0, gA);
     check('v17.19 风格指南：不约束返回空', gN==='', JSON.stringify(gN));
 
@@ -100,7 +100,7 @@ function check(name,cond,detail){results.push({name,pass:!!cond});console.log((c
     const fwList=ctx.STATE.framework.map(x=>x.id+'「'+x.title+'」').join('；');
     const pWith=AI._test.genPrompt('purpose','为座舱新增免唤醒能力。',fwList,AI._test.styleGuide('hardware'));
     const pNo=AI._test.genPrompt('purpose','为座舱新增免唤醒能力。',fwList,'');
-    check('v17.19 prompt：带风格时 system 含风格约束', pWith&&pWith.system.indexOf('【模板风格：智能硬件/车规】')>=0&&pWith.system.indexOf('功能安全等级')>=0, pWith?pWith.system:'null');
+    check('当前生成提示词包含硬件风格约束', pWith&&pWith.system.indexOf('【模板风格：通用硬件/物联网】')>=0&&pWith.system.indexOf('功能安全等级')>=0, pWith?pWith.system:'null');
     check('v17.19 prompt：不带风格时无风格段落', pNo&&pNo.system.indexOf('【模板风格')<0, pNo?pNo.system:'null');
 
     // ---------- 3. genSection 透传风格指南到请求体 ----------

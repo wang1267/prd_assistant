@@ -70,6 +70,7 @@ function mockFetch(url, opts){
 
 const ctx = {
   document:doc, localStorage:storage, console, setTimeout, clearTimeout, setInterval, clearInterval,
+  __AI_TEST_MODE:true,
   confirm:()=>true, prompt:()=>'', alert:()=>{}, TextDecoder, TextEncoder, URL, AbortController,
   fetch:mockFetch, FileReader:function(){}, Blob:function(){}, FormData:function(){},
   DOMParser:function(){return {parseFromString:()=>({body:{innerHTML:'',querySelectorAll:()=>[]}})};},
@@ -417,11 +418,11 @@ function check(name,cond,detail){results.push({name,pass:!!cond});console.log((c
     ctx.localStorage.removeItem('prdKanbanStateV3.bak');
     ctx.localStorage.setItem('prdKanbanStateV3', mainRaw);
 
-    // ---------- 28. v17.11/v17.24 示例 PRD（内嵌文档 + 标准 14 节框架） ----------
-    check('v17.11 示例文本已内嵌', (AI._test.sampleText()||'').indexOf('多意图连续对话')>=0, String((AI._test.sampleText()||'').length));
+    // ---------- 28. 当前示例 PRD（内嵌文档 + 标准 14 节框架） ----------
+    check('当前示例文本已内嵌', (AI._test.sampleText()||'').indexOf('协作工具「协同」')>=0, String((AI._test.sampleText()||'').length));
     ctx.loadSample();
     const sp=ctx.currentProj();
-    check('v17.24 加载示例走标准 14 节框架且内容完整', !!sp&&!sp.autoGen&&sp.framework.length===14&&sp.framework.some(s=>s.id==='purpose'&&s.title==='目的')&&sp.framework.some(s=>s.id==='feat'&&s.title==='功能需求')&&JSON.stringify(sp.data).indexOf('多意图连续对话')>=0&&JSON.stringify(sp.data).indexOf('免唤醒监听')>=0, JSON.stringify(sp&&sp.framework.map(s=>s.id).slice(0,15)));
+    check('当前示例走标准 14 节框架且内容完整', !!sp&&!sp.autoGen&&sp.framework.length===14&&sp.framework.some(s=>s.id==='purpose'&&s.title==='目的')&&sp.framework.some(s=>s.id==='feat'&&s.title==='功能需求')&&JSON.stringify(sp.data).indexOf('轻量团队协作工具')>=0&&JSON.stringify(sp.data).indexOf('实时协同看板')>=0, JSON.stringify(sp&&sp.framework.map(s=>s.id).slice(0,15)));
 
     // ---------- 29. v17.13 整份解析失败→按节逐个优化兜底 ----------
     ctx.STATE.framework=JSON.parse(JSON.stringify(t.DEFAULT_FRAMEWORK));

@@ -49,6 +49,9 @@
   #storageWarn{position:sticky;top:48px;z-index:39;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:8px 16px;background:#a8554c;color:#fff;font-size:13px;box-shadow:0 4px 12px rgba(168,85,76,.35)}
   #storageWarn button{border:1px solid rgba(255,255,255,.7);background:transparent;color:#fff;padding:4px 12px;border-radius:7px;font-size:12px}
   #storageWarn button:hover{background:rgba(255,255,255,.14)}
+  #storageAdvice{position:sticky;top:48px;z-index:38;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:8px 16px;background:#fff6df;color:#72551a;border-bottom:1px solid #ebd49b;font-size:13px}
+  #storageAdvice button{border:1px solid #d6b96b;background:#fffaf0;color:#72551a;padding:4px 12px;border-radius:7px;font-size:12px}
+  #storageAdvice button:hover{background:#fff0c7}
   .brand{font-size:17px;font-weight:600;letter-spacing:0;color:var(--brand)}
   .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
   .topbar-proj-name{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -231,6 +234,13 @@
   .wz-step p{margin:6px 0;line-height:1.7}
   .wz-list{margin:6px 0;padding-left:18px;line-height:1.9}
   .wz-list code{background:var(--line-2);padding:1px 5px;border-radius:5px;font-size:12px}
+  .wz-start-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}
+  .wz-start-card{border:1px solid var(--line);border-radius:10px;background:var(--base);padding:12px 13px;text-align:left;color:var(--ink);cursor:pointer;transition:.15s ease}
+  .wz-start-card:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateY(-1px)}
+  .wz-start-card b{display:block;font-size:13px;margin-bottom:4px}.wz-start-card span{display:block;font-size:11.5px;line-height:1.55;color:var(--ink-3)}
+  .wz-after{margin-top:14px;padding:11px 12px;border-radius:9px;background:var(--line-2);font-size:12.5px;line-height:1.65;color:var(--ink-2)}
+  .wz-after b{color:var(--ink)}.wz-after ol{margin:5px 0 0;padding-left:19px}.wz-privacy{font-size:11.5px;color:var(--ink-3);margin-top:10px!important}
+  @media(max-width:560px){.wz-start-grid{grid-template-columns:1fr}}
   /* 节内模板编辑器 */
   .sec-tpl-edit{margin:10px 0 0;border-top:1px dashed var(--line);padding-top:10px}
   .sec-tpl-edit textarea{width:100%;min-height:46px;resize:vertical;font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-family:inherit}
@@ -251,12 +261,34 @@
   .trace-table th{background:var(--line-2);font-weight:700}
   .trace-cell{color:var(--brand);cursor:pointer;text-decoration:underline}
   .trace-cell.none{color:var(--ink-3);text-decoration:none;cursor:default}
+  .trace-panel{grid-column:1/-1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow:auto}
+  .trace-panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}.trace-panel-h b{font-size:14px}.trace-panel-h span{font-size:12px;color:var(--ink-3)}
+  .trace-table{min-width:760px}.trace-table td{line-height:1.45}.trace-table .trace-main{font-weight:600;color:var(--ink)}.trace-table .trace-p0{color:var(--red);font-size:11px;margin-left:4px}
   .link-modal-list{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto}
   .link-item{display:flex;gap:8px;align-items:flex-start;font-size:13px}
   /* 偏好密度 */
   .dens-row{display:flex;gap:8px}
-  .dens-btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 18px;cursor:pointer;font-size:13px}
-  .dens-btn.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .dens-btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 18px;cursor:pointer;font-size:13px;transition:transform .16s ease,background .16s ease,color .16s ease,box-shadow .16s ease}
+  .dens-btn:hover{transform:translateY(-1px)}
+  .dens-btn.on{background:var(--brand);border-color:var(--brand);color:#fff;transform:translateY(-1px)}
+  .dens-current{display:block;margin-top:5px;color:var(--brand);font-size:12px;font-weight:600;min-height:18px}
+  .reset-intro{margin:0 0 12px;color:var(--ink-2);line-height:1.6}
+  .reset-options{display:grid;gap:8px}
+  .reset-choice{width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;background:var(--base);color:var(--ink);padding:11px 12px;cursor:pointer;transition:border-color .16s ease,background .16s ease,box-shadow .16s ease}
+  .reset-choice:hover{border-color:var(--brand-line);background:var(--brand-soft)}
+  .reset-choice.selected{border-color:var(--red);background:var(--red-soft);box-shadow:0 0 0 2px rgba(168,85,76,.14)}
+  .reset-choice b{display:block;font-size:13px;margin-bottom:3px}
+  .reset-choice span{display:block;font-size:12px;color:var(--ink-2);line-height:1.45}
+  .reset-summary{margin-top:12px;padding:10px 12px;border-radius:9px;background:var(--line-2);font-size:12px;line-height:1.6;color:var(--ink-2)}
+  .reset-summary b{color:var(--ink)}
+  .reset-summary ul{margin:5px 0 0;padding-left:18px}
+  .reset-summary.empty{color:var(--ink-3)}
+  .impact-summary{margin:0;padding:10px 12px;border-radius:9px;background:var(--line-2);font-size:12px;line-height:1.65;color:var(--ink-2)}
+  .impact-summary b{color:var(--ink)}
+  .impact-summary ul{margin:5px 0 0;padding-left:18px}
+  .impact-choice{display:flex;gap:8px;align-items:flex-start;margin:12px 0 0;font-size:13px;color:var(--ink-2)}
+  .impact-choice input{margin-top:3px}
+  .impact-target{margin:10px 0 0}
   body[data-density="compact"] .section-card{padding:10px 12px;margin-bottom:9px}
   body[data-density="compact"] .dashboard{gap:10px}
   body[data-density="compact"] .help{display:none}
@@ -450,6 +482,25 @@
   .tpl-toolbar .tpl-hint{margin-left:auto;font-size:11px;color:var(--ink-3)}
   .tpl-preset-label{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-2);border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:#fff}
   .tpl-preset-label select{border:1px solid var(--line);border-radius:5px;font-size:12px;padding:2px 4px;background:#fff;color:var(--ink)}
+  .tpl-start{font-size:13px;color:var(--ink-2);line-height:1.65;margin-bottom:14px}
+  .tpl-start strong{color:var(--ink)}
+  .tpl-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .tpl-card{appearance:none;text-align:left;border:1px solid var(--line);background:var(--base);border-radius:10px;padding:13px 14px;min-height:112px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s;color:var(--ink)}
+  .tpl-card:hover{border-color:var(--brand);transform:translateY(-1px)}
+  .tpl-card.on{border-color:var(--brand);box-shadow:0 0 0 2px rgba(31,58,69,.12);background:rgba(31,58,69,.04)}
+  .tpl-card-title{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:700;margin-bottom:5px}
+  .tpl-card-title .tpl-card-check{display:none;width:16px;height:16px;border-radius:50%;background:var(--brand);color:#fff;text-align:center;font-size:11px;line-height:16px}
+  .tpl-card.on .tpl-card-check{display:inline-block}
+  .tpl-card-desc{font-size:12px;line-height:1.55;color:var(--ink-3)}
+  .tpl-preview{margin-top:14px;border:1px solid var(--line);border-radius:9px;background:var(--line-2);padding:10px 12px;display:flex;gap:9px;align-items:flex-start}
+  .tpl-preview:before{content:'✓';flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:var(--brand);color:#fff;text-align:center;line-height:18px;font-size:12px;margin-top:1px}
+  .tpl-preview b{display:block;font-size:12.5px;color:var(--ink);margin-bottom:2px}
+  .tpl-preview span{display:block;font-size:12px;line-height:1.55;color:var(--ink-3)}
+  .tpl-advanced-switch{margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .tpl-advanced-switch button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;font-size:12px;color:var(--ink-2);cursor:pointer}
+  .tpl-advanced-switch span{font-size:11.5px;color:var(--ink-3)}
+  .tpl-advanced{margin-top:12px;padding-top:14px;border-top:1px dashed var(--line)}
+  .tpl-advanced-title{font-size:12px;font-weight:700;color:var(--ink-2);margin:0 0 8px}
   .tpl-editor{width:100%;box-sizing:border-box;min-height:52vh;height:56vh;font-family:Consolas,'Courier New',Menlo,monospace;font-size:13px;line-height:1.6;padding:10px 12px;border:1px solid var(--line);border-radius:8px;resize:vertical;white-space:pre;overflow:auto;background:#fdfdfd;color:#1f2430}
   .tpl-editor:focus{outline:none;border-color:var(--brand)}
   .tpl-dirty{font-size:11px;color:#b45309;margin-left:8px}
@@ -465,6 +516,7 @@
   .field label{display:block;font-size:13px;color:var(--ink-2);margin-bottom:5px;font-weight:600}
   .field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit}
   .field textarea{min-height:70px;resize:vertical}
+  @media(max-width:700px){.tpl-gallery{grid-template-columns:1fr}.tpl-card{min-height:auto}.tpl-preview{margin-top:10px}.tpl-toolbar .tpl-hint{margin-left:0;width:100%}.modal .m-foot{flex-wrap:wrap}.modal .m-foot button{flex:1 1 auto}}
   .tabs{display:flex;gap:6px;margin-bottom:14px}
   .tabs button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-size:13px;color:var(--ink-2)}
   .tabs button.active{background:var(--brand);color:#fff;border-color:var(--brand)}
@@ -548,7 +600,7 @@
   .toast.show{opacity:1}
   .muted{color:var(--ink-3);font-size:12px}
   /* 初始页导入卡 */
-  .placeholder{max-width:560px;margin:48px auto;text-align:center;padding:40px 36px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:var(--shadow)}
+  .placeholder{max-width:860px;margin:48px auto;text-align:center;padding:40px 36px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:var(--shadow)}
   .placeholder h2{margin:0 0 8px;color:var(--ink);font-size:22px}
   .placeholder p{color:var(--ink-3);margin:0 0 18px}
   .import-card{border:1.5px dashed var(--brand-line);border-radius:14px;padding:30px 20px;margin:22px 0;cursor:pointer;background:#fff;transition:.2s;box-shadow:var(--shadow)}
@@ -561,18 +613,31 @@
   .wk-hero{margin:6px 0 24px}
   .wk-hi{font-size:23px;font-weight:700;margin:0 0 6px;letter-spacing:-.01em;color:var(--ink)}
   .wk-sub{font-size:14px;color:var(--ink-3);margin:0;line-height:1.5}
-  .wk-entries{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:0 0 22px;text-align:left}
+  .wk-entries{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 22px;text-align:left}
   .wk-entry{position:relative;display:flex;flex-direction:column;gap:5px;padding:15px 16px 15px 52px;border:1px solid var(--line);border-radius:12px;background:var(--base);box-shadow:var(--shadow);cursor:pointer;text-align:left;transition:.18s ease-out}
   .wk-entry:hover{border-color:var(--brand);box-shadow:0 8px 22px rgba(0,0,0,.07);transform:translateY(-1px)}
   .wk-entry .wk-e-ic{position:absolute;left:16px;top:16px;width:22px;height:22px;color:var(--brand)}
   .wk-entry .wk-e-ic svg{width:22px;height:22px;display:block}
   .wk-entry .wk-e-t{font-size:14.5px;font-weight:600;color:var(--ink)}
   .wk-entry .wk-e-d{font-size:12.5px;color:var(--ink-3);line-height:1.45}
+  .wk-entry .wk-e-meta{font-size:11.5px;color:var(--brand);margin-top:2px}
+  .import-preview-summary{padding:11px 12px;border-radius:9px;background:var(--brand-soft);color:var(--ink-2);font-size:13px;line-height:1.55}
+  .import-preview-options{margin:12px 0;display:grid;gap:8px}
+  .import-preview-choice{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:13px;line-height:1.45}
+  .import-preview-choice:has(input:checked){border-color:var(--brand);background:var(--brand-soft)}
+  .import-preview-list{margin:12px 0 0;border-top:1px solid var(--line);padding-top:10px}
+  .import-preview-list b{font-size:12.5px}.import-preview-list ul{margin:6px 0 0;padding-left:18px;font-size:12px;color:var(--ink-2);line-height:1.6;max-height:144px;overflow:auto}
+  .import-preview-empty{color:var(--ink-3);font-size:12px;margin-top:6px}
+  .import-report-chip{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:5px 9px;border:1px solid var(--brand-line);border-radius:999px;background:var(--brand-soft);color:var(--brand);font-size:12px;cursor:pointer}
+  .import-report-tasks{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+  .import-report-tasks li{padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;line-height:1.45;color:var(--ink-2)}
+  .sample-next{margin:0 0 14px;padding:12px 14px;border:1px solid var(--brand-line);border-radius:11px;background:var(--brand-soft);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .sample-next b{font-size:13px}.sample-next span{font-size:12px;color:var(--ink-2)}.sample-next .row-act{margin:0;display:flex;gap:7px;flex-wrap:wrap}.sample-next button{font-size:12px;padding:6px 9px}
   .wk-entry--soon{opacity:.55;cursor:not-allowed}
   .wk-entry--soon:hover{border-color:var(--line);box-shadow:var(--shadow);transform:none}
   .wk-badge{display:inline-block;font-size:10px;font-weight:600;color:var(--brand);background:rgba(108,99,255,.14);padding:1px 6px;border-radius:6px;margin-left:6px;vertical-align:middle}
   .wk-import{margin-top:2px}
-  @media(max-width:480px){.wk-entries{grid-template-columns:1fr}}
+  @media(max-width:760px){.placeholder{max-width:560px}.wk-entries{grid-template-columns:1fr}}
   /* 章节标题可下钻 */
   .sec-head .num,.sec-head h2{cursor:pointer}
   .sec-head .num:hover,.sec-head h2:hover{color:var(--brand)}
@@ -614,7 +679,7 @@
   .dash-panel-h b{font-family:var(--serif);font-size:14px}
   .dash-ai-sum{font-size:12.5px;color:var(--ink-2);margin-bottom:8px;line-height:1.55}
   .dash-dims{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 14px}
-  .dash-dim{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2)}
+  .dash-dim{width:100%;display:flex;align-items:center;gap:6px;padding:2px 0;border:0;background:transparent;text-align:left;font:inherit;font-size:11.5px;color:var(--ink-2)}
   .dash-dim span{width:52px;flex:0 0 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .dash-dim b{width:24px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
   .dash-dim-bar{flex:1;height:5px;background:var(--line-2);border-radius:3px;overflow:hidden}
@@ -677,7 +742,8 @@
   .pill-st.lv-yellow{color:var(--color-warning-text);background:var(--yellow-soft);border-color:#ece0bd}
   /* P0-②/③ 维度下钻 + 缺口详情展开 + 健康度等级 */
   .dash-dim{cursor:pointer}
-  .dash-dim .dd-chev{margin-left:3px;font-size:9px;color:var(--ink-3);transition:transform .15s}
+  .dash-dim:focus-visible{outline:none;border-radius:6px;box-shadow:var(--ring)}
+  .dash-dim .dd-chev{width:12px;flex:0 0 12px;margin-left:3px;overflow:visible;text-overflow:clip;white-space:normal;text-align:center;font-size:9px;color:var(--ink-3);transition:transform .15s;transform-origin:center}
   .dash-dim.open .dd-chev{transform:rotate(90deg)}
   .dim-details{margin-top:6px}
   .dim-detail{margin:0 0 8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:12px}
@@ -693,6 +759,10 @@
   .gap-detail td{background:var(--bg);font-size:12.5px;color:var(--ink-2);padding:10px 12px;line-height:1.55}
   .gap-detail .gd-why{color:var(--ink);margin-bottom:6px}
   .gap-detail .gd-why b,.gap-detail .gd-adv b{color:var(--ink);margin-right:4px}
+  .delivery-ready{grid-column:1/-1;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:14px 16px}
+  .delivery-ready-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.delivery-ready-h b{font-size:14px}.delivery-ready-h span{font-size:12px;color:var(--ink-3)}
+  .delivery-ready-rows{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.delivery-ready-row{border-radius:9px;padding:10px 11px;background:var(--line-2);font-size:12px;line-height:1.45}.delivery-ready-row b{display:block;font-size:13px;margin-bottom:3px}.delivery-ready-row.ok{background:var(--green-soft);color:var(--color-success-text)}.delivery-ready-row.warn{background:var(--yellow-soft);color:var(--color-warning-text)}.delivery-ready-row.block{background:var(--red-soft);color:var(--red)}
+  @media(max-width:760px){.delivery-ready-rows{grid-template-columns:1fr}}
   .pill-grade{display:inline-flex;align-items:center;font-weight:800;font-size:12.5px;border-radius:8px;padding:2px 9px;letter-spacing:.02em}
   .pill-grade.g-S{color:#0f5132;background:#d8f3e3;border:1px solid #aee9c9}
   .pill-grade.g-A{color:#1b4fd6;background:#dfe7ff;border:1px solid #b9c8ff}
@@ -1074,7 +1144,7 @@ html[data-theme="hc"] .theme-opt.on{background:#fff;color:#000;border-color:#fff
   const KEY='prdKanbanTheme';
   const root=document.documentElement;
   function setNeumorphism(on){ var st=document.getElementById('dark-neumorphism'); if(st) st.disabled=!on; }
-  function applyTheme(t){ root.dataset.theme=t; try{localStorage.setItem(KEY,t);}catch(e){} setNeumorphism(t!=='light'); }
+  function applyTheme(t){ t=(t==='light'||t==='dark'||t==='hc')?t:'light'; root.dataset.theme=t; try{localStorage.setItem(KEY,t);}catch(e){} setNeumorphism(t!=='light'); }
   window.setTheme=function(t){ if(t!=='light'&&t!=='dark'&&t!=='hc')return; applyTheme(t); updateSeg(); };
   function updateSeg(){ document.querySelectorAll('.theme-opt').forEach(function(b){ b.classList.toggle('on', b.dataset.t===root.dataset.theme); }); }
   function updateBtn(){ updateSeg(); }
@@ -1168,6 +1238,7 @@ html:not([data-theme="dark"]) textarea:focus-visible{outline:none;box-shadow:var
 /* F1：gen modal 与逐条确认套用 .btn 设计系统 */
 .modal .m-foot button.btn{background:transparent;border-color:transparent;height:auto;padding:8px 16px}
 .modal .m-foot button.btn--primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+.modal .m-foot button.btn--danger{background:var(--red);color:#fff;border-color:var(--red)}
 .modal .m-foot button.btn--ghost{background:transparent;color:var(--ink-2);border-color:transparent}
 .modal .m-foot button.btn:hover{transform:translateY(-1px);box-shadow:var(--btn-shadow-hover)}
 .modal .m-foot button.btn:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -1278,7 +1349,7 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
         <button data-act="tpl" role="menuitem">PRD 模板</button>
         <button data-act="help" role="menuitem">帮助</button>
         <div class="top-dd-sep"></div>
-        <button data-act="reset" role="menuitem" class="top-dd-danger" title="清空所有项目与配置，不可恢复">重置看板</button>
+        <button data-act="reset" role="menuitem" class="top-dd-danger" title="选择要重置的本地数据范围">重置本地数据</button>
       </div>
     </div>
 
@@ -1290,6 +1361,7 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
         <button data-act="sample" role="menuitem">加载示例</button>
         <div class="top-dd-sep"></div>
         <button data-act="importbackup" role="menuitem" class="top-dd-danger" title="会整体覆盖当前看板所有内容，请先导出备份">导入备份</button>
+        <button data-act="restorepreimport" role="menuitem" title="恢复最近一次导入备份前自动保留的本地状态">恢复导入前状态</button>
         <div class="top-dd-note">导入备份会整体覆盖当前内容，操作前请先「导出备份」。</div>
       </div>
     </div>
@@ -1310,6 +1382,7 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
   <span><svg class="warn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3l9-16Z"/><path d="M12 10v4"/><circle cx="12" cy="17" r=".7" fill="currentColor" stroke="none"/></svg> 本地存储空间不足，最近的修改<b>未能保存到浏览器</b>，仅存在于当前页面，刷新或关闭会丢失！</span>
   <button type="button" data-act="backup">立即导出备份</button>
 </div>
+<div id="storageAdvice" style="display:none"><span id="storageAdviceText"></span><button type="button" data-act="backup">导出备份</button></div>
 
 <div id="layout">
   <aside id="sidebar">
@@ -1401,11 +1474,66 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
   <div class="m-foot"><button data-act="closemodal">取消</button><button class="btn btn--primary" data-act="doPaste">导入</button></div>
 </div></div>
 
+<div class="modal" id="importPreviewModal"><div class="box" style="max-width:620px">
+  <div class="m-head"><h3>确认导入</h3><button class="x" data-act="closemodal">×</button></div>
+  <div class="m-body">
+    <div id="importPreviewSummary" class="import-preview-summary" aria-live="polite"></div>
+    <div id="importPreviewOptions" class="import-preview-options"></div>
+    <label class="field" id="importPreviewNameField"><span>项目名称</span><input id="importPreviewName" maxlength="80"></label>
+    <div class="import-preview-list"><b>章节映射</b><ul id="importPreviewMapping"></ul></div>
+    <div class="import-preview-list"><b id="importPreviewUnmatchedTitle">未识别章节</b><ul id="importPreviewUnmatched"></ul></div>
+  </div>
+  <div class="m-foot"><button data-act="closemodal">取消</button><button class="btn btn--primary" data-act="importpreviewconfirm">确认导入</button></div>
+</div></div>
+
+<div class="modal" id="importReportModal"><div class="box" style="max-width:560px">
+  <div class="m-head"><h3>导入报告</h3><button class="x" data-act="closemodal">×</button></div>
+  <div class="m-body"><div id="importReportSummary" class="import-preview-summary"></div><ul id="importReportTasks" class="import-report-tasks"></ul></div>
+  <div class="m-foot"><button data-act="closemodal">稍后处理</button><button data-act="importreport-framework">核对章节结构</button><button class="btn btn--primary" data-act="importreport-health">查看待处理项</button></div>
+</div></div>
+
+<div class="modal" id="exportPreflightModal"><div class="box" style="max-width:620px">
+  <div class="m-head"><h3>导出前交付检查</h3><button class="x" data-act="closemodal">×</button></div>
+  <div class="m-body"><p class="muted" style="margin-top:0">导出文件可以继续编辑；此检查仅说明它是否已适合交给评审、研发或测试。</p><div id="exportPreflightSummary" class="impact-summary" aria-live="polite"></div><ul id="exportPreflightGaps" class="import-report-tasks"></ul></div>
+  <div class="m-foot"><button data-act="closemodal">取消</button><button class="btn btn--primary" data-act="exportpreflightconfirm" id="exportPreflightConfirm">仍然导出</button></div>
+</div></div>
+
 <div class="modal" id="overrideModal"><div class="box">
   <div class="m-head"><h3 id="ovTitle">手动改色</h3><button class="x" data-act="closemodal">×</button></div>
   <div class="m-body"><div class="field"><label>标记颜色</label><div id="ovColorView" class="muted"></div></div>
     <div class="field"><label>改色原因（必填，留痕审计）</label><textarea id="ovReason" placeholder="如：该功能需走线下评审，暂不按红处理"></textarea></div></div>
   <div class="m-foot"><button data-act="closemodal">取消</button><button class="btn btn--primary" data-act="doOverride">保存</button></div>
+</div></div>
+
+<div class="modal" id="resetModal"><div class="box">
+  <div class="m-head"><h3>重置本地数据</h3><button class="x" data-act="closemodal">×</button></div>
+  <div class="m-body">
+    <p class="reset-intro">重置只影响此浏览器中的本产品数据。建议先导出项目备份；AI Key 不会被导出。</p>
+    <div class="reset-options" role="radiogroup" aria-label="选择重置范围">
+      <button type="button" class="reset-choice" data-act="resetpick" data-scope="projects" role="radio" aria-checked="false"><b>仅项目</b><span>清空项目、项目分组、项目内 AI 记录和自动恢复备份。</span></button>
+      <button type="button" class="reset-choice" data-act="resetpick" data-scope="projectsTemplates" role="radio" aria-checked="false"><b>项目 + 模板</b><span>在“仅项目”基础上，清空自定义框架、模板草稿和自定义模板。</span></button>
+      <button type="button" class="reset-choice" data-act="resetpick" data-scope="all" role="radio" aria-checked="false"><b>全部本地数据</b><span>同时清空界面主题、密度和 AI 服务设置（含 API Key）。</span></button>
+    </div>
+    <div id="resetSummary" class="reset-summary empty" aria-live="polite">请选择一个重置范围，查看具体影响后再确认。</div>
+  </div>
+  <div class="m-foot"><button data-act="backup">先导出项目备份</button><button data-act="closemodal">取消</button><button id="resetConfirm" class="btn btn--danger" data-act="resetconfirm" disabled>选择范围后确认</button></div>
+</div></div>
+
+<div class="modal" id="fwDeleteModal"><div class="box" style="max-width:580px">
+  <div class="m-head"><h3>删除框架节</h3><button class="x" data-act="closemodal">×</button></div>
+  <div class="m-body">
+    <div id="fwDeleteImpact" class="impact-summary" aria-live="polite"></div>
+    <label class="impact-choice"><input type="radio" name="fwDeleteMode" value="archive" checked> <span><b>归档到其他节</b><br>将原内容以“小卡片”保存到目标节，仍会随 Markdown 导出。</span></label>
+    <div id="fwDeleteTargetWrap" class="field impact-target"><label>归档目标节</label><select id="fwDeleteTarget"></select></div>
+    <label class="impact-choice"><input type="radio" name="fwDeleteMode" value="delete"> <span><b>连内容删除</b><br>该节正文、小卡片和结构化内容将不再出现在项目和导出中。</span></label>
+  </div>
+  <div class="m-foot"><button data-act="closemodal">取消</button><button class="btn btn--danger" data-act="fwdeleteconfirm">确认删除节</button></div>
+</div></div>
+
+<div class="modal" id="backupImportModal"><div class="box" style="max-width:580px">
+  <div class="m-head"><h3 id="backupImportTitle">导入备份前确认</h3><button class="x" data-act="closemodal">×</button></div>
+  <div class="m-body"><div id="backupImportSummary" class="impact-summary" aria-live="polite"></div></div>
+  <div class="m-foot"><button data-act="backup">先导出当前项目备份</button><button data-act="closemodal">取消</button><button id="backupImportConfirm" class="btn btn--danger" data-act="backupimportconfirm">确认覆盖并导入</button></div>
 </div></div>
 
 <div class="modal" id="settingsModal"><div class="box wide">
@@ -1427,61 +1555,40 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
       <div id="tabAI" style="display:none"></div>
     </div>
   </div>
-  <div class="m-foot"><!-- 版本号：每次更迭在此更新 --><span class="set-ver" id="settingsVer">版本 v18.41 · 健康度阈值统一 ≥80% 绿（顶部胶囊/指标卡/总览/AI 总评）+ 方案设计文档整合为唯一权威版（旧方案文档归档 archive/）</span><button data-act="closemodal">关闭</button></div>
+  <div class="m-foot"><!-- 版本号：每次更迭在此更新 --><span class="set-ver" id="settingsVer">版本 v18.65 · 移除重复新手入口</span><button data-act="closemodal">关闭</button></div>
 </div></div>
 
 <div class="modal" id="wizardModal"><div class="box">
   <div class="m-head"><h3>帮助 · 快速上手</h3><button class="x" data-act="closemodal">×</button></div>
   <div class="m-body">
     <div class="wz-step" data-step="0">
-      <h4>需求文档工作台能做什么</h4>
-      <ul class="wz-list">
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4.2-1.1 11-11-3.1-3.1-11 11L4 20Z"/><path d="M13.9 6.9l3.1 3.1"/></svg><strong>AI 撰写草稿</strong>：输入产品描述，按框架逐节生成整份 PRD（可选手模板风格），逐条确认后写入、版本可回滚</li>
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><strong>对话助手（可见即可做）</strong>：右下角 💬 或侧栏随时叫 AI，直接让它改节 / 套模板 / 体检 / 优化 / 对齐；高风险动作会先跟你二次确认</li>
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h3.5l2-6 3 13 2-7 1.5 3H21"/></svg><strong>体检 + 缺口清单</strong>：规则引擎即时红黄绿 + AI 6 维深度体检（带原文引用与幻觉校验），缺口自动列成可跳转清单</li>
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4.2-1.1 11-11-3.1-3.1-11 11L4 20Z"/><path d="M13.9 6.9l3.1 3.1"/></svg><strong>AI 优化 / 结构对齐</strong>：一键给出改写建议，或自动检测内容与框架错位并批量修正</li>
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="5" rx="1.6"/><rect x="13.5" y="11" width="7.5" height="10" rx="1.6"/><rect x="3" y="15" width="7.5" height="6" rx="1.6"/></svg><strong>多角色评审</strong>：产品 / 研发 / 测试 / 设计 / 项目经理 五视角评审，带「深度思考」过程可展开</li>
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="5" rx="1.6"/><rect x="13.5" y="11" width="7.5" height="10" rx="1.6"/><rect x="3" y="15" width="7.5" height="6" rx="1.6"/></svg><strong>看板</strong>：单项目健康度热力图 / AI 总评 / 摘要一键复制，多项目总览横向对比并一键切换</li>
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><strong>版本管理</strong>：每次 AI 改动自动存为版本，可逐条接受 / 拒绝 / 撤销，或一键回滚</li>
-        <li><svg class="hw-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><strong>模板</strong>：内置标准 / 敏捷 / 通用硬件等模板，也可把常用内容存成自定义模板</li>
-      </ul>
-      <p class="muted">本地优先、单文件、零网络——你的 PRD <strong>永远不离开这台电脑</strong>，不上云、不收集。</p>
-    </div>
-    <div class="wz-step" data-step="1" style="display:none">
-      <h4>怎么开始</h4>
-      <p>三种方式任选其一：</p>
-      <ul class="wz-list">
-        <li><strong>新建项目</strong>：选框架（标准 14 节 / 精简 7 节）或「导入自动生成」，直接开始写</li>
-        <li><strong>导入现有文档</strong>：顶栏「导入」支持 <code>.md / .txt / .html / .docx</code>（Word 自动识别）或直接粘贴，按标题自动建节</li>
-        <li><strong>AI 撰写草稿</strong>：侧栏「AI 助手 → <svg class="hw-ic-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4.2-1.1 11-11-3.1-3.1-11 11L4 20Z"/><path d="M13.9 6.9l3.1 3.1"/></svg> AI 撰写」，输入描述一键生成整份 PRD（需先在 设置→AI 配置 Key）</li>
-      </ul>
-      <div class="row-act" style="margin-top:10px">
-        <button data-act="wz-newproj">＋ 新建项目</button>
-        <button data-act="wz-sample">加载示例 PRD</button>
-        <button data-act="wz-ai"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4.2-1.1 11-11-3.1-3.1-11 11L4 20Z"/><path d="M13.9 6.9l3.1 3.1"/></svg> AI 撰写草稿</button>
+      <h4>用 1 分钟开始第一份 PRD</h4>
+      <p>不用先学习功能。<strong>只选一种最接近你的情况</strong>，马上开始。</p>
+      <div class="wz-start-grid">
+        <button class="wz-start-card" data-act="wz-ai" data-genmode="design"><b>我只有一个想法</b><span>AI 会用几个简单问题帮你理清要做什么；首次使用需连接自己的 AI 服务。</span></button>
+        <button class="wz-start-card" data-act="wz-template"><b>我不想从头搭结构</b><span>选 Web、移动端、AI 或硬件场景，直接得到可填写的项目。</span></button>
+        <button class="wz-start-card" data-act="wz-import"><b>我已经有文档</b><span>导入 Word、文本或 Markdown，系统先预览再写入项目。</span></button>
+        <button class="wz-start-card" data-act="wz-newproj"><b>我知道自己要写什么</b><span>从空白项目开始，自己选择框架并自由编辑。</span></button>
       </div>
-    </div>
-    <div class="wz-step" data-step="2" style="display:none">
-      <h4>几个小贴士</h4>
-      <ul class="wz-list">
-        <li>所有数据存在<strong>当前浏览器</strong>；换电脑/换浏览器请用「导出 JSON 备份 / 导入 JSON 备份」迁移</li>
-        <li>每 5 秒自动备份到本地，意外清空可一键恢复</li>
-        <li>AI 功能需自备 API Key（设置→AI，支持 DeepSeek / 智谱 GLM-4-Flash 等 OpenAI 兼容服务），Key 只存本机、不随备份导出</li>
-        <li>写完后可切「完成编辑」进入只读评审视图，一键生成体检报告</li>
-      </ul>
+      <div class="wz-after"><b>创建后只做两件事：</b><ol><li>用自己的话补全“目的”和“功能需求”，不确定的内容可以先留空。</li><li>写完点“完成编辑”，查看质量缺口；有需要再用 AI 优化或导出。</li></ol></div>
+      <p class="wz-privacy">项目默认保存在当前浏览器；只有你主动使用 AI 时，才会按确认范围发送本轮内容。</p>
     </div>
   </div>
   <div class="m-foot">
-    <button id="wzPrev" data-act="wzprev">上一步</button>
-    <button id="wzNext" class="btn btn--primary" data-act="wznext">下一步</button>
-    <button id="wzStart" class="btn btn--primary" data-act="wzfinish" style="display:none">开始使用</button>
+    <button id="wzStart" class="btn btn--primary" data-act="wzfinish">我自己先试试</button>
   </div>
 </div></div>
 
 <div class="modal" id="tplModal"><div class="box wide">
-  <div class="m-head"><h3>PRD 完整模板 <span class="muted">（可编辑 / 粘贴 / 导入）</span></h3><button class="x" data-act="closemodal">×</button></div>
+  <div class="m-head"><h3>选择场景模板 <span class="muted">（不需要会 Markdown）</span></h3><button class="x" data-act="closemodal">×</button></div>
   <div class="m-body" id="tplBody">
-    <div class="tpl-toolbar">
+    <div class="tpl-start"><strong>不知道怎么写需求？</strong> 先选一个和你最接近的场景。系统会放入常用结构和填写提示；创建后直接像普通文档一样补充内容即可。</div>
+    <div class="tpl-gallery" id="tplGallery" aria-label="内置场景模板"></div>
+    <div class="tpl-preview" id="tplPreview" aria-live="polite"><div><b id="tplPreviewTitle"></b><span id="tplPreviewDesc"></span></div></div>
+    <div class="tpl-advanced-switch"><button type="button" data-act="tpladvanced" id="tplAdvancedToggle">需要导入或编辑原始模板？打开高级编辑</button><span>高级编辑适合已有文档、团队模板或熟悉 Markdown 的用户。</span></div>
+    <div class="tpl-advanced" id="tplAdvanced" style="display:none">
+      <div class="tpl-advanced-title">高级编辑：导入、保存或自定义模板</div>
+      <div class="tpl-toolbar">
       <label class="tpl-preset-label">模板预设
         <select id="tplPreset">
           <option value="standard">标准 PRD（14 节）</option>
@@ -1496,15 +1603,15 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
       <button data-act="tpl-importfile" title="导入 .md / .txt / .docx 文件作为模板内容"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>导入文件</button>
       <button data-act="tpl-save" title="把当前内容存为草稿，下次打开自动恢复">保存草稿</button>
       <button data-act="tpl-loaddraft" title="恢复上次保存的草稿（若有）">⤴ 载入草稿</button>
-      <span class="tpl-hint">可直接在此粘贴/输入；从 Word 粘贴会自动转成 Markdown 表格语法</span>
+      <span class="tpl-hint">可直接粘贴/输入；从 Word 粘贴会自动转成 Markdown 表格语法</span>
     </div>
     <textarea id="tplEditor" class="tpl-editor" spellcheck="false" placeholder="# PRD 完整模板&#10;&#10;直接粘贴或输入内容…&#10;&#10;支持 Markdown：# 标题、- 列表、| 表格 | 语法、![图片](url)"></textarea>
+    </div>
   </div>
   <div class="m-foot">
     <button data-act="closemodal">关闭</button>
-    <button data-act="copytpl">复制全文</button>
-    <button data-act="tpl-apply" class="btn btn--primary" title="用编辑区内容生成/覆盖当前项目">导入当前项目</button>
-    <button data-act="tpl-newproj" class="btn btn--primary" title="新建一个项目并用编辑区内容生成框架与内容">用模板生成新项目</button>
+    <button data-act="tpl-apply" title="用选定模板填充当前项目">填充当前项目</button>
+    <button data-act="tpl-newproj" class="btn btn--primary" title="新建一个项目并用选定模板生成框架与内容">用此模板新建项目</button>
   </div>
 </div></div>
 
@@ -1595,7 +1702,12 @@ const DEFAULT_RULES=[
   {id:'R-TEST-05',dim:'可测性',desc:'验收项标「不通过」',level:'red',weight:3,enabled:true,scope:'all'},
   {id:'R-RISK-01',dim:'风险冗余',desc:'P0 占比超阈值',level:'yellow',weight:2,enabled:true,scope:'all',threshold:0.5},
   {id:'R-RISK-02',dim:'风险冗余',desc:'功能需求条数异常高（范围蔓延）',level:'yellow',weight:2,enabled:true,scope:'all',threshold:40},
-  {id:'R-RISK-03',dim:'风险冗余',desc:'残留占位符（TODO/待补充/【】/xxx）',level:'yellow',weight:2,enabled:true,scope:'all'}
+  {id:'R-RISK-03',dim:'风险冗余',desc:'残留占位符（TODO/待补充/【】/xxx）',level:'yellow',weight:2,enabled:true,scope:'all'},
+  {id:'R-XCONS-01',dim:'一致性',desc:'功能与验收、测试点的跨章节追溯缺口',level:'yellow',weight:2,enabled:true,scope:'all'},
+  {id:'R-XCONS-02',dim:'一致性',desc:'目标与埋点的跨章节追溯缺口',level:'yellow',weight:2,enabled:true,scope:'all'},
+  {id:'R-XCONS-03',dim:'一致性',desc:'角色、权限或状态表述存在冲突',level:'yellow',weight:2,enabled:true,scope:'all'},
+  {id:'R-XCONS-04',dim:'风险冗余',desc:'外部依赖未在风险与对策中说明',level:'yellow',weight:2,enabled:true,scope:'all'},
+  {id:'R-XCONS-05',dim:'风险冗余',desc:'范围蔓延：第一版范围缺少明确取舍',level:'yellow',weight:1,enabled:true,scope:'all'}
 ];
 
 /* ============ 状态 ============ */
@@ -1700,6 +1812,8 @@ function load(){
   if(!STATE.framework||!STATE.framework.length)STATE.framework=deep(DEFAULT_FRAMEWORK);
   STATE.framework.forEach(f=>{if(f.template===undefined)f.template='';});
   if(!STATE.ruleSet)STATE.ruleSet=deep(DEFAULT_RULES);
+  // 新增内置规则只补齐缺失项，不覆盖既有项目的启用状态或人工处理记录。
+  DEFAULT_RULES.forEach(function(rule){if(!STATE.ruleSet.some(function(old){return old&&old.id===rule.id;}))STATE.ruleSet.push(deep(rule));});
   STATE.ruleSet=STATE.ruleSet.filter(r=>!(r&&r.id&&r.id.indexOf('R-TRACE')===0)); // 移除可追溯维度（用户不需要）
   STATE.projects.forEach(p=>{
     if(!p.overrides)p.overrides={};if(!p.corrections)p.corrections={};
@@ -1744,7 +1858,8 @@ let saveFailed=false;
 function save(){
   const p=currentProj();if(p){p.data=DATA;p.updatedAt=Date.now();}
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(STATE));
+    const serialized=JSON.stringify(STATE);updateStorageAdvice(serialized);
+    localStorage.setItem(STORAGE_KEY,serialized);
     if(saveFailed){saveFailed=false;showStorageWarn(false);}
     clearDirty();
   }catch(e){
@@ -1757,6 +1872,17 @@ function save(){
 function showStorageWarn(on){
   const w=document.getElementById('storageWarn');if(!w)return;
   w.style.display=on?'flex':'none';
+}
+function updateStorageAdvice(serialized){
+  const w=document.getElementById('storageAdvice'),txt=document.getElementById('storageAdviceText');if(!w||!txt)return;
+  const bytes=(serialized==null?JSON.stringify(STATE||{}):serialized).length*2;
+  // localStorage 通常约 5 MB；预留安全边际，避免图片内联后一次保存直接失败。
+  const threshold=3.5*1024*1024;
+  if(bytes>=threshold){
+    const mb=(bytes/1024/1024).toFixed(1);
+    txt.textContent='本地数据约 '+mb+' MB，已接近浏览器常见存储上限。请先导出备份；内嵌图片建议压缩后再插入（单张尽量不超过 1 MB）。';
+    w.style.display='flex';
+  }else w.style.display='none';
 }
 function currentProj(){return STATE.projects.find(x=>x.id===STATE.activeProjectId)||null;}
 let DATA={};
@@ -1857,6 +1983,35 @@ function hitsFor(rule){
     case 'R-RISK-03':{ // 残留占位符（黄）
       STATE.framework.forEach(s=>{const t=plain(s.id);if(!isEmpty(s.id) && /(TODO|待补充|待定|【】|xxx|XXX|\?\?\?)/.test(t))out.push({sectionId:s.id,ruleId:id,level:rule.level,snippet:'含残留占位符：'+(t.slice(0,50)),advice:'补全占位内容或删除占位符'});});
       break;}
+    case 'R-XCONS-01':{ // 功能 → 验收 → 测试：按功能逐条给出可追溯缺口
+      const tr=traceabilityReport();
+      tr.rows.forEach(function(row){
+        const miss=[];if(!row.accept.length)miss.push('验收');if(!row.test.length)miss.push('测试点/自测');
+        if(miss.length)out.push({sectionId:(tr.sections.accept||tr.sections.test||{}).id||row.feature&&STATE.framework.find(function(s){return s.type==='feat';}).id,ruleId:id,level:String(row.feature&&row.feature.priority||'').toUpperCase()==='P0'?'red':rule.level,snippet:'功能「'+String(row.feature&&row.feature.name||'').slice(0,40)+'」未关联'+miss.join('与'),advice:'为该功能补充可匹配的'+miss.join('、')+'，并以功能名称或共同关键词建立追溯'});
+      });
+      break;}
+    case 'R-XCONS-02':{ // 目标 → 埋点：只在目标已写明时检查，避免空文档误报
+      const goal=STATE.framework.find(function(s){return /目的|背景|目标|概述|产品信息|产品概述/.test(s.title)&&!isEmpty(s.id);});
+      const tr=traceabilityReport(),track=tr.sections.track;
+      if(goal&&(!track||isEmpty(track.id)))out.push({sectionId:goal.id,ruleId:id,level:rule.level,snippet:'目标已定义，但未找到可关联的埋点/数据采集',advice:'补充至少一个衡量目标是否达成的事件、指标或数据采集方式'});
+      break;}
+    case 'R-XCONS-03':{ // 仅报告明确互斥的表述，不把正常的多角色文档误判为冲突
+      const all=STATE.framework.map(function(s){return plain(s.id);}).join(' ');
+      const anchor=STATE.framework.find(function(s){return /用户|权限|功能|流程|状态/.test(s.title);});
+      if(/(?:访客|游客)/.test(all)&&/(?:可编辑|可以编辑|允许编辑|可删除|可以删除)/.test(all)&&!/(?:访客[^。；\n]{0,20}(?:只读|不可编辑|无编辑权限)|(?:只读|不可编辑|无编辑权限)[^。；\n]{0,20}(?:访客|游客))/.test(all))out.push({sectionId:(anchor||{}).id||null,ruleId:id,level:rule.level,snippet:'出现“访客/游客”与“可编辑或删除”，但未说明权限边界',advice:'明确访客是否只读、哪些角色可编辑/删除，以及无权限时的反馈'});
+      if(/(?:无需登录|免登录)/.test(all)&&/(?:登录后|登录才可|必须登录)/.test(all))out.push({sectionId:(anchor||{}).id||null,ruleId:id,level:rule.level,snippet:'同时出现“无需登录/免登录”与“必须登录”',advice:'区分可免登录浏览的范围与必须登录的操作，写明状态转换'});
+      break;}
+    case 'R-XCONS-04':{ // 发现外部依赖时，要求有风险/对策承接
+      const dep=STATE.framework.find(function(s){return /依赖|第三方|接口|支付|地图|短信/.test(plain(s.id));});
+      const risk=STATE.framework.find(function(s){return /风险|对策|依赖/.test(s.title)&&!isEmpty(s.id);});
+      if(dep&&!risk)out.push({sectionId:dep.id,ruleId:id,level:rule.level,snippet:'检测到第三方或外部依赖，但未找到风险与对策说明',advice:'说明依赖方、失败影响、降级/重试方案和负责人'});
+      break;}
+    case 'R-XCONS-05':{ // 需要做很多事却没有 MVP 取舍，才提示范围边界；条数异常仍由 R-RISK-02 覆盖
+      const featSecs=secsOfType('feat'),n=featSecs.map(function(s){return (secData(s).items||[]).length;}).reduce(function(a,b){return a+b;},0);
+      const scope=STATE.framework.find(function(s){return /范围|边界|目标/.test(s.title);});
+      const scopeText=scope?plain(scope.id):'';
+      if(n>=8&&(!scopeText||!/(?:第一版|MVP|暂不|不做|不支持|范围外|后续)/i.test(scopeText)))out.push({sectionId:(scope||featSecs[0]||{}).id||null,ruleId:id,level:rule.level,snippet:'当前有 '+n+' 个功能点，但第一版范围未写明做与不做的取舍',advice:'在范围节明确 MVP、暂不做事项和后续版本边界，防止范围蔓延'});
+      break;}
     default:{
       // v16.2 修复：自定义规则此前仅存 keyword 却从不读取，是"完全不生效"的死功能。
       // 现在支持两种写法：1) 关键词用 | 分隔（如 尽量|最好）；2) /正则/ 语法（如 /TODO|待定/i）。
@@ -1953,22 +2108,13 @@ function renderPlaceholder(){
     '<div class="wk-hero"><h2 class="wk-hi">你好，产品经理</h2>'+
     '<p class="wk-sub">今天想完成什么？让 AI 搭档帮你从想法一路推进到研发就绪。</p></div>'+
     '<div class="wk-entries">'+
-      '<button class="wk-entry" data-act="wz-ai"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span><span class="wk-e-t">创建新需求</span><span class="wk-e-d">有成熟方案？直接填写，AI 逐节生成 PRD</span></button>'+
-      '<button class="wk-entry" data-act="import"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span><span class="wk-e-t">审查已有 PRD</span><span class="wk-e-d">AI 深度检查完整性 · 一致性 · 可执行性</span></button>'+
-      '<button class="wk-entry" data-act="wz-ai" data-genmode="design"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10c1 1 1 2 1 3h6c0-1 0-2 1-3a6 6 0 0 0-4-10z"/></svg></span><span class="wk-e-t">AI 产品设计</span><span class="wk-e-d">只有想法？AI 一步步引导你做出方案与 PRD</span></button>'+
-      '<button class="wk-entry" data-act="multireview"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.5A5 5 0 0 1 21 20"/></svg></span><span class="wk-e-t">多角色评审</span><span class="wk-e-d">产品 / 研发 / 测试 / 设计 / 项目经理 五视角评审</span></button>'+
+      '<button class="wk-entry" data-act="wz-ai" data-genmode="design"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10c1 1 2 2 1 3h6c-1-1 0-2 1-3a6 6 0 0 0-4-10z"/></svg></span><span class="wk-e-t">从想法开始</span><span class="wk-e-d">AI 逐步澄清用户、目标、范围与验收，再生成可确认的 PRD。</span><span class="wk-e-meta">约 5–10 分钟 · 适合只有模糊想法</span></button>'+
+      '<button class="wk-entry" data-act="newproj"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg></span><span class="wk-e-t">从空白开始</span><span class="wk-e-d">新建一个空项目，自选框架后从第一节开始自由编辑。</span><span class="wk-e-meta">约 1 分钟 · 适合已有清晰结构</span></button>'+
+      '<button class="wk-entry" id="importEntry" data-act="import"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span><span class="wk-e-t">导入已有 PRD</span><span class="wk-e-d">导入 Markdown、文本或 Word，保留原文后检查章节与质量缺口。</span><span class="wk-e-meta">约 1–3 分钟 · 适合已有需求文档</span></button>'+
+      '<button class="wk-entry" data-act="tpl"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="wk-e-t">使用场景模板</span><span class="wk-e-d">选择 Web、移动端、AI、硬件等常见场景，直接生成一个可填写的项目。</span><span class="wk-e-meta">约 2 分钟 · 适合不想从头搭结构</span></button>'+
     '</div>'+
-    '<div class="wk-import"><div class="import-card" id="importCard">'+
-      '<div class="ic-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg></div>'+
-      '<div class="ic-title">拖入文件，或点击此处导入</div>'+
-      '<div class="ic-sub">支持 .md / .markdown / .txt / .docx</div>'+
-    '</div>'+
-    '<div class="ph-actions">'+
-      '<button class="btn btn--primary" data-act="newproj" style="border:1px solid var(--brand);background:var(--brand);color:#fff;padding:9px 18px;border-radius:9px">＋ 新建空白项目</button>'+
-      '<button data-act="sample" style="border:1px solid var(--line);background:#fff;padding:9px 18px;border-radius:9px">加载示例</button>'+
-    '</div></div>'+
     '</div>';
-  const card=document.getElementById('importCard');
+  const card=document.getElementById('importEntry');
   if(card){
     card.addEventListener('click',()=>document.getElementById('fileInput').click());
     ['dragenter','dragover'].forEach(ev=>card.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();card.classList.add('drag');}));
@@ -2037,8 +2183,9 @@ function renderDashboard(){
   const compTag=m.completion>=80?'<span class="tag green">良好</span>':(m.completion>=60?'<span class="tag yellow">进行中</span>':'<span class="tag red">偏低</span>');
   const riskTag=m.risk>0?'<span class="tag red">有风险</span>':'<span class="tag green">安全</span>';
   const consTag=m.consistency>0?'<span class="tag yellow">'+m.consistency+' 项</span>':'<span class="tag green">一致</span>';
+  const delivery=deliveryReadiness();
 
-  let html=
+  let html='<div class="delivery-ready"><div class="delivery-ready-h"><b>交付就绪结论</b><span>'+delivery.blockerText+'</span></div><div class="delivery-ready-rows">'+delivery.rows.map(function(row){return '<div class="delivery-ready-row '+row.level+'"><b>'+row.title+'</b><span>'+row.text+'</span></div>';}).join('')+'</div></div>'+renderTraceability()+
     '<div class="card click" data-act="drillmetric" data-m="completion"><div class="k">完成度'+compTag+'</div><div class="v green">'+m.completion+'<small>% ('+m.green+'/'+m.total+')</small></div>'+delta('completion','%')+'</div>'+
     '<div class="card click" data-act="drillmetric" data-m="risk"><div class="k">风险数（红节）'+riskTag+'</div><div class="v red">'+m.risk+'</div>'+delta('risk')+'</div>'+
     '<div class="card click" data-act="drillmetric" data-m="consistency"><div class="k">一致性问题'+consTag+'</div><div class="v brand">'+m.consistency+'</div>'+delta('consistency')+'</div>';
@@ -2060,7 +2207,7 @@ function renderDashboard(){
       +(aiReport.summary?'<div class="dash-ai-sum">'+esc(aiReport.summary)+'</div>':'')
       +'<div class="dash-dims">'+dims.slice(0,6).map(function(d,i){
         const dv=aiReport.total>=80?'ok':aiReport.total>=60?'warn':'bad';
-        return '<div class="dash-dim" data-act="dimdrill" data-i="'+i+'"><span>'+esc(d.name)+'</span><div class="dash-dim-bar"><i class="'+dv+'" style="width:'+Math.max(0,Math.min(100,d.score||0))+'%"></i></div><b>'+d.score+'</b><span class="dd-chev">▶</span></div>';
+        return '<button type="button" class="dash-dim" data-act="dimdrill" data-i="'+i+'" aria-expanded="false" aria-controls="dimd-'+i+'"><span>'+esc(d.name)+'</span><div class="dash-dim-bar"><i class="'+dv+'" style="width:'+Math.max(0,Math.min(100,d.score||0))+'%"></i></div><b>'+d.score+'</b><span class="dd-chev" aria-hidden="true">▶</span></button>';
       }).join('')+'</div>'
       +'<div class="dim-details">'+dims.slice(0,6).map(function(d,i){return '<div class="dim-detail" id="dimd-'+i+'" style="display:none"></div>';}).join('')+'</div>'
       +'</div>';
@@ -2073,19 +2220,24 @@ function renderDashboard(){
 
     +'<div class="row-act" style="margin-top:8px"><button data-act="copyhealth">⧉ 复制摘要（Markdown）</button><button data-act="exportmd">导出 MD</button><button data-act="multireview">多角色评审</button></div>'
     +'<div class="muted" style="font-size:11.5px;margin-top:6px">粘贴到评审群/需求评审文档，一行带全部关键指标。</div></div>';
-  const hits=HEALTH.activeHits.slice();
+  const hits=HEALTH.activeHits.map(function(h,hi){return {h:h,hi:hi,impact:gapImpact(h)};}).sort(function(a,b){
+    var d=a.impact.rank-b.impact.rank;if(d)return d;
+    if(a.h.level!==b.h.level)return a.h.level==='red'?-1:1;
+    return String(sectionTitle(a.h.sectionId)).localeCompare(String(sectionTitle(b.h.sectionId)),'zh-CN');
+  });
   if(hits.length){
-    html+='<div class="gaps" style="grid-column:1/-1"><h3>缺口清单（点 ▾ 展开「为什么/建议」，点行跳到对应节）</h3><div class="gap-table-wrap"><table class="gap-table"><thead><tr><th></th><th>缺口项</th><th>所属章节</th><th>严重程度</th><th>改进建议</th></tr></thead><tbody>';
-    hits.forEach(function(h,i){
+    html+='<div class="gaps" style="grid-column:1/-1"><h3>交付缺口（已按交付影响排序；点 ▾ 查看依据，点行跳到对应节）</h3><div class="gap-table-wrap"><table class="gap-table"><thead><tr><th></th><th>缺口项</th><th>所属章节</th><th>交付影响</th><th>下一步</th></tr></thead><tbody>';
+    hits.forEach(function(entry,i){
+      var h=entry.h,impact=entry.impact;
       const lv=h.level;
       html+='<tr class="gap-row" data-act="opensec" data-id="'+h.sectionId+'">'+
-        '<td class="gap-expand" data-act="gapexpand" data-i="'+i+'">▾</td>'+
+        '<td class="gap-expand" data-act="gapexpand" data-hi="'+entry.hi+'">▾</td>'+
         '<td class="gitem">'+esc(h.snippet)+'</td>'+
         '<td class="gsec">'+esc(sectionTitle(h.sectionId))+'</td>'+
-        '<td><span class="pill-st '+(lv==='red'?'lv-red':'lv-yellow')+'">'+(lv==='red'?'红':'黄')+'</span></td>'+
-        '<td class="gadv">'+esc((h.advice||'').split('\n')[0]||'')+'</td>'+
+        '<td><span class="pill-st '+impact.cls+'">'+impact.label+'</span></td>'+
+        '<td class="gadv">'+esc(impact.next||((h.advice||'').split('\n')[0]||''))+'</td>'+
         '</tr>'+
-        '<tr class="gap-detail" id="gapd-'+i+'" style="display:none"><td colspan="5"></td></tr>';
+        '<tr class="gap-detail" id="gapd-'+entry.hi+'" style="display:none"><td colspan="5"></td></tr>';
     });
     html+='</tbody></table></div></div>';
   }else{
@@ -2093,6 +2245,78 @@ function renderDashboard(){
   }
   el.innerHTML=html;
   PREV_METRICS=m;
+}
+function deliveryReadiness(){
+  const has=function(id,words){
+    let sec=(STATE.framework||[]).find(function(s){return s.id===id;});
+    if(!sec&&words)sec=(STATE.framework||[]).find(function(s){const t=(s.title||'').replace(/\s/g,'');return words.some(function(w){return t.indexOf(w)>=0;});});
+    if(!sec)return false;const c=DATA[sec.id]||{};
+    if((c.items||[]).length||(c.cards||[]).length||(c.rows||[]).length)return true;
+    return !!htmlToText(c.html||'').trim();
+  };
+  const red=(HEALTH&&HEALTH.activeHits||[]).filter(function(h){return h.level==='red';}).length;
+  const trace=traceabilityReport();
+  const p0Ready=!trace.p0Gaps.length;
+  const basics=has('purpose',['目的','目标','背景'])&&has('scope',['范围','边界'])&&has('feat',['功能需求','功能']);
+  const devNeeds=has('nfr',['非功能','性能','安全'])&&has('accept',['验收','测试标准']);
+  const testNeeds=has('accept',['验收','测试标准'])&&has('selftest',['自测','测试点','测试']);
+  const level=function(ok){return red?'block':ok?'ok':'warn';};
+  return {blockerText:red?'存在 '+red+' 个红色阻塞项：请先处理后再交付':(!p0Ready?'存在 '+trace.p0Gaps.length+' 个 P0 追溯缺口：补齐验收与测试点后再交付':'无红色阻塞项；仍需按各阶段要求核对'),rows:[
+    {title:basics&&p0Ready&&!red?'可进入评审':'暂不建议评审',level:level(basics&&p0Ready),text:!p0Ready?'P0 功能缺少关联验收或测试点。':basics?'目标、范围与功能已具备，可组织评审。':'补齐目标、范围或功能需求后再评审。'},
+    {title:basics&&devNeeds&&p0Ready&&!red?'可进入研发':'暂不建议研发',level:level(basics&&devNeeds&&p0Ready),text:!p0Ready?'P0 功能缺少关联验收或测试点。':basics&&devNeeds?'非功能约束与验收已具备，可进入研发拆解。':'需补齐非功能约束或验收标准。'},
+    {title:basics&&devNeeds&&testNeeds&&p0Ready&&!red?'可进入测试':'暂不建议测试',level:level(basics&&devNeeds&&testNeeds&&p0Ready),text:!p0Ready?'P0 功能缺少关联验收或测试点。':basics&&devNeeds&&testNeeds?'验收与自测内容齐备，可进入测试设计。':'需补齐可判定验收和自测/测试点。'}
+  ]};
+}
+function traceSection(type,words){
+  var sec=null;
+  if(words)sec=(STATE.framework||[]).find(function(s){var t=String(s.title||'');return words.some(function(w){return t.indexOf(w)>=0;});});
+  if(!sec)sec=(STATE.framework||[]).find(function(s){return s.type===type;});
+  return sec||null;
+}
+function traceTerms(text){
+  var out=[],seen={};
+  String(text||'').toLowerCase().match(/[a-z][a-z0-9_-]{2,}|[\u4e00-\u9fff]{2,}/g)?.forEach(function(run){
+    var chunks=/^[\u4e00-\u9fff]+$/.test(run)?Array.from({length:Math.max(0,run.length-1)},function(_,i){return run.slice(i,i+2);}):[run];
+    chunks.forEach(function(x){if(x.length>=2&&!/^(用户|功能|需求|系统|支持|进行|相关|可以|需要|一个|我们|通过)$/.test(x)&&!seen[x]){seen[x]=1;out.push(x);}});
+  });
+  return out;
+}
+function traceMatches(feature,items){
+  var terms=traceTerms(feature),full=String(feature||'').replace(/\s/g,'').toLowerCase();
+  return (items||[]).filter(function(item){
+    var text=String(item&&item.text||item&&item.label||'').replace(/\s/g,'').toLowerCase();if(!text)return false;
+    if(full.length>=2&&(text.indexOf(full)>=0||full.indexOf(text)>=0))return true;
+    return traceTerms(text).some(function(term){return terms.indexOf(term)>=0;});
+  });
+}
+function traceabilityReport(){
+  var featSec=traceSection('feat',['功能']),userSec=traceSection('users',['用户','使用者']),acceptSec=traceSection('accept',['验收']),testSec=traceSection('text',['自测','测试点','测试']),trackSec=traceSection('table',['埋点','数据']);
+  var features=((featSec&&DATA[featSec.id]||{}).items||[]).filter(function(it){return String(it&&it.name||'').trim();});
+  var users=((userSec&&DATA[userSec.id]||{}).items||[]).map(function(it){return {text:'作为'+(it.role||'')+'，我希望'+(it.want||'')+'，以便'+(it.soThat||'')};});
+  var accepts=((acceptSec&&DATA[acceptSec.id]||{}).items||[]).map(function(it){return {text:it.text||''};});
+  var tests=[];if(testSec){htmlToText((DATA[testSec.id]||{}).html||'').split(/[\n。；;]/).forEach(function(text){if(String(text).trim())tests.push({text:String(text).trim()});});}
+  var tracks=[];if(trackSec){var td=DATA[trackSec.id]||{};(td.rows||[]).slice(1).forEach(function(row){var cells=(row&&row.cells)||[];if(cells.join('').trim())tracks.push({text:cells.join(' / ')});});if(!tracks.length&&td.html)tracks.push({text:htmlToText(td.html)});}
+  var rows=features.map(function(f){var source=[f.name,f.desc].join(' ');return {feature:f,user:traceMatches(source,users),accept:traceMatches(source,accepts),test:traceMatches(source,tests),track:traceMatches(source,tracks)};});
+  return {rows:rows,sections:{user:userSec,accept:acceptSec,test:testSec,track:trackSec},p0Gaps:rows.filter(function(r){return String(r.feature.priority||'').toUpperCase()==='P0'&&(!r.accept.length||!r.test.length);})};
+}
+function renderTraceCell(items,sec,empty){
+  if(!sec)return '<span class="trace-cell none">未设置该节</span>';
+  if(!items||!items.length)return '<span class="trace-cell none">'+esc(empty||'未匹配，需补齐')+'</span>';
+  return '<button type="button" class="trace-cell" data-act="opensec" data-id="'+esc(sec.id)+'" title="点击查看「'+esc(sec.title)+'」">'+esc(items.slice(0,2).map(function(x){return x.text;}).join('；'))+(items.length>2?' 等 '+items.length+' 条':'')+'</button>';
+}
+function renderTraceability(){
+  var report=traceabilityReport();if(!report.rows.length)return '';
+  var s=report.sections;
+  return '<div class="trace-panel"><div class="trace-panel-h"><b>需求追溯链</b><span>基于共同关键词自动推断，点击查看原节；请人工核对后交付</span></div><table class="trace-table"><thead><tr><th>功能</th><th>用户需求</th><th>验收标准</th><th>测试点 / 自测</th><th>埋点</th></tr></thead><tbody>'+report.rows.map(function(row){var p0=String(row.feature.priority||'').toUpperCase()==='P0';return '<tr><td class="trace-main">'+esc(row.feature.name)+(p0?'<span class="trace-p0">P0</span>':'')+'</td><td>'+renderTraceCell(row.user,s.user,'未匹配，需核对用户需求')+'</td><td>'+renderTraceCell(row.accept,s.accept,'未匹配，需补验收')+'</td><td>'+renderTraceCell(row.test,s.test,'未匹配，需补测试点')+'</td><td>'+renderTraceCell(row.track,s.track,'未匹配，需补埋点')+'</td></tr>';}).join('')+'</tbody></table>'+(report.p0Gaps.length?'<div class="muted" style="margin-top:8px;color:var(--red)">P0 缺口：'+esc(report.p0Gaps.map(function(r){return r.feature.name;}).join('、'))+' 缺少关联验收或测试点，不能判为研发/测试就绪。</div>':'')+'</div>';
+}
+function gapImpact(h){
+  var id=String(h&&h.ruleId||''),sid=String(h&&h.sectionId||'');
+  var isTest=/^R-TEST|^R-CONS-0[13]$/.test(id)||/(?:accept|selftest|test|验收|测试)/i.test(sid);
+  var isDev=(id==='R-SPEC-01'&&/(?:purpose|scope|feat|nfr|users|ui|track)/i.test(sid))||/(?:feat|nfr|scope|users|ui|track|功能|范围|非功能|界面|埋点)/i.test(sid);
+  if(h&&h.level==='red'&&isDev)return {rank:0,label:'阻塞研发',cls:'lv-red',next:'先补齐该项，再进入研发拆解'};
+  if((h&&h.level==='red'&&isTest)||id==='R-CONS-01'||id==='R-CONS-03')return {rank:1,label:'阻塞测试',cls:'lv-red',next:'先补齐可判定验收与验证方式'};
+  if(/^R-CONS|^R-RISK/.test(id)||/(?:purpose|目标|范围)/i.test(sid))return {rank:2,label:'影响目标',cls:'lv-yellow',next:'核对目标、范围与关联内容是否一致'};
+  return {rank:3,label:'建议优化',cls:'lv-yellow',next:(h&&h.advice||'').split('\n')[0]||'补齐后重新运行体检'};
 }
 /* P0-②/③ 健康度等级 + 维度下钻 + 缺口详情 */
 function gradeOf(aiTotal,completion){
@@ -2110,11 +2334,24 @@ function renderDimDetail(d){
   }).join('');
 }
 function renderHero(){
+  const main=document.getElementById('main');
   const sub=document.getElementById('heroSub');
   if(!sub||!HEALTH||!HEALTH.metrics)return;
+  const proj=currentProj();
+  const title=sub.parentElement&&sub.parentElement.querySelector('h1');if(title&&proj)title.textContent=proj.name;
+  let reportChip=sub.parentElement&&sub.parentElement.querySelector('.import-report-chip');
+  if(proj&&proj.importReport){
+    if(!reportChip){reportChip=document.createElement('button');reportChip.className='import-report-chip';reportChip.dataset.act='showimportreport';sub.parentElement.appendChild(reportChip);}
+    reportChip.innerHTML='最近导入：'+esc(proj.importReport.sourceLabel||'文档')+' · 查看报告 <span aria-hidden="true">→</span>';
+  }else if(reportChip){reportChip.remove();}
+  let sampleNext=main.querySelector('#sampleNext');
+  if(proj&&proj.sampleGuide){
+    if(!sampleNext){sampleNext=document.createElement('div');sampleNext.id='sampleNext';sampleNext.className='sample-next';const dash=document.getElementById('dashboard');if(dash)dash.before(sampleNext);}
+    sampleNext.innerHTML='<div><b>示例 PRD 已加载</b><br><span>把它改成自己的项目，再用体检找出需补齐的内容。</span></div><div class="row-act"><button data-act="sample-edit">先替换目标</button><button data-act="sample-health">查看质量缺口</button><button data-act="sample-rename">保留为我的项目</button></div>';
+  }else if(sampleNext){sampleNext.remove();}
   const m=HEALTH.metrics;
-  const aiReport=currentProj()&&currentProj().ai&&currentProj().ai.lastReport?currentProj().ai.lastReport:null;
-  const updated=currentProj()&&currentProj().updatedAt?new Date(currentProj().updatedAt).toLocaleString():'';
+  const aiReport=proj&&proj.ai&&proj.ai.lastReport?proj.ai.lastReport:null;
+  const updated=proj&&proj.updatedAt?new Date(proj.updatedAt).toLocaleString():'';
   sub.innerHTML='<span class="hero-meta hero-dot ok"></span>完成度 <b>'+m.completion+'%</b>'
     +'<span class="hero-sep">·</span>风险红节 <b>'+(m.risk||0)+'</b>'
     +(aiReport?'<span class="hero-sep">·</span>AI 总评 <b>'+aiReport.total+'</b>':'')
@@ -2180,7 +2417,10 @@ function renderSections(){
   const main=document.getElementById('main');
   // hero + dashboard 容器只在首次创建
   let wrap=main.querySelector('#content');
-  const heroHtml='<div class="hero"><div class="hcontent"><h1>'+esc(currentProj().name)+'</h1><div class="sub" id="heroSub"></div></div></div>'+
+  const latestImport=currentProj().importReport;
+  const heroHtml='<div class="hero"><div class="hcontent"><h1>'+esc(currentProj().name)+'</h1><div class="sub" id="heroSub"></div>'+
+    (latestImport?'<button class="import-report-chip" data-act="showimportreport">最近导入：'+esc(latestImport.sourceLabel||'文档')+' · 查看报告 <span aria-hidden="true">→</span></button>':'')+
+    '</div></div>'+
 
     '<div id="dashboard" class="dashboard"></div><div id="content"></div>';
   if(!wrap){main.innerHTML=heroHtml;wrap=main.querySelector('#content');}
@@ -2195,9 +2435,11 @@ function renderSections(){
 function renderSection(s,i){
   const e=HEALTH.sec[s.id].effective;const ov=HEALTH.sec[s.id].override;
   const body=renderEditor(s);
+  const locked=!!(currentProj()&&currentProj().ai&&currentProj().ai.locks&&currentProj().ai.locks[s.id]);
   return '<div class="section-card'+(ov?' overridden':'')+'" id="sec-'+s.id+'" data-id="'+s.id+'">'+
     '<div class="sec-head"><span class="num" data-act="drill" data-id="'+s.id+'">'+(i+1)+'</span><h2 data-act="drill" data-id="'+s.id+'">'+esc(s.title)+'</h2>'+
     (s.auto?'<span class="auto-tag" title="导入文档时自动生成的章节">自动</span>':'')+
+    '<button type="button" class="btn btn--sm btn--ghost" data-ai="lock-section" data-sid="'+esc(s.id)+'" title="锁定后 AI 优化、AI 草稿写入不会修改本节">'+(locked?'🔒 已锁定 AI':'🔓 锁定 AI')+'</button>'+
     '<span class="sec-color '+e+'" data-act="ovmenu" data-id="'+s.id+'" id="badge-'+s.id+'" title="点击手动改色"></span>'+
     '</div>'+
     '<div class="sec-body">'+body+'</div>'+
@@ -2426,11 +2668,65 @@ function refreshFwPickSel(){
 /* ============ 框架编辑器（新建项目双击编辑 / 自建 / 设置页另存为） ============ */
 let fwEditorBuf=null; // 正在编辑的框架（节数组）
 let fwEditorCtx=null; // {context:'newproj'|'settings', sourceId, baseName, saveAs}
+let fwEditorDeleteOps=[]; // 当前编辑会话内待提交的删节策略，取消编辑时不会影响项目数据
+let fwDeletePending=null;
 function openFwEditor(framework,opts){
   fwEditorBuf=deep(framework||[]);
   fwEditorCtx=opts||{context:'newproj',sourceId:null,baseName:'自定义框架',saveAs:false};
+  fwEditorDeleteOps=[];
   if(!fwEditorBuf.length)fwEditorBuf.push({id:uid(),title:'新节',type:'text',required:false,weight:1});
   renderFwEditor();openModal('fwEditModal');
+}
+function fwImpactOf(sec){
+  const p=currentProj(),d=p&&p.data&&p.data[sec.id];
+  if(!d)return {has:false,body:0,cards:0,items:0,rows:0};
+  const body=htmlToText(d.html||'').trim().length;
+  const cards=(d.cards||[]).length,items=(d.items||[]).filter(Boolean).length,rows=(d.rows||[]).length;
+  return {has:!!(body||cards||items||rows),body,cards,items,rows};
+}
+function fwArchiveHtml(sec,d){
+  d=d||{};
+  let html=d.html||'';
+  if(d.items&&d.items.length)html+='<ul>'+d.items.filter(Boolean).map(function(i){return '<li>'+esc(i.name!=null?((i.name||'')+' '+(i.desc||'')):(i.text!=null?i.text:('作为'+(i.role||'')+'我希望'+(i.want||'')+'以便'+(i.soThat||''))))+'</li>';}).join('')+'</ul>';
+  if(d.rows&&d.rows.length)html+='<table><tbody>'+d.rows.map(function(r){return '<tr>'+((r.cells||[]).map(function(c){return '<td>'+esc(c)+'</td>';}).join(''))+'</tr>';}).join('')+'</tbody></table>';
+  (d.cards||[]).forEach(function(c){html+='<h3>'+esc(c.title||'小标题')+'</h3>'+(c.html||'');});
+  return html||'<p>（原节为空）</p>';
+}
+function openFwDeleteModal(index){
+  const sec=fwEditorBuf&&fwEditorBuf[index];if(!sec)return;
+  const targets=fwEditorBuf.filter(function(x,i){return i!==index;});
+  const blocked=fwEditorDeleteOps.some(function(x){return x.mode==='archive'&&x.targetId===sec.id;});
+  if(blocked){toast('该节已被选为其他内容的归档目标；请先完成当前编辑，或取消后重新调整。');return;}
+  const impact=fwImpactOf(sec),parts=[];
+  if(impact.body)parts.push('正文约 '+impact.body+' 字');if(impact.cards)parts.push(impact.cards+' 个小卡片');if(impact.items)parts.push(impact.items+' 条结构化条目');if(impact.rows)parts.push(impact.rows+' 行表格数据');
+  const el=document.getElementById('fwDeleteImpact');
+  if(el)el.innerHTML='<b>即将删除：「'+esc(sec.title)+'</b><ul><li><b>受影响内容：</b>'+((parts.join('、'))||'当前为空')+'</li><li><b>导出影响：</b>该节将不再作为独立章节导出。</li><li><b>提示：</b>删除在点击“完成”保存框架后才会生效。</li></ul>';
+  const sel=document.getElementById('fwDeleteTarget');if(sel)sel.innerHTML=targets.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.title)+'</option>';}).join('');
+  const wrap=document.getElementById('fwDeleteTargetWrap');if(wrap)wrap.style.display=targets.length?'block':'none';
+  document.querySelectorAll('#fwDeleteModal input[name="fwDeleteMode"]').forEach(function(x){x.checked=x.value===(targets.length?'archive':'delete');});
+  fwDeletePending={index,sec:deep(sec),hasTargets:targets.length>0};openModal('fwDeleteModal');
+}
+function confirmFwDelete(){
+  const pending=fwDeletePending;if(!pending||!fwEditorBuf)return;
+  const sec=fwEditorBuf[pending.index];if(!sec||sec.id!==pending.sec.id){toast('框架已变化，请重新选择要删除的节');return;}
+  const checked=document.querySelector('#fwDeleteModal input[name="fwDeleteMode"]:checked');
+  const mode=checked?checked.value:'delete',targetId=(document.getElementById('fwDeleteTarget')||{}).value||'';
+  if(mode==='archive'&&(!pending.hasTargets||!targetId)){toast('请选择归档目标节，或改为连内容删除');return;}
+  fwEditorDeleteOps.push({section:deep(sec),mode,targetId});
+  fwEditorBuf.splice(pending.index,1);fwDeletePending=null;closeModal('fwDeleteModal');renderFwEditor();
+}
+function applyFwDeleteOps(project){
+  if(!project||!fwEditorDeleteOps.length)return;
+  const remain=new Set((fwEditorBuf||[]).map(function(s){return s.id;}));
+  fwEditorDeleteOps.forEach(function(op){
+    const data=project.data&&project.data[op.section.id];
+    if(op.mode==='archive'&&remain.has(op.targetId)&&data){
+      const target=project.data[op.targetId]||(project.data[op.targetId]={cards:[]});
+      if(!target.cards)target.cards=[];
+      target.cards.push({id:uid(),title:'已归档：'+op.section.title,html:fwArchiveHtml(op.section,data)});
+    }
+    if(project.data)delete project.data[op.section.id];
+  });
 }
 function openFwEditorFromPreset(fwId){
   const pr=(STATE.frameworkPresets||[]).find(x=>x.id===fwId);
@@ -2568,7 +2864,7 @@ function bindTouchDrag(){
 function moveFw(i,dir){if(!STATE.framework[i])return;const j=i+dir;if(j<0||j>=STATE.framework.length)return;const tmp=STATE.framework[i];STATE.framework[i]=STATE.framework[j];STATE.framework[j]=tmp;const p=currentProj();if(p)p.framework=deep(STATE.framework);save();renderFrameworkTab();if(currentProj())render();}
 function createProject(name,frameworkId){name=(name||'').trim();if(!name){toast('请输入项目名称');return;}let fw,autoGen=false;if(frameworkId==='__AUTO__'){fw=[];autoGen=true;}else{fw=deep(STATE.framework);if(frameworkId){const preset=(STATE.frameworkPresets||[]).find(x=>x.id===frameworkId);if(preset&&preset.framework&&preset.framework.length)fw=deep(preset.framework);}ensureCatchAll(fw);}const p={id:uid(),name:name,data:blankData(fw),overrides:{},corrections:{},framework:fw,autoGen:autoGen,context:{},updatedAt:Date.now()};STATE.projects.push(p);STATE.activeProjectId=p.id;STATE.framework=deep(fw);drillOpen=null;DATA=p.data;save();render();toast(autoGen?'已创建项目（自动生成框架：导入文档后将按标题生成结构，可能有误差，请核对）':'已创建项目');}
 function deleteProject(id){const i=STATE.projects.findIndex(p=>p.id===id);if(i<0)return;STATE.projects.splice(i,1);if(STATE.activeProjectId===id)STATE.activeProjectId=STATE.projects.length?STATE.projects[0].id:null;render();save();}
-function renameProject(id,name){const p=STATE.projects.find(x=>x.id===id);if(p){p.name=name;save();render();}}
+function renameProject(id,name){const p=STATE.projects.find(x=>x.id===id);if(p){p.name=name;delete p.sampleGuide;save();render();}}
 
 /* ============ 手动改色 ============ */
 let ovTarget=null,ovColor=null;
@@ -2583,6 +2879,8 @@ function setCorr(id,rule,status){const p=currentProj();if(!p.corrections[id])p.c
 /* ============ 导入 / 导出 ============ */
 function headingToId(t){
   t=t.toLowerCase();
+  // “自定义风险 / 自定义字段”等是用户自建标题，不应因包含“定义”而误归入标准「定义」节。
+  if(/^自定义/.test(t))return null;
   const map=[['purpose','目的'],['purpose','背景'],['scope','适用范围'],['scope','范围'],['def','定义'],['def','术语'],['prodinfo','产品信息'],['prodinfo','目标'],['users','使用者'],['users','用户需求'],['users','用户故事'],['feat','功能需求'],['nfr','非功能'],['nfr','性能'],['nfr','安全'],['selftest','自测'],['track','埋点'],['track','数据'],['ui','界面'],['ui','交互'],['accept','验收'],['launch','上线'],['launch','发布'],['meta','变更'],['meta','历史'],['other','其他'],['other','相关文件'],['other','附录']];
   for(const [id,kw] of map){if(t.includes(kw.toLowerCase()))return id;}
   return null;
@@ -2629,7 +2927,7 @@ function parsePRD(text){
       data[key]=sec;
     }
   });
-  return {data,unmatched,buckets,titles};
+  return {data,unmatched,buckets,titles,order};
 }
 // 由解析结果生成「沿用文档自身结构」的框架：已知节映射到看板标准类型，文档特有节为 text 节，保持原标题顺序
 function docFrameworkFromParse(r){
@@ -3039,17 +3337,57 @@ function sectionTitle(id){const s=STATE.framework.find(x=>x.id===id);return s?s.
 function renderPrefsTab(){
   const el=document.getElementById('tabPrefs');if(!el)return;
   const opts=[['compact','紧凑'],['standard','标准'],['comfortable','宽松']];
-  let html='<div class="muted" style="margin-bottom:10px">面板密度影响卡片留白与信息密度，仅本机生效，刷新后保留。</div><div class="dens-row">';
-  opts.forEach(o=>{html+='<button class="dens-btn'+(STATE.density===o[0]?' on':'')+'" data-act="setdensity" data-v="'+o[0]+'">'+o[1]+'</button>';});
+  const labels={compact:'紧凑：减少留白，便于快速浏览',standard:'标准：兼顾阅读与信息密度',comfortable:'宽松：增加留白，适合长时间阅读'};
+  let html='<div class="muted" style="margin-bottom:10px">面板密度影响卡片留白与信息密度，仅本机生效，刷新后保留。<span id="densityCurrent" class="dens-current" aria-live="polite">当前：'+labels[STATE.density||'standard']+'</span></div><div class="dens-row" role="group" aria-label="面板密度">';
+  opts.forEach(o=>{const on=STATE.density===o[0];html+='<button type="button" class="dens-btn'+(on?' on':'')+'" data-act="setdensity" data-v="'+o[0]+'" aria-pressed="'+(on?'true':'false')+'">'+o[1]+'</button>';});
   html+='</div>';
-  html+='<div class="muted" style="margin:16px 0 8px">主题（与顶部导航同步）：</div><div class="dens-row">';
-  html+='<button class="theme-opt" data-t="light" onclick="setTheme(&quot;light&quot;)">浅色</button><button class="theme-opt" data-t="dark" onclick="setTheme(&quot;dark&quot;)">深色</button><button class="theme-opt" data-t="hc" onclick="setTheme(&quot;hc&quot;)">高对比</button>';
-  html+='</div>';
+  // 主题选择器由 theme-controller 统一注入，避免与设置页重复渲染两套入口。
   el.innerHTML=html;
   var curT=document.documentElement.dataset.theme||'light';
   el.querySelectorAll('.theme-opt').forEach(function(b){b.classList.toggle('on',b.dataset.t===curT);});
 }
-function setDensity(v){STATE.density=v;save();document.body.setAttribute('data-density',v);render();toast('密度：'+(v==='compact'?'紧凑':v==='comfortable'?'宽松':'标准'));}
+function setDensity(v){
+  const labels={compact:'紧凑：减少留白，便于快速浏览',standard:'标准：兼顾阅读与信息密度',comfortable:'宽松：增加留白，适合长时间阅读'};
+  if(!labels[v])return;
+  STATE.density=v;
+  document.body.setAttribute('data-density',v);
+  document.querySelectorAll('#tabPrefs .dens-btn').forEach(function(btn){const on=btn.dataset.v===v;btn.classList.toggle('on',on);btn.setAttribute('aria-pressed',on?'true':'false');});
+  const current=document.getElementById('densityCurrent');if(current)current.textContent='当前：'+labels[v];
+  save();
+  toast('已切换为'+(v==='compact'?'紧凑':v==='comfortable'?'宽松':'标准')+'密度');
+}
+
+let resetScope='';
+const RESET_LOCAL_KEYS={templateDraft:'prdKanbanTplDraftV1',templateCustom:'prdKanbanTplCustom',theme:'prdKanbanTheme',aiSettings:'prdKanbanAiSettings',preImport:'prdKanbanStateV3.preimport'};
+const RESET_META={
+  projects:{label:'仅项目',remove:['所有项目与分组','项目中的 PRD 正文、AI 记录和版本','自动恢复备份与导入前恢复点'],keep:['自定义框架预设','模板草稿与自定义模板','界面主题与密度','AI 服务设置与 API Key']},
+  projectsTemplates:{label:'项目 + 模板',remove:['所有项目与分组','项目中的 PRD 正文、AI 记录和版本','自动恢复备份与导入前恢复点','自定义框架预设、模板草稿和自定义模板'],keep:['界面主题与密度','AI 服务设置与 API Key']},
+  all:{label:'全部本地数据',remove:['所有项目、分组和全部恢复点','自定义框架预设、模板草稿和自定义模板','界面主题与密度','AI 服务设置与 API Key'],keep:['无；下次打开将按全新本地环境开始']}
+};
+function resetSummaryHtml(scope){const meta=RESET_META[scope];if(!meta)return '请选择一个重置范围，查看具体影响后再确认。';return '<b>将执行：'+meta.label+'</b><ul><li><b>会删除：</b>'+meta.remove.join('；')+'</li><li><b>会保留：</b>'+meta.keep.join('；')+'</li></ul>';}
+function openResetModal(){resetScope='';const summary=document.getElementById('resetSummary');if(summary){summary.className='reset-summary empty';summary.textContent='请选择一个重置范围，查看具体影响后再确认。';}document.querySelectorAll('#resetModal .reset-choice').forEach(function(btn){btn.classList.remove('selected');btn.setAttribute('aria-checked','false');});const confirmBtn=document.getElementById('resetConfirm');if(confirmBtn){confirmBtn.disabled=true;confirmBtn.textContent='选择范围后确认';}openModal('resetModal');}
+function pickResetScope(scope){if(!RESET_META[scope])return;resetScope=scope;document.querySelectorAll('#resetModal .reset-choice').forEach(function(btn){const on=btn.dataset.scope===scope;btn.classList.toggle('selected',on);btn.setAttribute('aria-checked',on?'true':'false');});const summary=document.getElementById('resetSummary');if(summary){summary.className='reset-summary';summary.innerHTML=resetSummaryHtml(scope);}const confirmBtn=document.getElementById('resetConfirm');if(confirmBtn){confirmBtn.disabled=false;confirmBtn.textContent='确认删除：'+RESET_META[scope].label;}}
+function resetFreshState(keepFrameworkPresets){const next=seedState();const old=STATE||{};next.density=['compact','standard','comfortable'].indexOf(old.density)>=0?old.density:'standard';next.seenWizard=!!old.seenWizard;if(keepFrameworkPresets&&Array.isArray(old.frameworkPresets)&&old.frameworkPresets.length)next.frameworkPresets=deep(old.frameworkPresets);return next;}
+function resetLocalData(scope){
+  if(!RESET_META[scope])return false;
+  try{
+    if(scope==='all'){
+      [STORAGE_KEY,STORAGE_KEY+'.bak',RESET_LOCAL_KEYS.preImport,RESET_LOCAL_KEYS.templateDraft,RESET_LOCAL_KEYS.templateCustom,RESET_LOCAL_KEYS.theme,RESET_LOCAL_KEYS.aiSettings].forEach(function(key){localStorage.removeItem(key);});
+      STATE=seedState();
+      document.body.setAttribute('data-density','standard');
+      document.documentElement.dataset.theme='light';
+      const darkStyle=document.getElementById('dark-neumorphism');if(darkStyle)darkStyle.disabled=true;
+      updateStorageAdvice('{}');
+    }else{
+      STATE=resetFreshState(scope==='projects');
+      localStorage.removeItem(STORAGE_KEY+'.bak');localStorage.removeItem(RESET_LOCAL_KEYS.preImport);
+      if(scope==='projectsTemplates'){localStorage.removeItem(RESET_LOCAL_KEYS.templateDraft);localStorage.removeItem(RESET_LOCAL_KEYS.templateCustom);}
+      document.body.setAttribute('data-density',STATE.density);
+      save();
+    }
+    refreshData();render();closeModal('resetModal');resetScope='';toast('已重置：'+RESET_META[scope].label);return true;
+  }catch(error){toast('重置失败：'+(error&&error.message||error));return false;}
+}
 
 /* ============ 模态 ============ */
 function openModal(id){document.getElementById(id).classList.add('open');}
@@ -3061,10 +3399,10 @@ function showWzStep(){
   document.querySelectorAll('#wizardModal .wz-step').forEach(p=>{p.style.display=(+p.dataset.step===wzStep)?'block':'none';});
   const prev=document.getElementById('wzPrev'),next=document.getElementById('wzNext'),start=document.getElementById('wzStart');
   if(prev)prev.style.visibility=wzStep>0?'visible':'hidden';
-  if(next)next.style.display=wzStep<2?'inline-block':'none';
-  if(start)start.style.display=wzStep===2?'inline-block':'none';
+  if(next)next.style.display='none';
+  if(start)start.style.display='inline-block';
 }
-function wzNext(){if(wzStep<2){wzStep++;showWzStep();}}
+function wzNext(){showWzStep();}
 function wzPrev(){if(wzStep>0){wzStep--;showWzStep();}}
 function wzFinish(){STATE.seenWizard=true;save();closeModal('wizardModal');}
 
@@ -3119,20 +3457,22 @@ function bindStatic(){
       }
       case 'sidebartoggle':openSidebar();break;
       case 'sidebarclose':closeSidebar();break;
-      case 'expmd':{closeProjMenu();const p=STATE.projects.find(x=>x.id===id);if(p)download(p.name+'.md',projectMD(p),'text/markdown;charset=utf-8');break;}
-      case 'expdocx':{closeProjMenu();const p=STATE.projects.find(x=>x.id===id);if(p){toast('正在生成 Word（含图片）…');buildDocx(p.data,p).then(bytes=>{downloadBytes(p.name+'.docx',bytes);toast('已导出 Word（含图片）');}).catch(e=>{console.error(e);toast('导出失败：'+(e&&e.message||e));});}break;}
+      case 'expmd':{closeProjMenu();openExportPreflight('md',id);break;}
+      case 'expdocx':{closeProjMenu();openExportPreflight('docx',id);break;}
       case 'edit':toggleEdit();break;
       case 'undo':undo();break;
       case 'settings':openSettings();break;
-      case 'closemodal':closeModal('newProjModal');closeModal('renameModal');closeModal('pasteModal');closeModal('overrideModal');closeModal('settingsModal');closeModal('wizardModal');closeModal('tplModal');closeModal('fwEditModal');closeModal('ctxModal');closeModal('reviewModal');closeModal('reviewPickModal');break;
+      case 'closemodal':closeModal('newProjModal');closeModal('renameModal');closeModal('pasteModal');closeModal('importPreviewModal');closeModal('importReportModal');closeModal('exportPreflightModal');closeModal('overrideModal');closeModal('resetModal');closeModal('fwDeleteModal');closeModal('backupImportModal');closeModal('settingsModal');closeModal('wizardModal');closeModal('tplModal');closeModal('fwEditModal');closeModal('ctxModal');closeModal('reviewModal');closeModal('reviewPickModal');break;
       case 'drill':toggleDrill(id);break;
       case 'rulelink':openSettings('rules',t.dataset.rule);break;
       case 'setdensity':setDensity(t.dataset.v);break;
       case 'accstatus':{const idx=+t.dataset.idx;const v=t.dataset.val;if(DATA.accept&&DATA.accept.items[idx]){DATA.accept.items[idx].status=v;save();render();}break;}
-      case 'exportdocx':exportDOCX();break;
+      case 'exportdocx':openExportPreflight('docx');break;
       case 'tpl':showTpl();break;
       case 'help':openWizard();break;
       case 'copytpl':copyTpl();break;
+      case 'tplchoose':tplChoose(t.dataset.tpl);break;
+      case 'tpladvanced':tplToggleAdvanced();break;
       case 'tpl-regen':tplRegen();break;
       case 'tpl-preset':tplApplyPreset();break;
       case 'tpl-saveas':tplSaveAsCustom();break;
@@ -3149,9 +3489,11 @@ function bindStatic(){
       case 'wz-sample':{loadSample();wzFinish();break;}
       case 'wz-newproj':{wzFinish();renderNewProjFrameworks();openModal('newProjModal');break;}
       case 'wz-ai':{wzFinish();var gmode=t.dataset.genmode||'';if(gmode==='design'){aiDesignOpen();}else if(window.__AICtrl&&window.__AICtrl.openGen){window.__AICtrl.openGen('');}else toast('AI 助手尚未就绪，请稍后再试');break;}
+      case 'wz-template':{wzFinish();showTpl();break;}
+      case 'wz-import':{wzFinish();document.getElementById('fileInput').click();break;}
       case 'drillmetric':{const hm=document.querySelector('.dash-heatmap');if(hm)hm.scrollIntoView({behavior:'smooth',block:'center'});else toast('点击各节色标查看判分明细');break;}
-      case 'dimdrill':{const i=+t.dataset.i;const box=document.getElementById('dimd-'+i);const dim=document.querySelector('.dash-dim[data-i="'+i+'"]');if(!box)break;if(box.style.display==='none'||!box.style.display){const aiR=currentProj()&&currentProj().ai&&currentProj().ai.lastReport;const d=aiR&&aiR.dimensions&&aiR.dimensions[i];if(d)box.innerHTML=renderDimDetail(d);box.style.display='block';if(dim)dim.classList.add('open');}else{box.style.display='none';if(dim)dim.classList.remove('open');}break;}
-      case 'gapexpand':{const i=+t.dataset.i;const row=t.closest('.gap-row');const box=document.getElementById('gapd-'+i);if(!box)break;if(box.style.display==='none'||!box.style.display){const h=HEALTH&&HEALTH.activeHits&&HEALTH.activeHits[i];if(h){box.innerHTML='<div class="gd-why"><b>为什么重要：</b>'+esc(ruleWhy(h.ruleId)||'该问题影响 PRD 质量基线，建议处理')+'</div><div class="gd-adv"><b>改进建议：</b>'+esc((h.advice||'').replace(/\n/g,'<br>'))+'</div>';}box.style.display='table-row';if(row)row.classList.add('open');}else{box.style.display='none';if(row)row.classList.remove('open');}break;}
+      case 'dimdrill':{const i=+t.dataset.i;const box=document.getElementById('dimd-'+i);const dim=document.querySelector('.dash-dim[data-i="'+i+'"]');if(!box)break;const opening=box.style.display==='none'||!box.style.display;if(opening){const aiR=currentProj()&&currentProj().ai&&currentProj().ai.lastReport;const d=aiR&&aiR.dimensions&&aiR.dimensions[i];if(d)box.innerHTML=renderDimDetail(d);box.style.display='block';if(dim){dim.classList.add('open');dim.setAttribute('aria-expanded','true');}}else{box.style.display='none';if(dim){dim.classList.remove('open');dim.setAttribute('aria-expanded','false');}}break;}
+      case 'gapexpand':{const i=+t.dataset.hi;const row=t.closest('.gap-row');const box=document.getElementById('gapd-'+i);if(!box)break;if(box.style.display==='none'||!box.style.display){const h=HEALTH&&HEALTH.activeHits&&HEALTH.activeHits[i];if(h){const imp=gapImpact(h);box.innerHTML='<div class="gd-why"><b>为什么重要：</b>'+esc(ruleWhy(h.ruleId)||'该问题影响 PRD 质量基线，建议处理')+'</div><div class="gd-adv"><b>交付影响：</b>'+esc(imp.label)+'；'+esc(imp.next)+'</div><div class="gd-adv"><b>改进建议：</b>'+esc((h.advice||'').replace(/\n/g,'<br>'))+'</div>';}box.style.display='table-row';if(row)row.classList.add('open');}else{box.style.display='none';if(row)row.classList.remove('open');}break;}
       case 'goto':{const el=document.getElementById('sec-'+id);if(el)el.scrollIntoView({behavior:'smooth'});if(window.innerWidth<=860)closeSidebar();break;}
       case 'ovmenu':openOverrideQuick(id);break;
       case 'ov-red':closeOverrideQuick();openOverride(id,'red');break;
@@ -3180,13 +3522,26 @@ function bindStatic(){
       case 'managefw':{openFwEditor(STATE.framework,{context:'settings',sourceId:null,baseName:'自定义框架',saveAs:false});break;}
       case 'import':document.getElementById('fileInput').click();break;
       case 'sample':loadSample();break;
+      case 'sample-edit':{const id=(STATE.framework.find(function(s){return s.id==='purpose';})||STATE.framework[0]||{}).id;if(!editing)toggleEdit();if(id)setTimeout(function(){openSection(id);},0);break;}
+      case 'sample-health':{const dash=document.getElementById('dashboard');if(dash)dash.scrollIntoView({behavior:'smooth',block:'start'});break;}
+      case 'sample-rename':{const p=currentProj();if(!p)break;const name=prompt('为此项目命名：',p.name==='示例 PRD'?'我的 PRD':p.name);if(name!==null&&name.trim())renameProject(p.id,name.trim());break;}
       case 'paste':document.getElementById('pasteArea').value='';openModal('pasteModal');break;
-      case 'doPaste':{const txt=document.getElementById('pasteArea').value;doImportText(txt);closeModal('pasteModal');break;}
-      case 'exportmd':download(currentProj().name+'.md',exportMD(),'text/markdown;charset=utf-8');break;
+      case 'doPaste':{const txt=document.getElementById('pasteArea').value;if(beginImportPreview(txt,'粘贴导入 PRD','粘贴内容'))closeModal('pasteModal');break;}
+      case 'importpreviewmode':renderImportPreview();break;
+      case 'importpreviewconfirm':applyImportPreview();break;
+      case 'showimportreport':openImportReport();break;
+      case 'importreport-framework':{closeModal('importReportModal');const p=currentProj();if(p)openFwEditor(p.framework,{context:'settings',sourceId:null,baseName:p.name+' 导入框架',saveAs:false});break;}
+      case 'importreport-health':{closeModal('importReportModal');const dash=document.getElementById('dashboard');if(dash)dash.scrollIntoView({behavior:'smooth',block:'start'});break;}
+      case 'exportmd':openExportPreflight('md');break;
+      case 'exportpreflightconfirm':confirmExportPreflight();break;
       case 'copyhealth':copyHealthSummary();break;
       case 'backup':download('prd-kanban-backup.json',JSON.stringify({app:'prd-kanban',version:3,exportedAt:Date.now(),state:STATE}),'application/json');break;
       case 'importbackup':document.getElementById('fileInputBackup').click();break;
-      case 'reset':if(confirm('确定重置看板？将清空所有项目与配置。')){localStorage.removeItem(STORAGE_KEY);STATE=seedState();save();render();toast('已重置');}break;
+      case 'restorepreimport':restorePreImport();break;
+      case 'backupimportconfirm':applyBackupImport();break;
+      case 'reset':openResetModal();break;
+      case 'resetpick':pickResetScope(t.dataset.scope);break;
+      case 'resetconfirm':if(resetScope)resetLocalData(resetScope);break;
       case 'settab':setSettingsTab(t.dataset.tab);break;
       case 'settier':setTier(t.dataset.tier);break;
       case 'fw-title':{STATE.framework[+t.dataset.i].title=t.value;const p=currentProj();if(p)p.framework=deep(STATE.framework);save();break;}
@@ -3205,9 +3560,10 @@ function bindStatic(){
       case 'fwedit-req':{if(fwEditorBuf&&fwEditorBuf[+t.dataset.i])fwEditorBuf[+t.dataset.i].required=t.checked;break;}
       case 'fwedit-w':{if(fwEditorBuf&&fwEditorBuf[+t.dataset.i])fwEditorBuf[+t.dataset.i].weight=+t.value||1;break;}
       case 'fwedit-ins':{if(fwEditorBuf)fwEditorBuf.splice(+t.dataset.i+1,0,{id:uid(),title:'新节',type:'text',required:false,weight:1});renderFwEditor();break;}
-      case 'fwedit-del':{if(fwEditorBuf)fwEditorBuf.splice(+t.dataset.i,1);renderFwEditor();break;}
+      case 'fwedit-del':{if(fwEditorBuf)openFwDeleteModal(+t.dataset.i);break;}
       case 'fwedit-add':{if(fwEditorBuf)fwEditorBuf.push({id:uid(),title:'新节',type:'text',required:false,weight:1});renderFwEditor();break;}
       case 'fwedit-cancel':{closeModal('fwEditModal');break;}
+      case 'fwdeleteconfirm':{confirmFwDelete();break;}
       case 'fwedit-done':{
         const ctx=fwEditorCtx||{context:'newproj'};
         if(ctx.context==='newproj'){
@@ -3226,7 +3582,7 @@ function bindStatic(){
           closeModal('fwEditModal');
           toast('已保存框架「'+presetName+'」('+fwEditorBuf.length+' 节)，新建项目时可选中复用');
         }else{
-          STATE.framework=deep(fwEditorBuf);const p=currentProj();if(p)p.framework=deep(fwEditorBuf);
+          STATE.framework=deep(fwEditorBuf);const p=currentProj();if(p){applyFwDeleteOps(p);p.framework=deep(fwEditorBuf);}
           if(ctx.saveAs){
             if(!STATE.frameworkPresets)STATE.frameworkPresets=[];
             const pn='自定义框架 '+fwEditorBuf.length+'节';
@@ -3234,7 +3590,8 @@ function bindStatic(){
           }
           save();renderFrameworkTab();if(currentProj())render();
           closeModal('fwEditModal');
-          toast('文档框架已更新（'+fwEditorBuf.length+' 节）'+(ctx.saveAs?'，并已另存为自定义框架':''));
+          const deleted=fwEditorDeleteOps.length;fwEditorDeleteOps=[];
+          toast('文档框架已更新（'+fwEditorBuf.length+' 节）'+(deleted?('，已处理 '+deleted+' 个删节操作'):'')+(ctx.saveAs?'，并已另存为自定义框架':''));
         }
         break;
       }
@@ -3538,6 +3895,7 @@ function rvRun(){
     docText = (AIC._test && typeof AIC._test.docText==='function') ? AIC._test.docText() : '';
   }catch(e){showErr('读取文档内容失败：'+(e.message||e));return;}
   if(!docText.trim()){if(st)st.textContent='当前项目没有可评审的 PRD 内容';toast('当前项目没有可评审的 PRD 内容');return;}
+  const startReview=function(){
   const groups=[];
   let i=0;
   const runNext=function(){
@@ -3582,6 +3940,10 @@ function rvRun(){
     });
   };
   runNext();
+  };
+  if(typeof AIC.privacyConfirm!=='function'){showErr('AI 隐私确认模块未加载，请 Ctrl+Shift+R 后重试');return;}
+  if(st)st.textContent='请确认本次评审的数据发送范围…';
+  AIC.privacyConfirm({label:'多角色评审',scope:'当前项目的 PRD 全文、章节结构和所选角色评审指令',key:'多角色评审|全文 PRD'}).then(startReview).catch(function(e){if(st)st.textContent=(e&&e.message)||'已取消本次评审';});
 }
 function rvReviewSystemPrompt(role){
   const fw=STATE.framework.map(function(x){return x.id+'「'+x.title+'」';}).join('；');
@@ -3692,6 +4054,68 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('#projMenu'))closeProjMenu();
 });
 
+let importPreviewPlan=null;
+function importPreviewMode(){const picked=document.querySelector('#importPreviewOptions input[name="importPreviewMode"]:checked');return picked?picked.value:(importPreviewPlan&&importPreviewPlan.defaultMode)||'new';}
+function renderImportPreview(){
+  const plan=importPreviewPlan;if(!plan)return;
+  const mode=importPreviewMode(),asNew=mode==='new',keepsSource=asNew||!plan.currentFilled;
+  const summary=document.getElementById('importPreviewSummary');
+  const options=document.getElementById('importPreviewOptions');
+  const nameField=document.getElementById('importPreviewNameField');
+  const nameInput=document.getElementById('importPreviewName');
+  const mapping=document.getElementById('importPreviewMapping');
+  const unmatchedTitle=document.getElementById('importPreviewUnmatchedTitle');
+  const unmatched=document.getElementById('importPreviewUnmatched');
+  if(summary)summary.innerHTML='<b>已读取「'+esc(plan.sourceLabel)+'」</b>：识别到 '+plan.sectionCount+' 个章节。确认前不会修改本地项目。';
+  if(options){
+    if(plan.currentFilled){options.innerHTML='<label class="import-preview-choice"><input type="radio" name="importPreviewMode" value="new" data-act="importpreviewmode"'+(mode==='new'?' checked':'')+'><span><b>导入为新项目（推荐）</b><br>保留当前项目「'+esc(plan.currentName)+'」，并按原文标题生成框架。</span></label><label class="import-preview-choice"><input type="radio" name="importPreviewMode" value="overwrite" data-act="importpreviewmode"'+(mode==='overwrite'?' checked':'')+'><span><b>覆盖当前项目</b><br>替换当前项目「'+esc(plan.currentName)+'」已匹配章节；未识别章节会收纳到“其他”。</span></label>';}else if(plan.currentName){options.innerHTML='<div class="import-preview-choice"><span><b>导入到当前空项目「'+esc(plan.currentName)+'」</b><br>将按原文标题生成框架，后续可在框架设置中调整。</span></div>';}else{options.innerHTML='<div class="import-preview-choice"><span><b>将创建新项目</b><br>按原文标题生成框架，不会覆盖任何已有项目。</span></div>';}
+  }
+  if(nameField)nameField.style.display=asNew?'':'none';
+  if(nameInput&&asNew&&!nameInput.value)nameInput.value=plan.projectName;
+  const mapped=plan.matched.map(function(key){const from=plan.parsed.titles[key]||key;const target=(STATE.framework.find(function(s){return s.id===key;})||{}).title||key;return '<li>'+esc(from)+' <span class="muted">→</span> '+esc(target)+'</li>';});
+  if(!mapped.length&&plan.generated.length)mapped.push.apply(mapped,plan.generated.slice(0,12).map(function(s){return '<li>'+esc(s.title)+' <span class="muted">→ 保留为原文标题章节</span></li>';}));
+  if(mapping)mapping.innerHTML=mapped.length?mapped.join(''):'<li class="import-preview-empty">未识别到可映射的标准章节，将保留原文结构。</li>';
+  const unknown=plan.unmatched.map(function(key){return plan.parsed.titles[key]||key.replace(/^new::/,'');});
+  if(unmatchedTitle)unmatchedTitle.textContent=keepsSource?'将按原文标题保留的章节':'未识别章节（将收纳到“其他”）';
+  if(unmatched)unmatched.innerHTML=unknown.length?unknown.slice(0,18).map(function(title){return '<li>'+esc(title)+'</li>';}).join(''):'<li class="import-preview-empty">无</li>';
+}
+function beginImportPreview(text,projName,sourceLabel){
+  let parsed,generated=[];
+  try{parsed=parsePRD(text||'');generated=parseAutoGen(text||'');}catch(e){toast('解析失败：'+(e&&e.message||e));return false;}
+  const sectionCount=(parsed.order||[]).length||generated.length;
+  if(!sectionCount){toast('未识别到可导入的章节（建议使用 Markdown 标题或编号标题）');return false;}
+  const cur=currentProj();
+  importPreviewPlan={text:text||'',projectName:(projName||'导入项目').trim()||'导入项目',sourceLabel:sourceLabel||projName||'导入内容',parsed:parsed,generated:generated,matched:(parsed.order||[]).filter(function(key){return key.indexOf('new::')!==0;}),unmatched:parsed.unmatched||[],sectionCount:sectionCount,currentName:cur?cur.name:'',currentFilled:!!(cur&&STATE.framework.some(function(s){return !isEmpty(s.id);})),defaultMode:cur&&STATE.framework.some(function(s){return !isEmpty(s.id);})?'new':(cur?'current':'new')};
+  const nameInput=document.getElementById('importPreviewName');if(nameInput)nameInput.value=importPreviewPlan.projectName;
+  renderImportPreview();openModal('importPreviewModal');return true;
+}
+function applyImportPreview(){
+  const plan=importPreviewPlan;if(!plan)return;
+  const mode=importPreviewMode();const name=((document.getElementById('importPreviewName')||{}).value||plan.projectName).trim()||'导入项目';
+  closeModal('importPreviewModal');importPreviewPlan=null;
+  if(mode==='new'){
+    createProject(name,'__AUTO__');
+    if(!currentProj())return;
+  }
+  doImportText(plan.text,name,mode==='overwrite'?'overwrite':undefined);
+  const p=currentProj();
+  if(p){
+    p.importReport={sourceLabel:plan.sourceLabel,importedAt:Date.now(),sectionCount:plan.sectionCount,mappedTitles:plan.matched.map(function(key){return plan.parsed.titles[key]||key;}),unmatchedTitles:plan.unmatched.map(function(key){return plan.parsed.titles[key]||key.replace(/^new::/,'' );}),mode:mode};
+    save();render();openImportReport();
+  }
+}
+function openImportReport(){
+  const p=currentProj(),report=p&&p.importReport;if(!report)return;
+  const summary=document.getElementById('importReportSummary');const tasks=document.getElementById('importReportTasks');
+  const unmatched=report.unmatchedTitles||[];const kept=report.mode==='overwrite'?'已收纳到“其他”':'已按原文标题保留';
+  if(summary)summary.innerHTML='<b>已导入「'+esc(report.sourceLabel||'文档')+'」</b>：共 '+(report.sectionCount||0)+' 个章节，其中 '+(report.mappedTitles||[]).length+' 个可映射到标准结构'+(unmatched.length?'；'+unmatched.length+' 个非标准章节'+kept:'')+'。';
+  const h=HEALTH||runHealth();const taskRows=[];
+  if(unmatched.length)taskRows.push('<li><b>核对非标准章节：</b>'+esc(unmatched.slice(0,4).join('、'))+(unmatched.length>4?' 等':'')+'；确认它们是否应保留为独立内容或并入标准章节。</li>');
+  if(h&&h.activeHits&&h.activeHits.length)taskRows.push('<li><b>处理规则体检：</b>当前有 '+h.activeHits.length+' 项待处理问题，优先查看红色章节和必填内容缺口。</li>');
+  else taskRows.push('<li><b>继续完善：</b>章节已导入；建议核对目标、范围、验收和风险是否足以进入评审。</li>');
+  taskRows.push('<li><b>下一步：</b>核对章节结构后，再根据体检结果补齐内容或发起 AI 深度审查。</li>');
+  if(tasks)tasks.innerHTML=taskRows.join('');openModal('importReportModal');
+}
 function doImportText(text,projName){
   pushUndo();
   const cur0=currentProj();
@@ -3703,7 +4127,7 @@ function doImportText(text,projName){
   if(!hasContent){ toast('未识别到可导入的章节（需含 Markdown 标题 #~######）'); return; }
   const cur=currentProj();
   const curFilled=cur && STATE.framework.some(s=>!isEmpty(s.id));
-  if(curFilled && !confirm('当前项目「'+cur.name+'」已有内容，导入将覆盖它。\n确定覆盖？\n（点“取消”则导入为全新项目，保留当前项目）')){
+  if(curFilled && arguments[2]!=='overwrite' && !confirm('当前项目「'+cur.name+'」已有内容，导入将覆盖它。\n确定覆盖？\n（点“取消”则导入为全新项目，保留当前项目）')){
     // 取消覆盖 → 新建项目，并“沿用导入文档自身框架”（标题顺序+已知节类型），避免内容全进「其他」
     const docFw=docFrameworkFromParse(r);
     STATE.framework=deep(docFw);
@@ -3757,31 +4181,36 @@ function ingestFile(f){if(!f)return;const nm=(f.name||'').toLowerCase();const ba
                .replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi,'###### $1\n')
                .replace(/<[^>]+>/g,' ');
     }
-    doImportText(text,base);
+    beginImportPreview(text,base,f.name||base);
   };
   rd.readAsArrayBuffer(f);
 }
 function handleFile(e){const f=e.target.files[0];if(!f)return;e.target.value='';ingestFile(f);}
-function handleBackup(e){const f=e.target.files[0];if(!f)return;e.target.value='';const rd=new FileReader();rd.onload=()=>{
-    let raw; try{ raw=JSON.parse(rd.result); }catch(err){ toast('备份文件不是有效的 JSON'); return; }
-    // 兼容两种格式：导出包装 {state:...} 或 顶层 {projects,...}
-    const incoming=raw&&raw.state?raw.state:raw;
-    if(!incoming||!Array.isArray(incoming.projects)){ toast('备份格式不正确：未找到项目数据'); return; }
-    if(!confirm('导入备份将覆盖当前所有项目与配置，确定继续？')){ return; }
-    try{
-      if(!incoming.ruleSet||(incoming.version||0)<6)incoming.ruleSet=deep(DEFAULT_RULES);
-      incoming.version=6;
-      if(!incoming.frameworkPresets||!incoming.frameworkPresets.length)incoming.frameworkPresets=deep(DEFAULT_PRESETS);
-      if(!incoming.framework||!incoming.framework.length)incoming.framework=deep(DEFAULT_FRAMEWORK);
-      incoming.projects.forEach(p=>{ if(!p.overrides)p.overrides={}; if(!p.corrections)p.corrections={}; if(!p.framework||!p.framework.length)p.framework=deep(incoming.framework); if(!p.data)p.data=blankData(p.framework); });
-      const active=incoming.projects.find(x=>x.id===incoming.activeProjectId);
-      if(active&&active.framework&&active.framework.length)incoming.framework=deep(active.framework);
-      pushUndo();
-      STATE=incoming;
-      save();render();toast('备份已导入（'+incoming.projects.length+' 个项目）');
-    }catch(err){ toast('备份导入失败：'+(err&&err.message||err)); }
-  };rd.readAsText(f);
+let backupPending=null;
+function backupStateSummary(st){st=st||{};const ps=Array.isArray(st.projects)?st.projects:[];return {projects:ps.length,groups:(st.groups||[]).length,presets:(st.frameworkPresets||[]).length,names:ps.slice(0,3).map(function(p){return p.name||'未命名项目';})};}
+function openBackupImportModal(incoming,mode){
+  const next=backupStateSummary(incoming),now=backupStateSummary(STATE),restore=mode==='restore';
+  const title=document.getElementById('backupImportTitle'),summary=document.getElementById('backupImportSummary'),confirmBtn=document.getElementById('backupImportConfirm');
+  if(title)title.textContent=restore?'恢复导入前状态':'导入备份前确认';if(confirmBtn)confirmBtn.textContent=restore?'确认恢复导入前状态':'确认覆盖并导入';
+  if(summary)summary.innerHTML='<b>'+((restore?'即将恢复导入前保存的状态':'即将用备份整体覆盖当前看板'))+'</b><ul><li><b>当前：</b>'+now.projects+' 个项目、'+now.groups+' 个分组、'+now.presets+' 个自定义框架</li><li><b>'+((restore?'恢复为':'导入内容：'))+'</b>'+next.projects+' 个项目、'+next.groups+' 个分组、'+next.presets+' 个自定义框架'+(next.names.length?'（'+next.names.map(esc).join('、')+(next.projects>3?' 等':'')+'）':'')+'</li><li><b>会覆盖：</b>项目、分组、文档框架、规则和项目内 AI 记录；界面主题与 AI 服务设置不受备份导入影响。</li><li><b>保护：</b>'+((restore?'恢复前':'导入前'))+'会创建新的本地恢复点；也可先导出当前项目备份。</li></ul>';
+  backupPending={incoming:deep(incoming),mode:mode||'import'};openModal('backupImportModal');
 }
+function applyBackupImport(){
+  const pending=backupPending;if(!pending)return;
+  try{localStorage.setItem(RESET_LOCAL_KEYS.preImport,JSON.stringify(STATE));}catch(err){toast('无法创建导入前恢复点，已取消覆盖：'+(err&&err.message||err));return;}
+  try{
+    const incoming=deep(pending.incoming);
+    if(!incoming.ruleSet||(incoming.version||0)<6)incoming.ruleSet=deep(DEFAULT_RULES);incoming.version=6;
+    if(!incoming.frameworkPresets||!incoming.frameworkPresets.length)incoming.frameworkPresets=deep(DEFAULT_PRESETS);
+    if(!incoming.framework||!incoming.framework.length)incoming.framework=deep(DEFAULT_FRAMEWORK);
+    incoming.projects.forEach(function(p){if(!p.overrides)p.overrides={};if(!p.corrections)p.corrections={};if(!p.framework||!p.framework.length)p.framework=deep(incoming.framework);if(!p.data)p.data=blankData(p.framework);});
+    const active=incoming.projects.find(function(x){return x.id===incoming.activeProjectId;});if(active&&active.framework&&active.framework.length)incoming.framework=deep(active.framework);
+    pushUndo();STATE=incoming;save();refreshData();render();closeModal('backupImportModal');backupPending=null;
+    toast(pending.mode==='restore'?'已恢复导入前状态（可用撤销返回）':'备份已导入，已创建导入前恢复点');
+  }catch(err){toast('备份导入失败：'+(err&&err.message||err));}
+}
+function restorePreImport(){let raw=null;try{raw=localStorage.getItem(RESET_LOCAL_KEYS.preImport);}catch(e){}if(!raw){toast('没有可恢复的导入前状态');return;}try{const incoming=JSON.parse(raw);if(!incoming||!Array.isArray(incoming.projects))throw new Error('恢复点格式不正确');openBackupImportModal(incoming,'restore');}catch(err){toast('导入前恢复点不可用：'+(err&&err.message||err));}}
+function handleBackup(e){const f=e.target.files[0];if(!f)return;e.target.value='';const rd=new FileReader();rd.onload=()=>{let raw;try{raw=JSON.parse(rd.result);}catch(err){toast('备份文件不是有效的 JSON');return;}const incoming=raw&&raw.state?raw.state:raw;if(!incoming||!Array.isArray(incoming.projects)){toast('备份格式不正确：未找到项目数据');return;}openBackupImportModal(incoming,'import');};rd.readAsText(f);}
 function handleFrameworkFile(e){const f=e.target.files[0];if(!f)return;pushUndo();const rd=new FileReader();rd.onload=()=>{try{const arr=JSON.parse(rd.result);if(Array.isArray(arr)&&arr.length){STATE.framework=arr;const p=currentProj();if(p)p.framework=deep(STATE.framework);save();renderFrameworkTab();if(currentProj())render();toast('框架已导入');}}catch(err){toast('框架 JSON 解析失败');}};rd.readAsText(f);e.target.value='';}
 
 /* ============ Word(.docx) 导入/导出（R-27，零依赖、本地） ============ */
@@ -3964,6 +4393,39 @@ async function buildDocx(srcData,proj){
   media.forEach(m=>{parts['word/'+m.name]=m.bytes;});
   return makeZip(parts);
 }
+var exportPreflightTarget=null;
+function projectPreflight(p){
+  if(!p)return null;
+  var old={active:STATE.activeProjectId,framework:STATE.framework,data:DATA,health:HEALTH};
+  try{
+    STATE.activeProjectId=p.id;STATE.framework=p.framework||STATE.framework;DATA=p.data||{};HEALTH=runHealth();
+    var trace=traceabilityReport(),delivery=deliveryReadiness();
+    var red=(HEALTH.activeHits||[]).filter(function(h){return h.level==='red';});
+    return {delivery:delivery,trace:trace,red:red};
+  }finally{STATE.activeProjectId=old.active;STATE.framework=old.framework;DATA=old.data;HEALTH=old.health;}
+}
+function openExportPreflight(kind,projectId){
+  var p=projectId?STATE.projects.find(function(x){return x.id===projectId;}):currentProj();if(!p){toast('请先创建项目');return;}
+  var info=projectPreflight(p);if(!info){toast('无法生成交付检查');return;}
+  exportPreflightTarget={kind:kind,projectId:p.id};
+  var summary=document.getElementById('exportPreflightSummary'),gaps=document.getElementById('exportPreflightGaps'),confirmBtn=document.getElementById('exportPreflightConfirm');
+  var ready=info.delivery.rows.every(function(r){return r.level==='ok';});
+  if(summary)summary.innerHTML='<b>'+esc(p.name)+' · '+(kind==='docx'?'Word':'Markdown')+' 导出</b><br>'+(ready?'当前满足评审、研发与测试交付检查。':'当前未达到完整交付就绪条件；你仍可导出用于继续编辑或内部核对。');
+  var list=[];
+  info.delivery.rows.filter(function(r){return r.level!=='ok';}).forEach(function(r){list.push('【'+r.title+'】'+r.text);});
+  info.trace.p0Gaps.forEach(function(r){list.push('【P0 追溯缺口】'+r.feature.name+' 缺少关联验收或测试点。');});
+  info.red.slice(0,4).forEach(function(h){list.push('【红色规则】'+h.snippet);});
+  if(gaps)gaps.innerHTML=(list.length?list:['未发现阻塞项；导出后仍建议由相关角色人工核对。']).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+  if(confirmBtn)confirmBtn.textContent=ready?'确认导出':'仍然导出（继续编辑）';
+  openModal('exportPreflightModal');
+}
+function confirmExportPreflight(){
+  var target=exportPreflightTarget,p=target&&STATE.projects.find(function(x){return x.id===target.projectId;});
+  if(!target||!p){toast('导出目标不存在，请重新发起导出');return;}
+  closeModal('exportPreflightModal');exportPreflightTarget=null;
+  if(target.kind==='docx'){exportDOCX(p.id);return;}
+  download(p.name+'.md',projectMD(p),'text/markdown;charset=utf-8');toast('已导出 Markdown');
+}
 async function exportDOCX(id){const p=id?STATE.projects.find(x=>x.id===id):currentProj();if(!p){toast('请先创建项目');return;}try{toast('正在生成 Word（含图片）…');const bytes=await buildDocx(p.data,p);downloadBytes(p.name+'.docx',bytes);toast('已导出 Word（含图片）');}catch(e){console.error(e);toast('导出失败');}}
 function parseZip(buf){
   if(buf instanceof ArrayBuffer) buf=new Uint8Array(buf);
@@ -4141,15 +4603,14 @@ async function importDOCX(file,projName){
     const xmlBytes=docEntry.method===0?raw:await inflateRaw(raw);
     const xml=new TextDecoder().decode(xmlBytes);
     const text=extractDocText(xml,relsMap,mediaMap);
-    doImportText(text,projName);
     const imgCnt=Object.keys(mediaMap).length;
-    toast('Word 已导入（已尽量保留标题层级、表格'+(imgCnt?'与 '+imgCnt+' 张图片':'')+'）');
+    if(beginImportPreview(text,projName,'Word 文档「'+projName+'」'))toast('Word 已读取（已尽量保留标题层级、表格'+(imgCnt?'与 '+imgCnt+' 张图片':'')+'），请确认导入范围');
   }catch(err){toast('Word 导入失败：'+(err&&err.message||err));}
 }
 
 /* ============ PRD 完整模板（整体式，可编辑 / 粘贴 / 导入） ============ */
 const TPL_DRAFT_KEY='prdKanbanTplDraftV1';
-/* v17.18：内置内容模板库（3 套高质量骨架，套用时先自动备份原编辑区到草稿） */
+/* 内置内容模板库：默认展示 6 套小白可直接使用的场景骨架，高级编辑仍可自定义。 */
 const TPL_PRESETS={
   standard:'# PRD 完整模板（标准 14 节）\n\n'
     +'> 撰写提示：必填节必须填写；量化指标给具体数字与判定方式；验收项可"是/否"判定。\n\n'
@@ -4210,26 +4671,87 @@ const TPL_PRESETS={
     +'## 界面\n【人机交互：状态机、提示语、多态反馈】\n\n'
     +'## 验收\n- [ ] 【硬件 / 软件验收项，可量化】\n- [ ] 【安全相关验收项】\n\n'
     +'## 上线\n【SOP 量产节点 / 灰度 / 回滚 / 售后监控】\n\n'
-    +'## 其他相关文件\n- 【设计文档 / 规格书 / 认证资料】\n'
+    +'## 其他相关文件\n- 【设计文档 / 规格书 / 认证资料】\n',
+  web:'# SaaS / Web 服务需求模板\n\n'
+    +'> 适合后台管理、在线服务、会员/订阅和企业工具。请先写清楚谁在什么场景下解决什么问题。\n\n'
+    +'## 产品目标\n【要解决的问题、目标用户、成功标准】\n\n'
+    +'## 范围与优先级\n- 本期必须做：【】\n- 本期不做：【】\n- 后续再评估：【】\n\n'
+    +'## 用户与权限\n| 角色 | 可以做什么 | 不能做什么 |\n| --- | --- | --- |\n| 【角色】 | 【权限】 | 【限制】 |\n\n'
+    +'## 核心流程\n1. 用户【进入/登录】\n2. 用户【完成关键操作】\n3. 系统【给出结果与下一步】\n\n'
+    +'## 功能清单\n| 功能 | 用户价值 | 优先级 | 验收方式 |\n| --- | --- | --- | --- |\n| 【功能】 | 【价值】 | P0/P1/P2 | 【可判断结果】 |\n\n'
+    +'## 数据与异常\n【关键字段、空状态、失败提示、重复提交、权限不足时的处理】\n\n'
+    +'## 上线与指标\n【埋点、成功指标、灰度范围、回滚方式】\n',
+  mobile:'# 移动 App 需求模板\n\n'
+    +'> 适合手机端新功能或独立 App。优先描述用户打开 App 后的完整操作路径。\n\n'
+    +'## 产品目标\n【用户要完成什么、为什么现在要做、成功的衡量方式】\n\n'
+    +'## 使用场景\n| 场景 | 用户动作 | 期望结果 |\n| --- | --- | --- |\n| 【例如：通勤中】 | 【快速操作】 | 【立即得到反馈】 |\n\n'
+    +'## 页面与流程\n1. 【入口页】→ 【操作页】→ 【结果页】\n2. 【返回/取消/重试】时系统如何处理\n\n'
+    +'## 功能需求\n| 页面/功能 | 内容与交互 | 优先级 | 验收标准 |\n| --- | --- | --- | --- |\n| 【】 | 【】 | P0/P1/P2 | 【】 |\n\n'
+    +'## 状态与边界\n【首次使用、无网络、无内容、加载中、权限拒绝、深链返回、不同屏幕尺寸】\n\n'
+    +'## 发布与指标\n【版本范围、灰度、崩溃/性能观察、核心转化指标】\n',
+  ai:'# AI 助手 / 智能功能需求模板\n\n'
+    +'> 适合在产品中增加 AI 对话、生成、审核或推荐能力。先定义用户要得到的结果，再定义 AI 的边界。\n\n'
+    +'## 用户目标\n【用户希望 AI 帮他完成什么；完成后如何判断有用】\n\n'
+    +'## 输入与隐私边界\n| 输入内容 | 是否可选 | 是否外发 | 脱敏/限制 |\n| --- | --- | --- | --- |\n| 【】 | 是/否 | 是/否 | 【】 |\n\n'
+    +'## AI 工作方式\n1. 用户【输入/选择上下文】\n2. AI【澄清/生成/检测】\n3. 用户【预览、修改、确认或重试】\n\n'
+    +'## 输出与人工确认\n【输出格式、引用依据、置信度、哪些操作必须由用户确认】\n\n'
+    +'## 异常与安全\n【无答案、错误内容、超时、敏感信息、幻觉提示、停止生成、反馈入口】\n\n'
+    +'## 评估与验收\n| 指标 | 目标 | 验收方法 |\n| --- | --- | --- |\n| 【准确性/采纳率/耗时】 | 【】 | 【抽检/数据】 |\n\n'
+    +'## 上线策略\n【试用人群、频率限制、模型/成本监控、回滚方案】\n'
 };
+const TPL_CATALOG={
+  standard:{title:'标准 PRD',desc:'适合第一次完整梳理一个产品或功能，覆盖目标、流程、验收和上线。',projectName:'标准 PRD 项目'},
+  agile:{title:'精简 MVP',desc:'适合想快速验证一个想法，只保留最小范围和关键验收。',projectName:'MVP 验证项目'},
+  web:{title:'SaaS / Web 服务',desc:'适合后台、在线服务、会员或企业工具，内置权限和异常处理。',projectName:'Web 服务项目'},
+  mobile:{title:'移动 App',desc:'适合手机端功能，内置页面流程、弱网和首次使用等状态。',projectName:'移动 App 项目'},
+  ai:{title:'AI 助手 / 智能功能',desc:'适合对话、生成、审核或推荐，内置隐私边界和人工确认。',projectName:'AI 智能功能项目'},
+  hardware:{title:'智能硬件 / 物联网',desc:'适合设备、传感器和软硬件协同，内置安全、环境和验证要求。',projectName:'智能硬件项目'}
+};
+let tplSelectedKey='standard';
+function tplPresetText(key){return String(key||'').indexOf('custom:')===0?((tplCustomList().find(x=>x.id===String(key).slice(7))||{}).text||''):TPL_PRESETS[key];}
+function tplPresetMeta(key){
+  if(TPL_CATALOG[key])return TPL_CATALOG[key];
+  if(String(key||'').indexOf('custom:')===0){const c=tplCustomList().find(x=>x.id===String(key).slice(7));if(c)return {title:c.name,desc:'这是你保存的自定义模板，可从高级编辑继续调整。',projectName:c.name+'项目'};}
+  return {title:'自定义内容',desc:'可从高级编辑继续调整后，再生成项目。',projectName:'由模板生成'};
+}
+function tplRenderGallery(){
+  const host=document.getElementById('tplGallery');if(!host)return;
+  host.innerHTML=Object.keys(TPL_CATALOG).map(key=>{const m=TPL_CATALOG[key],on=key===tplSelectedKey?' on':'';return '<button type="button" class="tpl-card'+on+'" data-act="tplchoose" data-tpl="'+key+'"><span class="tpl-card-title"><span class="tpl-card-check">✓</span>'+esc(m.title)+'</span><span class="tpl-card-desc">'+esc(m.desc)+'</span></button>';}).join('');
+}
+function tplRenderPreview(){
+  const meta=tplPresetMeta(tplSelectedKey);
+  const title=document.getElementById('tplPreviewTitle'),desc=document.getElementById('tplPreviewDesc');
+  if(title)title.textContent='已选：'+meta.title;
+  if(desc)desc.textContent=meta.desc+' 创建后可直接继续填写，不会要求你编辑 Markdown。';
+}
+function tplSetSelected(key,backup){
+  const text=tplPresetText(key),el=document.getElementById('tplEditor');
+  if(!text||!el){toast('模板内容不可用，请重新选择');return false;}
+  if(backup&&el.value.trim()&&el.value!==text)localStorage.setItem(TPL_DRAFT_KEY,el.value);
+  tplSelectedKey=key;el.value=text;tplEditorInput();
+  const sel=document.getElementById('tplPreset');if(sel&&Array.from(sel.options).some(o=>o.value===key))sel.value=key;
+  tplRenderGallery();tplRenderPreview();return true;
+}
+function tplChoose(key){if(tplSetSelected(key,true))toast('已选「'+tplPresetMeta(key).title+'」，可直接新建项目');}
+function tplToggleAdvanced(){
+  const box=document.getElementById('tplAdvanced'),btn=document.getElementById('tplAdvancedToggle');if(!box)return;
+  const opening=box.style.display==='none'||!box.style.display;box.style.display=opening?'block':'none';
+  if(btn)btn.textContent=opening?'收起高级编辑':'需要导入或编辑原始模板？打开高级编辑';
+  if(opening){const el=document.getElementById('tplEditor');if(el)el.focus();}
+}
 function tplApplyPreset(){
-  const sel=document.getElementById('tplPreset');
-  const key=sel?sel.value:'standard';
-  const text=key.indexOf('custom:')===0?((tplCustomList().find(x=>x.id===key.slice(7))||{}).text||''):TPL_PRESETS[key];
-  const el=document.getElementById('tplEditor');
-  if(!text||!el)return;
-  if(el.value.trim())localStorage.setItem(TPL_DRAFT_KEY,el.value); // 先自动备份，防误丢
-  el.value=text;tplEditorInput();
-  toast('已套用「'+(sel&&sel.selectedOptions[0]?sel.selectedOptions[0].textContent:'模板')+'」（原内容已自动存入草稿）');
+  const sel=document.getElementById('tplPreset');const key=sel?sel.value:'standard';
+  if(tplSetSelected(key,true))toast('已套用「'+tplPresetMeta(key).title+'」（原内容已自动存入草稿）');
 }
 function tplCustomList(){
   try{const a=JSON.parse(localStorage.getItem('prdKanbanTplCustom')||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}
 }
 function tplRenderPresets(){
   const sel=document.getElementById('tplPreset');if(!sel)return;
-  let html='<option value="standard">标准 PRD（14 节）</option><option value="agile">精简敏捷 PRD（7 节）</option><option value="hardware">通用硬件 / 物联网</option>';
+  let html=Object.keys(TPL_CATALOG).map(key=>'<option value="'+key+'">'+esc(TPL_CATALOG[key].title)+'（内置）</option>').join('');
   tplCustomList().forEach(c=>{html+='<option value="custom:'+esc(c.id)+'">'+ICONS.star+' '+esc(c.name)+'（自定义）</option>';});
   sel.innerHTML=html;
+  if(Array.from(sel.options).some(o=>o.value===tplSelectedKey))sel.value=tplSelectedKey;
 }
 function tplSaveAsCustom(){
   const el=document.getElementById('tplEditor');
@@ -4242,8 +4764,8 @@ function tplSaveAsCustom(){
   list.push({id:'c'+Date.now().toString(36),name:nm,text:text,at:Date.now()});
   try{localStorage.setItem('prdKanbanTplCustom',JSON.stringify(list));}catch(e){toast('保存失败（本地存储空间不足）');return;}
   tplRenderPresets();
-  const sel=document.getElementById('tplPreset');
-  if(sel)sel.value='custom:'+list[list.length-1].id;
+  tplSelectedKey='custom:'+list[list.length-1].id;
+  tplRenderPresets();tplRenderGallery();tplRenderPreview();
   toast('已保存自定义模板「'+nm+'」');
 }
 function tplDeleteCustom(){
@@ -4257,7 +4779,8 @@ function tplDeleteCustom(){
   const ok=window.__tplDelOk!==undefined?!!window.__tplDelOk:confirm('删除自定义模板「'+item.name+'」？');
   if(!ok)return;
   try{localStorage.setItem('prdKanbanTplCustom',JSON.stringify(list.filter(x=>x.id!==id)));}catch(e){toast('删除失败');return;}
-  tplRenderPresets();
+  if(tplSelectedKey===v)tplSelectedKey='standard';
+  tplRenderPresets();tplRenderGallery();tplRenderPreview();
   toast('已删除「'+item.name+'」');
 }
 function tplPlaceholder(type){
@@ -4279,13 +4802,12 @@ function tplDefaultText(){
   return txt;
 }
 function showTpl(){
-  const el=document.getElementById('tplEditor');
-  const draft=localStorage.getItem(TPL_DRAFT_KEY);
-  el.value=(draft!=null&&draft.length)?draft:tplDefaultText();
-  tplEditorInput();
   tplRenderPresets();
+  tplSelectedKey='standard';tplSetSelected('standard',false);
+  const advanced=document.getElementById('tplAdvanced'),toggle=document.getElementById('tplAdvancedToggle');
+  if(advanced)advanced.style.display='none';
+  if(toggle)toggle.textContent='需要导入或编辑原始模板？打开高级编辑';
   openModal('tplModal');
-  setTimeout(()=>{el.focus();el.setSelectionRange(0,0);},60);
 }
 function tplEditorInput(){const el=document.getElementById('tplEditor');if(el)window.__tplText=el.value;}
 function copyTpl(){
@@ -4354,19 +4876,19 @@ function tplPasteHandler(e){
 function tplRegen(){
   const el=document.getElementById('tplEditor');
   if(el.value.trim())localStorage.setItem(TPL_DRAFT_KEY,el.value); // 先自动备份，防误丢
-  el.value=tplDefaultText();tplEditorInput();
+  el.value=tplDefaultText();tplSelectedKey='';tplEditorInput();tplRenderGallery();tplRenderPreview();
   toast('已生成默认模板（原内容已自动存入草稿，可点「载入草稿」找回）');
 }
 function tplSaveDraft(){
   const el=document.getElementById('tplEditor');
   localStorage.setItem(TPL_DRAFT_KEY,el.value);
-  toast('模板草稿已保存（下次打开模板自动载入）');
+  toast('模板草稿已保存，可在高级编辑中随时载入');
 }
 function tplLoadDraft(){
   const draft=localStorage.getItem(TPL_DRAFT_KEY);
   if(!draft){toast('暂无已保存的草稿');return;}
   const el=document.getElementById('tplEditor');
-  el.value=draft;tplEditorInput();
+  el.value=draft;tplSelectedKey='';tplEditorInput();tplRenderGallery();tplRenderPreview();
   toast('已载入上次保存的草稿');
 }
 function tplImportFile(){
@@ -4383,7 +4905,7 @@ function handleTplFile(e){
     toast('正在解析 Word 模板…');
     readDocxText(f).then(text=>{
       if(text==null){toast('Word 解析失败或为空');return;}
-      el.value=text;tplEditorInput();
+      el.value=text;tplSelectedKey='';tplEditorInput();tplRenderGallery();tplRenderPreview();
       toast('Word 模板已载入编辑区（可继续编辑后保存/导入项目）');
     }).catch(err=>toast('Word 导入失败：'+(err&&err.message||err)));
     return;
@@ -4392,7 +4914,7 @@ function handleTplFile(e){
   rd.onload=()=>{
     let text=String(rd.result||'');
     if(nm.endsWith('.html')||nm.endsWith('.htm')){text=htmlToMd(text);}
-    el.value=text;tplEditorInput();
+    el.value=text;tplSelectedKey='';tplEditorInput();tplRenderGallery();tplRenderPreview();
     toast('模板已载入编辑区（可继续编辑后保存/导入项目）');
   };
   rd.readAsText(f);
@@ -4440,12 +4962,13 @@ function tplApply(asNew){
   const el=document.getElementById('tplEditor');
   const text=(el.value||'').trim();
   if(!text){toast('编辑区为空，请先粘贴/导入/输入内容');return;}
+  const meta=tplPresetMeta(tplSelectedKey);
   if(asNew){
-    const nm=prompt('新项目名称：','由模板生成');
+    const nm=window.__tplProjectName!==undefined?String(window.__tplProjectName):prompt('新项目名称：',meta.projectName||'由模板生成');
     if(nm==null)return;
     createProject(nm.trim()||'由模板生成');
   }
-  doImportText(text,'由模板生成');
+  doImportText(text,meta.title||'由模板生成');
   closeModal('tplModal');
   toast(asNew?'已用模板生成新项目（框架按标题自动划分，请核对）':'已按模板内容导入当前项目');
 }
@@ -4516,7 +5039,7 @@ function sampleData(){
 function loadSample(){
   if(!currentProj()){createProject('示例 PRD','default');}
   const d=sampleData();
-  DATA=d;currentProj().data=d;save();render();toast('已加载示例 PRD（标准 14 节框架 · 轻量团队协作工具）');
+  DATA=d;currentProj().data=d;currentProj().sampleGuide=true;save();render();toast('已加载示例 PRD（标准 14 节框架 · 轻量团队协作工具）');
 }
 
 /* ============ 启动 ============ */
@@ -4951,7 +5474,20 @@ function tblEd(table){ // 富文本表格所在编辑容器；结构化表格返
   return table.closest('.editable,.sub-card-body,.table-scroll');
 }
 // v15.8 P4 迷你格式工具条
-let mfbBar=null;
+let mfbBar=null,miniFmtRange=null,miniFmtEditor=null;
+function mfbEditorOfRange(range){
+  if(!range)return null;
+  const ac=range.commonAncestorContainer;
+  return ac&&((ac.nodeType===1?ac:ac.parentElement)&&((ac.nodeType===1?ac:ac.parentElement).closest('.editable,.sub-card-body,.table-scroll')));
+}
+function rememberMiniFmtRange(){
+  const sel=window.getSelection();
+  const range=sel&&sel.rangeCount>0?sel.getRangeAt(0):null;
+  const ed=range&&!range.collapsed?mfbEditorOfRange(range):null;
+  if(!ed)return null;
+  miniFmtRange=range.cloneRange();miniFmtEditor=ed;
+  return {range:range,ed:ed};
+}
 function ensureMiniFormatBar(){
   if(mfbBar)return;
   mfbBar=document.createElement('div');
@@ -4961,10 +5497,6 @@ function ensureMiniFormatBar(){
     '<button type="button" data-fmt="italic" title="斜体"><i>I</i></button>'+
     '<button type="button" data-fmt="underline" title="下划线"><u>U</u></button>'+
     '<button type="button" data-fmt="strike" title="删除线"><s>S</s></button>'+
-    '<span class="mfb-sep"></span>'+
-    '<button type="button" data-fmt="h2" title="二级标题">H2</button>'+
-    '<button type="button" data-fmt="h3" title="三级标题">H3</button>'+
-    '<button type="button" data-fmt="quote" title="引用">“”</button>'+
     '<button type="button" data-fmt="link" title="链接"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></button>'+
     '<span class="mfb-sep"></span>'+
     '<button type="button" data-fmt="removeFormat" title="清除格式" class="danger">清格式</button>';
@@ -4977,12 +5509,9 @@ function ensureMiniFormatBar(){
   });
   document.addEventListener('selectionchange',function(){
     if(!editing){hideMfb();return;}
-    const sel=window.getSelection();
-    if(!sel||sel.isCollapsed){hideMfb();return;}
-    const range=sel.rangeCount>0?sel.getRangeAt(0):null;
-    if(!range||range.collapsed){hideMfb();return;}
-    const ac=range.commonAncestorContainer;
-    const ed=ac.nodeType===1?ac.closest('.editable,.sub-card-body,.table-scroll'):(ac.parentElement&&ac.parentElement.closest('.editable,.sub-card-body,.table-scroll'));
+    const saved=rememberMiniFmtRange();
+    if(!saved){hideMfb();return;}
+    const range=saved.range,ed=saved.ed;
     // v18.8：去掉「表格内隐藏工具条」限制——富文本表格、结构化表格单元格内的划词同样可加粗/标题/链接等
     if(!ed){hideMfb();return;}
     const rect=range.getBoundingClientRect();
@@ -5004,23 +5533,22 @@ function ensureMiniFormatBar(){
 }
 function hideMfb(){if(mfbBar)mfbBar.style.display='none';}
 function applyFmt(op){
+  // 浮动栏只服务于“当前选中的文字”。标题/引用属于整段语义，不能悄悄扩大到整段。
+  const sel=window.getSelection();
+  const saved=miniFmtRange&&miniFmtEditor&&miniFmtEditor.isConnected?{range:miniFmtRange,ed:miniFmtEditor}:rememberMiniFmtRange();
+  if(!saved||saved.range.collapsed){toast('请先选中要调整的文字');return;}
+  try{sel.removeAllRanges();sel.addRange(saved.range);}catch(e){toast('选区已失效，请重新选中文字');return;}
+  if(op==='h2'||op==='h3'||op==='quote'){toast('标题和引用会影响整段，请在段落级编辑中调整；浮动工具栏只修改选中文字');return;}
   try{
-    // 仅 bold/italic/underline/strikeThrough/removeFormat 是合法 execCommand 名；
-    // h2/h3/quote 须用 formatBlock，link 须用 createLink（原代码直接当命令名导致失效）
-    if(op==='h2'||op==='h3'){ document.execCommand('formatBlock',false,'<h'+(op==='h2'?'2':'3')+'>'); }
-    else if(op==='quote'){ document.execCommand('formatBlock',false,'<blockquote>'); }
-    else if(op==='link'){ const url=prompt('链接地址（含 http(s)://）：','https://'); if(url){ document.execCommand('createLink',false,url); } }
+    if(op==='link'){ const url=prompt('链接地址（含 http(s)://）：','https://'); if(url){ document.execCommand('createLink',false,url); } }
     else { document.execCommand(op,false,null); }
   }catch(e){}
-  const sel=window.getSelection();
-  if(sel&&sel.anchorNode){
-    const an=sel.anchorNode;
-    const ed=an.nodeType===1?an.closest('.editable,.sub-card-body,.table-scroll'):(an.parentElement&&an.parentElement.closest('.editable,.sub-card-body,.table-scroll'));
-    if(ed){
-      if(ed.classList.contains('table-scroll')){ try{typeof save==='function'&&save();}catch(e){} }
-      else if(typeof saveEditableEl==='function'){try{saveEditableEl(ed);}catch(e){}}
-    }
+  const ed=saved.ed;
+  if(ed){
+    if(ed.classList.contains('table-scroll')){ try{typeof save==='function'&&save();}catch(e){} }
+    else if(typeof saveEditableEl==='function'){try{saveEditableEl(ed);}catch(e){}}
   }
+  const after=window.getSelection();if(after&&after.rangeCount&&!after.isCollapsed){miniFmtRange=after.getRangeAt(0).cloneRange();miniFmtEditor=ed;}
 }
 // 保存表格布局：核心前提——单元格宽高不属于单元格，属于行对象/列对象。
 // 结构化表格：列宽写回 c.colWidths（从列对象 <col> 读），行高写回 c.rowHeights（从行对象 <tr> 读）。
@@ -5989,9 +6517,18 @@ function aiState(){
   var p=currentProj();
   if(!p)return null;
   if(!p.ai||typeof p.ai!=='object')p.ai={versions:[],lastReport:null,ignoredAiIssues:[],pendingDiffs:null};
+  if(!p.ai.locks||typeof p.ai.locks!=='object')p.ai.locks={};
   return p.ai;
 }
 function aiPersist(){try{typeof flushSave==='function'?flushSave():(typeof save==='function'&&save());}catch(e){}}
+function aiIsSectionLocked(sid){var st=aiState();return !!(st&&st.locks&&st.locks[sid]);}
+function aiToggleSectionLock(sid){
+  if(!STATE.framework.find(function(s){return s.id===sid;}))return;
+  var st=aiState();if(!st)return;
+  if(st.locks[sid]){delete st.locks[sid];aiToast('已解除 AI 对该节的锁定');}
+  else{st.locks[sid]=Date.now();aiToast('已锁定该节：AI 只能提出建议，不能写入');}
+  aiPersist();try{render();}catch(e){}aiRenderPanel();
+}
 
 /* ---------- 文本抽取 ---------- */
 function aiSecText(id,fields,noCards){
@@ -6088,6 +6625,33 @@ function aiApplyWebSearch(body,st){
     body.tools=[{type:'web_search',web_search:{enable:true}}];
   }
 }
+var AI_PRIVACY_ACK_KEY='prdKanbanAiPrivacyAckV1';
+var aiPrivacySeen=(function(){try{return JSON.parse(localStorage.getItem(AI_PRIVACY_ACK_KEY)||'{}')||{};}catch(e){return {};}})();
+function aiPrivacyMarkSeen(){try{localStorage.setItem(AI_PRIVACY_ACK_KEY,JSON.stringify(aiPrivacySeen));}catch(e){}}
+function aiPrivacyMeta(messages,opts){
+  var raw=(messages||[]).map(function(m){return String(m&&m.content||'');}).join('\n');
+  var label='AI 对话',scope='本轮对话中输入的文字';
+  if(/质量审查|六个维度|分块评分/.test(raw)){label='AI 深度体检';scope='当前项目的 PRD 全文、章节结构和规则命中摘要';}
+  else if(/需求文档改写|优化|目标分/.test(raw)){label='AI 优化';scope=/只优化节|本章节/.test(raw)?'选中章节的正文、相关问题和项目上下文':'当前项目的 PRD 全文、问题清单和项目上下文';}
+  else if(/结构整理|错位信号|搬到哪个节/.test(raw)){label='AI 结构对齐';scope='当前项目的章节结构与各章节正文';}
+  else if(/评审复核员|多角色评审/.test(raw)){label='AI 复核/评审';scope='当前项目的 PRD 全文、拟修改摘要和评审上下文';}
+  else if(/产品描述|本章节|章节 id/.test(raw)){label='AI 撰写';scope='你填写的产品描述、所选框架和当前待生成章节要求';}
+  return {label:label,scope:scope,key:label+'|'+scope};
+}
+function aiPrivacyConfirm(meta,st){
+  meta=meta||{label:'AI 请求',scope:'本次操作所需内容',key:'default'};
+  if(typeof window!=='undefined'&&window.__AI_TEST_MODE)return Promise.resolve(true);
+  if(aiPrivacySeen.firstUse)return Promise.resolve(true);
+  return new Promise(function(resolve,reject){
+    var old=document.getElementById('aiPrivacyModal');if(old)old.remove();
+    var provider={deepseek:'DeepSeek',openai:'OpenAI',custom:'自定义 OpenAI 兼容服务'}[st.provider]||st.provider||'当前服务商';
+    var m=document.createElement('div');m.className='modal open';m.id='aiPrivacyModal';
+    m.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-labelledby="aiPrivacyTitle" style="max-width:600px"><div class="m-head"><h3 id="aiPrivacyTitle">发送前确认 · '+aiEsc(meta.label)+'</h3><button class="x" type="button" data-priv="cancel" aria-label="取消">×</button></div><div class="m-body"><div class="impact-summary"><b>本次会发送到 '+aiEsc(provider)+'：</b><ul><li><b>模型：</b>'+aiEsc(st.model||'未填写')+'</li><li><b>服务地址：</b>'+aiEsc(aiNormBase(st.baseUrl||''))+'</li><li><b>发送范围：</b>'+aiEsc(meta.scope)+'</li><li><b>不会发送：</b>API Key、界面主题和本机其他项目数据（除非它们已写入本次选中的正文/对话）。</li></ul></div><div class="impact-summary" style="margin-top:10px"><b>敏感信息提醒</b><br>请先删除或替换账号密码、Token、身份证/手机号、客户名单、未公开合同与生产数据；需要时可用“[已脱敏]”占位后再发送。</div></div><div class="m-foot"><button type="button" data-priv="cancel">取消本次发送</button><button type="button" class="btn btn--primary" data-priv="confirm">确认并发送</button></div></div>';
+    document.body.appendChild(m);
+    function done(ok){if(m.parentNode)m.remove();if(ok){aiPrivacySeen.firstUse=true;aiPrivacyMarkSeen();resolve(true);}else reject({kind:'privacy',message:'已取消本次 AI 发送'});}
+    m.addEventListener('click',function(e){var b=e.target.closest('[data-priv]');if(b)done(b.dataset.priv==='confirm');});
+  });
+}
 function aiChatOnce(messages,opts){
   var st=aiGetSettings();
   var base=aiNormBase(st.baseUrl);
@@ -6095,6 +6659,7 @@ function aiChatOnce(messages,opts){
   if(opts.json)body.response_format={type:'json_object'};
   if(opts.maxTokens)body.max_tokens=opts.maxTokens;
   if(st.web&&!opts.json)aiApplyWebSearch(body,st);
+  return aiPrivacyConfirm(aiPrivacyMeta(messages,opts),st).then(function(){
   var ctrl=new AbortController();
   if(aiGlobalAbort){
     aiGlobalAbort.signal.addEventListener('abort',function(){try{ctrl.abort();}catch(e){}});
@@ -6158,6 +6723,7 @@ function aiChatOnce(messages,opts){
     clearTimeout(timer);
     if(e&&e.kind)throw e;
     throw aiClassify(e,null,'');
+  });
   });
 }
 function aiChat(messages,opts){
@@ -6227,6 +6793,21 @@ function aiIssueLines(report){
     });
   });
   return out.join('\n')||'（无明显问题）';
+}
+function aiRelatedIssues(change,report){
+  var all=[];
+  (report&&report.dimensions||[]).forEach(function(d){(d.issues||[]).forEach(function(it){
+    if(!change||!change.sectionId||!it.sectionId||it.sectionId===change.sectionId)all.push({id:it.id,label:(it.reason||'未命名问题').slice(0,42),sectionId:it.sectionId||null});
+  });});
+  return all.slice(0,4);
+}
+function aiRuleHitSnapshot(){
+  var health=runHealth();
+  return (health&&health.activeHits||[]).map(function(h){return {key:[h.ruleId,h.sectionId,h.snippet].join('|'),ruleId:h.ruleId,sectionId:h.sectionId,snippet:h.snippet};});
+}
+function aiBuildRecheck(before,review){
+  var after=aiRuleHitSnapshot(),old={};(before||[]).forEach(function(h){old[h.key]=h;});var now={};after.forEach(function(h){now[h.key]=h;});
+  return {at:Date.now(),resolved:(before||[]).filter(function(h){return !now[h.key];}),remaining:after.filter(function(h){return old[h.key];}),introduced:after.filter(function(h){return !old[h.key];}),independentReview:review?{score:review.score,verdict:review.verdict,summary:review.summary||''}:null};
 }
 function aiScore(text,opts){
   var st=aiState();
@@ -6316,7 +6897,7 @@ function aiScoreChunked(text,opts){
           var low=!!q&&aiNormText(hay).indexOf(aiNormText(q))<0;
           var key=aiKey(sid||'',it.reason||'');
           if(seen[key])return;seen[key]=1;
-          issues.push({id:key,sectionId:sid,sectionTitle:STATE.framework.find(function(f){return f.id===sid;})?(STATE.framework.find(function(f){return f.id===sid;})).title:'',severity:(it.severity==='high'||it.severity==='medium'||it.severity==='low')?it.severity:'medium',reason:String(it.reason||''),quote:q,lowConfidence:low,suggestion:String(it.suggestion||'')});
+          issues.push({id:key,sectionId:sid,sectionTitle:STATE.framework.find(function(f){return f.id===sid;})?(STATE.framework.find(function(f){return f.id===sid;})).title:'',severity:(it.severity==='high'||it.severity==='medium'||it.severity==='low')?it.severity:'medium',reason:String(it.reason||''),quote:q,lowConfidence:low,suggestion:String(it.suggestion||''),source:it.ruleId?'规则 '+String(it.ruleId):'AI 推断',status:'open'});
         });
         if(d&&d.note)notes.push(String(d.note));
       });
@@ -6499,6 +7080,8 @@ function aiValidateChange(item){
       if(secType==='feat'){
         if(!String(i.name||'').trim())b.push('功能点缺名称');
         if(i.priority&&['P0','P1','P2','P3','P4'].indexOf(String(i.priority).toUpperCase())<0)b.push('优先级非法：'+i.priority);
+        var fd=String(i.desc||'');var lack=['目标','前置','主流程','异常','输入输出','权限','验收','埋点','待确认'].filter(function(k){return fd.indexOf(k)<0;});
+        if(lack.length)w.push('「'+String(i.name||'功能点')+'」缺少可交付字段：'+lack.join('、')+'；请补齐或明确标为待确认，当前草稿不宜直接交付');
       }else if(secType==='accept'){
         if(!String(i.text||'').trim())b.push('验收项缺内容');
       }else if(secType==='users'){
@@ -7502,7 +8085,16 @@ function aiRunOptimize(){
       aiSetStatus('第 '+rounds+'/'+maxR+' 轮优化中…');
       return aiOptimizeSafe(curText,scope,baseReport,aiIssueLines(baseReport),target,{onStatus:aiSetStatus}).then(function(res){
         aiOptDbg.steps.push({kind:'optimize',raw:(res.changes||[]).length,summary:String(res.summary||'').slice(0,60)});
-        function normOf(list){return (list||[]).map(aiNormChange).filter(Boolean).filter(function(ch){return scope.mode!=='section'||ch.sectionId===scope.sectionId;});}
+        function normOf(list){
+          var locked=[];
+          var usable=(list||[]).map(aiNormChange).filter(Boolean).filter(function(ch){
+            if(scope.mode==='section'&&ch.sectionId!==scope.sectionId)return false;
+            if(aiIsSectionLocked(ch.sectionId)){locked.push(ch.sectionId);return false;}
+            return true;
+          });
+          if(locked.length){aiOptDbg.steps.push({kind:'lockedSkipped',sections:Array.from(new Set(locked))});aiStatusLog.push('已跳过 AI 锁定章节：'+Array.from(new Set(locked)).join('、'));}
+          return usable;
+        }
         function proceed(changes,res){
           aiOptDbg.steps.push({kind:'norm',got:changes.length});
           if(!changes.length){
@@ -7577,14 +8169,14 @@ function aiRunOptimize(){
     function finish(scoreBefore,review){
       var items=Object.keys(best.changes).map(function(sid){
         var ch=best.changes[sid];
-        var it={id:aiUid(),sectionId:sid,sectionTitle:(STATE.framework.find(function(f){return f.id===sid;})||{}).title||sid,type:ch.type,suggestion:ch.type==='suggestion'?ch.suggestion:'',status:'pending',edits:[],rowEdits:[],replaceSection:ch.replaceSection!=null?ch.replaceSection:null,replaceRows:ch.replaceRows||null};
+        var it={id:aiUid(),sectionId:sid,sectionTitle:(STATE.framework.find(function(f){return f.id===sid;})||{}).title||sid,type:ch.type,suggestion:ch.type==='suggestion'?ch.suggestion:'',status:'pending',relatedIssues:aiRelatedIssues(ch,baseReport),edits:[],rowEdits:[],replaceSection:ch.replaceSection!=null?ch.replaceSection:null,replaceRows:ch.replaceRows||null};
         if(ch.type==='text')it.edits=ch.edits;
         else if(ch.type==='table')it.rowEdits=ch.rowEdits;
         aiValidateChange(it);
         return it;
       });
       var st2=aiState();
-      st2.pendingDiffs={id:aiUid(),scoreBefore:aiRound(scoreBefore),scoreAfter:best.score,target:target,rounds:rounds,createdAt:Date.now(),review:review,engineDelta:aiEvalRuleDelta(Object.keys(best.changes).map(function(s){return best.changes[s];})),items:items};
+      st2.pendingDiffs={id:aiUid(),scoreBefore:aiRound(scoreBefore),scoreAfter:best.score,target:target,rounds:rounds,createdAt:Date.now(),review:review,ruleBaseline:aiRuleHitSnapshot(),engineDelta:aiEvalRuleDelta(Object.keys(best.changes).map(function(s){return best.changes[s];})),items:items};
       st2.lastOptDebug=aiOptDbg;
       aiPersist();
       aiBusy=false;
@@ -7687,7 +8279,7 @@ function aiGenTypeSchema(type){
   var schemas={
     text:{shape:'{"html":"Markdown 格式的章节内容"}',tips:'2-6 个要点；先总述再分点；关键指标给具体数字与判定标准；可用 ##/### 子标题、- 列表、| 表格 组织内容。'},
     table:{shape:'{"rows":[{"cells":["表头1","表头2"]},{"cells":["值1","值2"]}]}',tips:'第一行必须是表头；2-6 行数据；表头按章节用途设计（变更历史：版本/更改内容/作者/日期；定义：术语/定义；埋点：事件/触发条件/参数/上报方式）。'},
-    feat:{shape:'{"items":[{"name":"功能点名称","desc":"一句话描述","priority":"P1","status":"草稿"}]}',tips:'5-12 条；name 必填且唯一；priority 只能 P0/P1/P2/P3/P4；status 只能 草稿/评审中/开发中/测试中/已上线；至少 1 条 P0。'},
+    feat:{shape:'{"items":[{"name":"功能点名称","desc":"目标：…；前置：…；主流程：…；异常/边界：…；输入输出：…；权限：…；验收：…；埋点：…；待确认：…","priority":"P1","status":"草稿"}]}',tips:'5-12 条；每条 desc 必须按固定字段写全：目标、前置、主流程、异常/边界、输入输出、权限、验收、埋点、待确认；未知值写“AI 建议（待确认）”。name 必填且唯一；priority 只能 P0/P1/P2/P3/P4；status 只能 草稿/评审中/开发中/测试中/已上线；至少 1 条 P0。'},
     accept:{shape:'{"items":[{"text":"验收标准","status":"na"}]}',tips:'4-10 条；每条必须能用是/否判定并尽量带量化指标（如"延迟 ≤ 1.5 秒"）；status 一律 "na"。'},
     users:{shape:'{"items":[{"role":"角色","want":"想要…","soThat":"以便…"}]}',tips:'2-6 条用户故事；role/want/soThat 都必填。'}
   };
@@ -7718,7 +8310,7 @@ function aiGenSectionPrompt(sid,desc,fwList,styleGuide,mode,ctxText){
   var schema=aiGenTypeSchema(type);
   var isDes=String(mode||'')==='design';
   var styleLine=String(styleGuide||'').trim()?('6. 风格约束：'+styleGuide+'\n'):'';
-  var modeLine=isDes?('7. 产品设计视角：先明确目标用户、核心场景与产品定位，再基于此产出本章节内容；功能与指标须能与产品定位对应，避免与技术实现脱节。\n'):'';
+  var modeLine=isDes?('7. 产品设计视角：先明确目标用户、核心场景与产品定位，再基于此产出本章节内容；功能与指标须能与产品定位对应，避免与技术实现脱节。\n8. 对从需求澄清带入的“待确认假设”，必须保留“（建议：…）”标识；不可把它写成已确认事实。功能需求应覆盖目标、前置条件、主流程、异常/边界、输入输出、权限、验收、埋点与待确认项：缺少时说明缺口或给出建议，不可用空泛文字掩盖。\n'):'';
   return {
     system:'你是资深的 PRD（产品需求文档）撰写专家。根据用户提供的产品描述，为指定章节撰写中文内容。\n'
       +'硬性要求：\n'
@@ -7939,6 +8531,7 @@ function aiDecideDiff(id,status){
   var it=pd.items.filter(function(x){return x.id===id;})[0];
   if(!it)return;
   if(status==='accepted'){
+    if(aiIsSectionLocked(it.sectionId)){aiToast('该节已锁定，AI 修改不能写入；可解除锁定后重新确认');return;}
     if(it.type==='suggestion'){it.status='accepted';aiPersist();aiRenderPanel();if(pd.items.every(function(x){return x.status!=='pending';}))aiFinalizePending();return;}
     if(!(it.validation&&it.validation.ok)){aiToast('该条校验不过，无法接受（可修改或拒绝）');return;}
     var entries=aiApplyDiffItemNow(it);
@@ -7961,6 +8554,7 @@ function aiSaveModifiedDiff(id,ei){
   var st=aiState();var pd=st.pendingDiffs;if(!pd)return;
   var it=pd.items.filter(function(x){return x.id===id;})[0];
   if(!it)return;
+  if(aiIsSectionLocked(it.sectionId)){aiToast('该节已锁定，不能写入 AI 修改');return;}
   var ta=document.getElementById('aiModify-'+id+(ei!=null?'_'+ei:''));
   if(!ta)return;
   var v=ta.value;
@@ -7990,12 +8584,13 @@ function aiAcceptAll(){
   var ok=false;
   pd.items.forEach(function(it){
     if(it.status==='pending'&&it.validation&&it.validation.ok){
+      if(aiIsSectionLocked(it.sectionId))return;
       if(it.type==='suggestion'){it.status='accepted';ok=true;return;}
       var entries=aiApplyDiffItemNow(it);
       if(entries){aiMergeApplied(pd,it,entries);it.appliedEntries=entries;it.status='accepted';ok=true;}
     }
   });
-  if(!ok){aiToast('存在校验不过的修改，无法全部接受，请逐条处理');aiRenderPanel();return;}
+  if(!ok){aiToast('存在校验不过或已锁定的修改，无法全部接受，请逐条处理');aiRenderPanel();return;}
   aiPersist();
   try{render();refreshHealthUI();}catch(e){}
   aiFinalizePending();
@@ -8047,6 +8642,8 @@ function aiFinalizePending(){
   var vs=st.versions||(st.versions=[]);
   var label=pd.genLabel||aiVersionLabel(kind,kind==='ai'?vs.filter(function(v){return v.kind==='ai';}).length+1:1);
   aiCreateVersion(kind,label,patches,pd.scoreBefore,pd.scoreAfter,{applied:true,transform:!!pd.gen});
+  // 写入后以当前正文重新跑确定性规则；独立 AI 复核保留其对“拟改后全文”的结论，二者不会相互替代。
+  st.lastRecheck=aiBuildRecheck(pd.ruleBaseline,pd.review);
   st.pendingDiffs=null;
   aiPersist();
   try{render();refreshHealthUI();}catch(e){}
@@ -8119,6 +8716,7 @@ function aiRenderTab(){
     return '<div class="ai-dim-row"><label class="ai-dim-on"><input type="checkbox" class="sw" id="aiDimOn-'+k+'"'+(d.enabled?' checked':'')+'>'+DIM_META[k].label+'</label><span class="muted">权重</span><input type="number" id="aiDimW-'+k+'" min="1" max="100" step="1" value="'+(d.weight||10)+'" style="width:64px"></div>';
   }).join('');
   el.innerHTML='<div class="muted" style="margin-bottom:10px">AI 深度体检（与红黄绿规则引擎并列，不覆盖）。Key 仅存本机浏览器，不进备份/导出/日志；公开分享的链接不会携带你的 Key。</div>'
+    +'<div class="impact-summary" style="margin-bottom:12px"><b>AI 数据边界</b><ul><li>首次使用 AI 时会显示服务商、模型和数据边界；确认后不再因不同操作重复打断。</li><li>体检/全文优化/评审会发送当前项目 PRD；单节优化仅发送该节和相关问题；对话只发送本轮对话内容。</li><li>请先脱敏账号、密钥、个人信息、客户数据和未公开合同；API Key、主题及其他本机项目不会作为请求字段发送。</li></ul></div>'
     +'<div class="field"><label>服务商</label><select id="aiProvider">'+[['deepseek','DeepSeek'],['openai','OpenAI'],['custom','自定义']].map(function(o){return '<option value="'+o[0]+'"'+(s.provider===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>'
     +'<div class="field"><label>Base URL（OpenAI 兼容）</label><input id="aiBaseUrl" value="'+aiEsc(s.baseUrl)+'" placeholder="https://api.deepseek.com/v1"></div>'
     +'<div class="field"><label>模型</label><input id="aiModel" value="'+aiEsc(s.model)+'" placeholder="deepseek-chat" list="aiModelList"><datalist id="aiModelList"><option value="deepseek-chat"><option value="deepseek-reasoner"></datalist></div>'
@@ -8163,6 +8761,13 @@ function aiRenderPanel(){
   if(hint.level!=='low')html+='<div class="ai-hint">'+ICONS.warn+' '+hint.reasons.map(function(r){return aiEsc(r);}).join('；')+'<button data-ai="align">执行对齐</button></div>';
   if(aiBusy||aiStatus)html+='<div class="ai-stop-row"><button class="btn btn--danger" data-ai="stop" title="中断当前 AI 任务">■ 停止</button><span class="muted" style="font-size:11.5px">停止后本轮结果不写入，可随时重试</span></div>';
   if(aiStatus)html+='<div class="ai-status">'+(aiBusy?'<span class="ai-orb ai-orb--spin" style="--s:14px;margin-right:6px"></span>':'')+aiEsc(aiStatus)+'</div>';
+  if(st.lastRecheck){
+    var rc=st.lastRecheck,rv=rc.independentReview;
+    html+='<div class="ai-sec"><div class="ai-sec-h">最近一次优化后复检 <span class="muted">'+new Date(rc.at).toLocaleString()+'</span></div>'
+      +'<div class="ai-engine-delta">确定性规则：<b>已解决 '+(rc.resolved||[]).length+'</b> · 仍存在 '+(rc.remaining||[]).length+' · 新引入 '+(rc.introduced||[]).length+'</div>'
+      +(rv?'<div class="ai-review">独立 AI 复核（拟改后全文）：<b>'+rv.score+'</b> 分 · '+(rv.verdict==='pass'?'通过':rv.verdict==='fail'?'不通过':'需改进')+(rv.summary?' · '+aiEsc(rv.summary):'')+'</div>':'<div class="muted" style="font-size:12px">本轮没有可独立复核的 AI 优化拟稿。</div>')
+      +(rc.introduced&&rc.introduced.length?'<div class="ai-vwarn">'+ICONS.warn+' 新引入：'+aiEsc(rc.introduced.slice(0,3).map(function(h){return h.snippet;}).join('；'))+'</div>':'')+'</div>';
+  }
   if(st.lastOptDebug)html+='<div class="ai-sec"><div class="ai-sec-h">最近一次优化诊断 <button data-ai="clearoptdbg">清除</button></div><pre class="ai-dbg">'+aiEsc(JSON.stringify(st.lastOptDebug,null,1).slice(0,900))+'</pre></div>';
   if(st.lastGenDebug)html+='<div class="ai-sec"><div class="ai-sec-h">最近一次撰写诊断 <button data-ai="cleargendbg">清除</button></div><pre class="ai-dbg">'+aiEsc(JSON.stringify(st.lastGenDebug,null,1).slice(0,900))+'</pre></div>';
   if(st.lastReport){
@@ -8181,7 +8786,7 @@ function aiRenderPanel(){
         html+='<div class="ai-iss">'+(iss.length?iss.map(function(it){
           var ignored=st.ignoredAiIssues&&st.ignoredAiIssues.some(function(x){return x.key===it.id;});
           return '<div class="ai-iss-item'+(ignored?' ignored':'')+'">'
-            +'<div class="ai-iss-top">'+aiSeverityTag(it.severity)+'<span class="muted">'+(it.sectionTitle?aiEsc(it.sectionTitle):'全文')+'</span></div>'
+            +'<div class="ai-iss-top">'+aiSeverityTag(it.severity)+'<span class="muted">'+(it.sectionTitle?aiEsc(it.sectionTitle):'全文')+' · '+aiEsc(it.source||'AI 推断')+' · '+(ignored?'已忽略/误报':it.status==='resolved'?'已解决':'待处理')+'</span></div>'
             +'<div class="ai-iss-reason">'+aiEsc(it.reason)+'</div>'
             +(it.lowConfidence?'<div class="ai-iss-warn">'+ICONS.warn+' 引用未匹配原文，疑似幻觉，请人工核对</div>':'')
             +(it.quote?'<div class="ai-iss-quote">引用：'+aiEsc(it.quote)+'</div>':'')
@@ -8206,6 +8811,7 @@ function aiRenderPanel(){
     html+='<div class="ai-diff-all"><button class="btn btn--primary" data-ai="acceptall">全部接受并写入</button></div>';
     pd.items.forEach(function(it){
       var stT=it.status;
+      var locked=aiIsSectionLocked(it.sectionId);
       var stLabel=stT==='pending'?'待确认':(stT==='accepted'?'已接受':stT==='modified'?'已修改':stT==='rejected'?'已拒绝':'已暂缓');
       var v=it.validation||{ok:true,warnings:[],blocked:[]};
       var vBadge=v.ok?'<span class="ai-vbadge ok">'+ICONS.check+' 校验通过</span>':(v.blocked.length?'<span class="ai-vbadge bad">'+ICONS.ban+' '+v.blocked.length+' 项校验不过</span>':'');
@@ -8216,7 +8822,8 @@ function aiRenderPanel(){
           :stT==='rejected'?'<span class="ai-diff-st rej">'+ICONS.x+' '+stLabel+'</span>'
           :stT==='deferred'?'<span class="ai-diff-st def">'+stLabel+'</span>'
           :'<span class="muted">· '+stLabel+'</span>')
-        +vBadge+'</div>'+vWarn;
+        +(locked?'<span class="ai-vbadge bad">🔒 AI 锁定</span>':'')+vBadge+'</div>'
+        +(it.relatedIssues&&it.relatedIssues.length?'<div class="muted" style="font-size:12px">关联原始问题：'+aiEsc(it.relatedIssues.map(function(x){return x.label;}).join('；'))+'</div>':'')+vWarn;
       if(it.type==='suggestion'){
         html+='<div class="ai-diff-sug">建议：'+aiEsc(it.suggestion)+'</div><div class="muted" style="font-size:12px">该类内容（清单/用户故事/小卡片）不做自动写入，请人工处理。</div>';
       }else{
@@ -8258,8 +8865,8 @@ function aiRenderPanel(){
         }
       }
       html+='<div class="ai-diff-act">'
-        +(stT==='pending'||stT==='deferred'?(v.ok?'<button class="btn btn--accept" data-ai="accept" data-did="'+aiEsc(it.id)+'">接受</button>':'<button class="btn btn--accept" disabled title="校验不过的修改需先修改或拒绝">接受</button>'):'')
-        +(stT==='pending'?'<button class="btn btn--ghost" data-ai="modify" data-did="'+aiEsc(it.id)+'">修改</button>':'')
+        +(stT==='pending'||stT==='deferred'?(v.ok&&!locked?'<button class="btn btn--accept" data-ai="accept" data-did="'+aiEsc(it.id)+'">接受</button>':'<button class="btn btn--accept" disabled title="'+(locked?'该节已锁定 AI 写入':'校验不过的修改需先修改或拒绝')+'">接受</button>'):'')
+        +(stT==='pending'&&!locked?'<button class="btn btn--ghost" data-ai="modify" data-did="'+aiEsc(it.id)+'">修改</button>':'')
         +(stT==='pending'?'<button class="btn btn--reject" data-ai="reject" data-did="'+aiEsc(it.id)+'">拒绝</button>':'')
         +(stT==='pending'?'<button class="btn btn--ghost" data-ai="defer" data-did="'+aiEsc(it.id)+'">暂缓</button>':'')
         +(stT==='accepted'||stT==='modified'||stT==='rejected'?'<button class="btn btn--ghost" data-ai="undo-diff" data-did="'+aiEsc(it.id)+'">撤销</button>':'')
@@ -8587,14 +9194,19 @@ function aiInjectPanel(){
   document.body.appendChild(gm);
   var dm=document.createElement('div');
   dm.className='modal';dm.id='aiDesignModal';
-  dm.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-labelledby="aiDesTitle" style="width:560px;max-width:94vw"><div class="m-head"><h3 id="aiDesTitle">AI 产品设计 · 从想法到方案</h3><button class="x" data-ai="desclose" aria-label="关闭">×</button></div>'
+  dm.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-labelledby="aiDesTitle" style="width:560px;max-width:94vw"><div class="m-head"><h3 id="aiDesTitle">AI 需求澄清 · 从一句想法开始</h3><button class="x" data-ai="desclose" aria-label="关闭">×</button></div>'
     +'<div class="m-body" style="display:flex;flex-direction:column;gap:10px;max-height:58vh;overflow:hidden">'
-    +'<div class="muted" style="font-size:12px">只有想法没关系，AI 会一步步引导你把想法变成清晰的产品设计，最后生成 PRD。</div>'
+    +'<div class="muted" style="font-size:12px">不需要懂 PRD、指标或技术术语。先说说你想做什么；AI 会把它整理成方案，并把不确定的内容标为建议供你确认。</div>'
+    +'<div id="aiDesState" aria-live="polite" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;font-size:11.5px"></div>'
     +'<div class="ai-chat-log" id="aiDesLog" style="flex:1;max-height:none;overflow:auto;border:1px solid var(--line,#e4e1da);border-radius:10px;padding:10px 12px;min-height:180px"></div>'
-    +'<div class="ai-chat-input"><textarea id="aiDesInput" rows="2" placeholder="回答 AI 的问题（Enter 发送，Shift+Enter 换行）"></textarea><button class="btn btn--ghost" data-ai="desstop" id="aiDesStop" style="display:none">■ 停止</button><button class="btn btn--primary" data-ai="dessend" id="aiDesSendBtn">发送</button></div>'
+    +'<div class="ai-chat-input"><textarea id="aiDesInput" rows="2" placeholder="例如：我想做一个帮我记录健身的简单网页（Enter 发送）"></textarea><button class="btn btn--ghost" data-ai="desstop" id="aiDesStop" style="display:none">■ 停止</button><button class="btn btn--primary" data-ai="dessend" id="aiDesSendBtn">开始梳理</button></div><div class="row-act" style="margin:0"><button class="btn btn--ghost btn--sm" data-ai="desadvise">我不确定，让 AI 建议</button><span class="muted" style="font-size:11.5px">每次只需回答一个问题</span></div>'
     +'</div>'
-    +'<div class="m-foot" style="justify-content:space-between"><button class="btn btn--ghost" data-ai="desclose">取消</button><button class="btn btn--ghost" data-ai="desskip" id="aiDesSkip" title="不想继续回答了？基于已收集的回答直接生成 PRD">跳过引导，直接生成</button><button class="btn btn--primary" data-ai="desfinish" id="aiDesFinish" style="display:none">据此生成 PRD</button></div></div>';
+    +'<div class="m-foot" style="justify-content:space-between"><button class="btn btn--ghost" data-ai="desclose">取消</button><button class="btn btn--ghost" data-ai="desskip" id="aiDesSkip" title="不想继续回答了？可先查看并确认当前方案">跳过引导，查看方案</button><button class="btn btn--primary" data-ai="desfinish" id="aiDesFinish" style="display:none">查看并确认方案</button></div></div>';
   document.body.appendChild(dm);
+  var sm=document.createElement('div');
+  sm.className='modal';sm.id='aiDesSkeletonModal';
+  sm.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-labelledby="aiDesSkelTitle" style="width:640px;max-width:94vw"><div class="m-head"><h3 id="aiDesSkelTitle">确认产品方案</h3><button class="x" data-ai="desskelclose" aria-label="关闭">×</button></div><div class="m-body" style="display:flex;flex-direction:column;gap:10px"><div class="muted">这是将交给 Coding Agent 的可读方案。请直接修改不准确的地方；标为“AI 建议（待确认）”的内容不会被当成已确认事实。</div><textarea id="aiDesSkeletonEditor" rows="16" style="width:100%;box-sizing:border-box;resize:vertical" aria-label="可编辑产品方案"></textarea><div id="aiDesSkeletonHint" class="muted" style="font-size:12px"></div></div><div class="m-foot" style="justify-content:space-between"><button class="btn btn--ghost" data-ai="desskelback">继续澄清</button><button class="btn btn--primary" data-ai="desskelconfirm">确认方案并生成 PRD</button></div></div>';
+  document.body.appendChild(sm);
   var desInp=dm.querySelector('#aiDesInput');
   if(desInp)desInp.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();aiDesSend();}});
   var fp=document.createElement('div');
@@ -8607,8 +9219,34 @@ function aiInjectPanel(){
   if(!document.getElementById('aiFloatBtn'))document.body.appendChild(fb);
 }
 /* P1-②A AI 产品设计引导：只有想法 → 一步步引导成型 → 生成 PRD（与「创建新需求」直接填写的实现逻辑不同） */
-var aiDesState={step:0,sub:0,qa:[],busy:false,name:'',summary:''};
-var AI_DES_Q=['这个产品/功能主要是给谁用的？试着描述一下典型用户。','用户在什么场景下会用到它？想解决什么具体问题？','你希望它具备哪些核心能力？挑最重要的几个说。','做成什么样算成功？有没有可量化的指标或期望？','有没有约束（技术/法规/成本/时间）？市面上有类似产品吗？'];
+var aiDesState={step:0,sub:0,qa:[],busy:false,name:'',summary:'',understood:'',needs:[],assumptions:[],conflicts:[]};
+var AI_DES_Q=['先用一句话说说：你想做一个什么东西，或者希望它帮你完成什么？','谁最可能会用它？他们现在通常怎么解决这件事？','第一版最想让它帮用户完成哪一两件事？','如果它真的有用，你希望用户最后得到什么结果？不确定也可以让 AI 建议。','有没有绝对不能发生的情况，或你已经知道的限制（例如只能自己用、要手机能用、时间很赶）？'];
+var AI_DES_TOPICS=['你想做什么','谁会用、现在怎么做','第一版先完成什么','希望得到什么结果','限制、风险与例外情况'];
+function aiDesNewState(){return {step:0,sub:0,qa:[],busy:false,name:'',summary:'',understood:'',needs:[AI_DES_TOPICS[0]],assumptions:[],conflicts:[]};}
+function aiDesPlain(txt){return String(txt||'').replace(/【[^】]{1,16}】/g,'').replace(/^项目名[:：].*$/m,'').trim();}
+function aiDesMarker(txt,name){var m=String(txt||'').match(new RegExp('【'+name+'】\\s*([\\s\\S]*?)(?=【|$)'));return m?m[1].trim():'';}
+function aiDesConflictHints(){
+  var all=aiDesState.qa.join(' '),out=[];
+  if(/(?:只|仅).{0,4}(?:自己|个人)|仅供个人/.test(all)&&/(?:多人|团队|协作|同事)/.test(all))out.push('“仅自己使用”和“多人/团队协作”需要二选一或说明范围');
+  if(/(?:无需|不需要|不)登录/.test(all)&&/(?:账号|登录|注册|成员)/.test(all))out.push('“无需登录”和“账号/成员”需要说明是否存在例外');
+  if(/离线/.test(all)&&/(?:必须|仅).{0,4}联网|在线才/.test(all))out.push('“离线可用”和“必须联网”需要说明各自适用的操作');
+  return out;
+}
+function aiDesRenderState(){
+  var el=document.getElementById('aiDesState');if(!el)return;
+  var understood=aiDesState.understood||('已收到 '+aiDesState.qa.length+' 条你的描述');
+  var fallback=AI_DES_TOPICS.slice(Math.min(aiDesState.qa.length,AI_DES_TOPICS.length),Math.min(aiDesState.qa.length+2,AI_DES_TOPICS.length));
+  var needs=(aiDesState.conflicts.length?aiDesState.conflicts:aiDesState.needs.length?aiDesState.needs:fallback).slice(0,2);
+  var assumptions=aiDesState.assumptions.slice(-2);
+  var cell=function(title,text,color){return '<div style="padding:7px 8px;border:1px solid var(--line,#e4e1da);border-radius:8px;background:var(--panel,#fff);min-width:0"><strong style="display:block;color:'+color+';font-size:11px;margin-bottom:2px">'+title+'</strong><span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+aiEsc(text||'暂无')+'">'+aiEsc(text||'暂无')+'</span></div>';};
+  el.innerHTML=cell('我已理解',understood,'var(--color-success-text,#2e6f4e)')+cell('还需要确认',needs.join('；')||'AI 正在判断下一步','var(--color-warning-text,#8a5b13)')+cell('AI 暂定假设',assumptions.join('；')||'没有；不知道时可让 AI 建议','var(--ink-2,#667)');
+}
+function aiDesAbsorbResponse(txt){
+  var understood=aiDesMarker(txt,'我已理解');if(understood)aiDesState.understood=aiDesPlain(understood).slice(0,120);
+  var needs=aiDesMarker(txt,'还需确认');if(needs)aiDesState.needs=needs.split(/[；;\n]/).map(function(x){return aiDesPlain(x).replace(/^[-•]\s*/,'').trim();}).filter(Boolean).slice(0,3);
+  var assume=aiDesMarker(txt,'AI假设');if(assume){assume.split(/[；;\n]/).map(function(x){return aiDesPlain(x).replace(/^[-•]\s*/,'').trim();}).filter(Boolean).forEach(function(x){if(aiDesState.assumptions.indexOf(x)<0)aiDesState.assumptions.push(x);});}
+  aiDesState.conflicts=aiDesConflictHints();aiDesRenderState();
+}
 function aiDesLogAdd(role,txt){
   var log=document.getElementById('aiDesLog');if(!log)return;
   var d=document.createElement('div');d.className='ai-msg '+role;
@@ -8616,13 +9254,16 @@ function aiDesLogAdd(role,txt){
   log.appendChild(d);log.scrollTop=log.scrollHeight;
 }
 var aiDesStreamEl=null;
-function aiDesSend(){
+function aiDesSend(forceEnd){
+  forceEnd=!!forceEnd;
   if(aiDesState.busy){aiToast('AI 正在思考，稍等片刻');return;}
   var inp=document.getElementById('aiDesInput');var txt=(inp&&inp.value||'').trim();
   if(!txt){aiToast('先回答当前问题吧');return;}
   if(inp)inp.value='';
   aiDesLogAdd('user',txt);
   aiDesState.qa.push(txt);
+  if(/不确定|不知道|没想好|随便|都可以/.test(txt))aiDesState.assumptions.push((AI_DES_TOPICS[Math.min(aiDesState.step,AI_DES_TOPICS.length-1)]||'当前问题')+'：AI 建议（待确认）');
+  aiDesState.conflicts=aiDesConflictHints();aiDesRenderState();
   aiDesState.busy=true;
   aiDesStreamEl=null;
   var st=aiGetSettings();
@@ -8630,25 +9271,26 @@ function aiDesSend(){
   var collected='';
   aiDesState.qa.forEach(function(q,i){collected+='Q'+(i+1)+'：'+String(q).slice(0,160)+'\n';});
   var cur=Math.min(aiDesState.step,AI_DES_Q.length-1);
-  var forceEnd=aiDesState.step>=AI_DES_Q.length;
-  var sys=forceEnd
-    ?'你是资深 AI 产品设计师。基于用户对以下 5 个问题的全部回答，输出「产品设计要点」汇总：\n①目标用户画像；②核心使用场景；③核心功能与优先级（P0/P1）；④成功指标（量化）；⑤约束与竞品差异。\n要求：第一行先输出「项目名：<8字以内名字>」，再输出设计要点（分点、简短、可直接作为 PRD 撰写输入），总长不超过 350 字。'
-    :'你是资深 AI 产品设计师，正在一步步引导用户把模糊想法变成清晰产品设计。\n当前主题：第 '+(cur+1)+'/'+AI_DES_Q.length+' 题「'+AI_DES_Q[cur]+'」（本主题已追问 '+(aiDesState.sub)+' 次）。\n已收集回答：\n'+collected+'规则：①先用 1-2 句话认可/澄清用户的回答；②**如果本主题的信息还不够具体，追问 1 个更深入的细节问题**（只问一个，结合用户回答针对性追问）；③**如果本主题信息已经足够，先输出【进入下一题】再提出下一题的问题**；④如果 5 题已全部完成，先输出【汇总】再输出产品设计要点（首行 项目名：<8字以内>，要点 ≤350 字，含目标用户/场景/功能优先级/量化指标/约束与竞品）。';
+  var conflicts=aiDesConflictHints();
+  var sys='你是面向 Vibe Coding 小白的需求澄清助手，正在把一句想法整理成可确认的产品方案。\n已收集回答：\n'+collected+'\n规则：①先判断当前最大的缺口，优先澄清谁会用/现在怎么做、想完成什么、第一版最小范围、不能接受什么；只有会改变方案时才问权限、数据或技术限制。②不要按固定题序；候选问题「'+AI_DES_Q[cur]+'」仅在它仍是最大缺口时才使用。③不用 PRD、指标、优先级等术语。④本轮只问 1 个最容易回答的问题，可给生活化例子。⑤用户说“不知道”时给 2 个简单选项，或标记“AI 建议（待确认）”，不要强迫填写指标。⑥若发现前后矛盾，必须先澄清矛盾，不能直接汇总。当前规则检测到的可能矛盾：'+(conflicts.join('；')||'无')+'。⑦每次输出都先给三个短标记：\n【我已理解】一句话复述\n【还需确认】最多 2 个未确认点\n【AI假设】没有则写“无”；所有推导都必须写“AI 建议（待确认）”。\n然后：信息足够时输出【汇总】及小白可读方案（要做什么、给谁用、怎样完成、第一版做/不做、成功结果、风险/待确认项），第一行补「项目名：<8字以内名字>」；否则输出【进入下一题】再提出唯一一个最关键的问题。';
   aiDesState.abort=new AbortController();
   aiGlobalAbort=aiDesState.abort;
   var stopBtn=document.getElementById('aiDesStop');if(stopBtn)stopBtn.style.display='';
   var aiDesReasoning='',aiDesOut='';
-  aiChat([{role:'system',content:sys},{role:'user',content:forceEnd?'全部回答如下：\n'+collected:'（我的回答如上，请继续引导）'}],{stream:true,temperature:0.5,onDelta:function(c){
-    if(!aiDesStreamEl){
-      aiDesLogAdd('bot','');
-      aiDesStreamEl=document.querySelector('#aiDesLog .ai-msg.bot:last-child .ai-msg-b');
-    }
+  // 请求一发出就给出真实状态反馈；不能等正文首个 token 到达才创建思考区。
+  aiDesLogAdd('bot','');
+  aiDesStreamEl=document.querySelector('#aiDesLog .ai-msg.bot:last-child .ai-msg-b');
+  if(aiDesStreamEl)aiDesStreamEl.innerHTML='<details class="ai-think" open><summary><span class="ai-think-h-t"><span class="ai-think-dot"></span>深度思考已启动</span><span class="ai-think-cnt">准备中</span><span class="ai-think-caret">▾</span></summary><div class="ai-think-body">已收到你的描述，正在理解你的想法，并找出最需要确认的一件事…</div></details>';
+  Promise.resolve().then(function(){
+    if(aiCancelFlag)throw {kind:'canceled',message:'已停止'};
+    return aiChat([{role:'system',content:sys},{role:'user',content:forceEnd?'全部回答如下：\n'+collected:'（我的回答如上，请继续引导）'}],{stream:true,temperature:0.5,onDelta:function(c){
     aiDesOut=c;
     if(aiDesStreamEl)aiDesStreamEl.innerHTML=(aiDesReasoning?'<details class="ai-think" open><summary><span class="ai-think-h-t"><span class="ai-think-dot"></span>深度思考</span><span class="ai-think-cnt">'+aiDesReasoning.length+' 字</span><span class="ai-think-caret">▾</span></summary><div class="ai-think-body">'+aiEsc(aiDesReasoning)+'</div></details>':'')+'<div class="ai-des-out">'+aiEsc(aiDesOut)+'</div>';aiScrollThinkBody();
   },onReasoning:function(r){
     aiDesReasoning+=r;
     if(aiDesStreamEl)aiDesStreamEl.innerHTML=(aiDesReasoning?'<details class="ai-think" open><summary><span class="ai-think-h-t"><span class="ai-think-dot"></span>深度思考</span><span class="ai-think-cnt">'+aiDesReasoning.length+' 字</span><span class="ai-think-caret">▾</span></summary><div class="ai-think-body">'+aiEsc(aiDesReasoning)+'</div></details>':'')+'<div class="ai-des-out">'+aiEsc(aiDesOut)+'</div>';aiScrollThinkBody();
-  }}).then(function(text){
+    }});
+  }).then(function(text){
     aiDesState.busy=false;aiGlobalAbort=null;aiDesState.abort=null;aiCancelFlag=false;
     if(stopBtn)stopBtn.style.display='none';
     var t=String(text||'').trim();
@@ -8660,17 +9302,13 @@ function aiDesSend(){
       var hint=document.getElementById('aiDesInput');if(hint)hint.placeholder='点击下方「据此生成 PRD」继续';
       var sb=document.getElementById('aiDesSendBtn');if(sb)sb.style.display='none';
     };
-    if(t.indexOf('【汇总】')>=0||forceEnd){
+    aiDesAbsorbResponse(t);
+    if(t.indexOf('【汇总】')>=0){
       aiDesState.summary=t.replace(/【汇总】/g,'').trim();
       aiDesState.name=(t.match(/项目名[:：]\s*(.{1,16})/)||[])[1]||'AI 产品设计';
       finish();
     }else if(t.indexOf('【进入下一题】')>=0){
       aiDesState.step++;aiDesState.sub=0;
-      if(aiDesState.step>=AI_DES_Q.length){
-        aiDesState.summary=t.replace(/【进入下一题】/g,'').trim();
-        aiDesState.name=(t.match(/项目名[:：]\s*(.{1,16})/)||[])[1]||'AI 产品设计';
-        finish();
-      }
     }else{
       aiDesState.sub++;
       if(aiDesState.sub>=3){aiDesState.step++;aiDesState.sub=0;}
@@ -8680,7 +9318,7 @@ function aiDesSend(){
     if(stopBtn)stopBtn.style.display='none';
     aiDesStreamEl=null;
     if(e&&(e.kind==='canceled'||e.name==='AbortError')){
-      aiDesLogAdd('sys','已停止本轮引导。AI 将基于已收集的回答直接生成 PRD。');
+      aiDesLogAdd('sys','已停止本轮引导。你可以基于已收集的回答查看并确认方案。');
       var fin=document.getElementById('aiDesFinish');if(fin)fin.style.display='inline-block';
       var hint=document.getElementById('aiDesInput');if(hint)hint.placeholder='点击「据此生成 PRD」直接生成';
       var sb=document.getElementById('aiDesSendBtn');if(sb)sb.style.display='none';
@@ -8690,33 +9328,44 @@ function aiDesSend(){
   });
 }
 function aiDesignOpen(){
-  aiDesState={step:0,sub:0,qa:[],busy:false,name:'',summary:''};
+  aiDesState=aiDesNewState();
   var log=document.getElementById('aiDesLog');if(log)log.innerHTML='';
   var fin=document.getElementById('aiDesFinish');if(fin)fin.style.display='none';
-  var inp=document.getElementById('aiDesInput');if(inp){inp.value='';inp.placeholder='回答 AI 的问题（Enter 发送，Shift+Enter 换行）';}
+  var inp=document.getElementById('aiDesInput');if(inp){inp.value='';inp.placeholder='例如：我想做一个帮我记录健身的简单网页（Enter 发送）';}
   var sb=document.getElementById('aiDesSendBtn');if(sb)sb.style.display='';
+  aiDesRenderState();
   var stp=document.getElementById('aiDesStop');if(stp)stp.style.display='none';
   var st=aiGetSettings();
   if(!String(st.apiKey||'').trim()||!String(st.baseUrl||'').trim()){
     aiDesLogAdd('sys','请先在 设置→高级→AI 设置 中配置 API Key 与地址。');
   }else{
-    aiDesLogAdd('bot','你好，我是产品设计助手。只有想法没关系，我们一起把它变成清晰的产品方案。\n\n'+AI_DES_Q[0]);
+    aiDesLogAdd('bot','你好，我是需求澄清助手。你不用会写 PRD，先告诉我一个想法就好；不确定的地方我会给建议，并标成待确认。\n\n'+AI_DES_Q[0]);
   }
   try{openModal('aiDesignModal');}catch(e){var mm=document.getElementById('aiDesignModal');if(mm)mm.classList.add('open');}
 }
 window.aiDesignOpen=aiDesignOpen;
+function aiDesBuildSkeleton(){
+  var provided=aiDesState.qa.map(function(q,i){return '- '+(i+1)+'. '+String(q).slice(0,220);}).join('\n')||'- （尚未提供）';
+  var assumptions=aiDesState.assumptions.length?aiDesState.assumptions.map(function(x){return '- '+x;}).join('\n'):'- 无';
+  var needs=(aiDesState.conflicts.length?aiDesState.conflicts:aiDesState.needs).map(function(x){return '- '+x;}).join('\n')||'- 请在生成前补充或接受 AI 建议';
+  var summary=aiDesPlain(aiDesState.summary);
+  return '# '+(aiDesState.name||'我的产品方案')+'\n\n## 要做什么\n'+(aiDesState.understood||'根据下面的描述整理')+'\n\n## 你已提供的信息\n'+provided+'\n\n## AI 整理的方案\n'+(summary||'（尚未完成 AI 汇总；以下信息会以待确认状态交给 AI 生成草稿。）')+'\n\n## AI 建议（待确认）\n'+assumptions+'\n\n## 还需要确认 / 可能冲突\n'+needs+'\n\n## 第一版边界\n- 只实现上面已确认的核心任务；其余内容默认不做，除非你在此处补充。';
+}
 function aiDesFinish(){
+  if(aiDesState.busy){aiToast('AI 仍在整理，稍后再查看方案');return;}
+  var editor=document.getElementById('aiDesSkeletonEditor');if(editor)editor.value=aiDesBuildSkeleton();
+  var hint=document.getElementById('aiDesSkeletonHint');if(hint)hint.textContent=aiDesState.conflicts.length?'发现可能冲突：确认前请在方案中说明取舍。':'确认后才会开始按章节生成草稿；生成内容仍需在 AI 面板逐条接受后写入。';
+  try{closeModal('aiDesignModal');openModal('aiDesSkeletonModal');}catch(e){var dm=document.getElementById('aiDesignModal'),sm=document.getElementById('aiDesSkeletonModal');if(dm)dm.classList.remove('open');if(sm)sm.classList.add('open');}
+}
+function aiDesConfirmSkeleton(){
   var st=aiGetSettings();
-  if(!String(st.apiKey||'').trim()||!String(st.baseUrl||'').trim()){aiToast('请先配置 API Key 与地址');return;}
-  var log=document.getElementById('aiDesLog');
-  var desc='';
-  aiDesState.qa.forEach(function(q,i){desc+='Q'+(i+1)+'：'+String(q).slice(0,140)+'\n';});
-  if(aiDesState.summary)desc+='\nAI 产品设计要点：\n'+aiDesState.summary;
-  var text=desc.slice(0,3000);
+  if(!String(st.apiKey||'').trim()||!String(st.baseUrl||'').trim()){aiToast('请先在 设置→AI 中配置 API Key 与地址');return;}
+  var editor=document.getElementById('aiDesSkeletonEditor');var text=String(editor&&editor.value||'').trim();
+  if(text.length<10){aiToast('请补充至少一句产品方案');return;}
   var nmEl=document.getElementById('aiGenName');if(nmEl)nmEl.value=aiDesState.name||'AI 产品设计';
-  var dsEl=document.getElementById('aiGenDesc');if(dsEl)dsEl.value=text;
+  var dsEl=document.getElementById('aiGenDesc');if(dsEl)dsEl.value=text.slice(0,6000);
   aiGenMode='design';
-  try{closeModal('aiDesignModal');}catch(e){var mm=document.getElementById('aiDesignModal');if(mm)mm.classList.remove('open');}
+  try{closeModal('aiDesSkeletonModal');}catch(e){var sm=document.getElementById('aiDesSkeletonModal');if(sm)sm.classList.remove('open');}
   aiGenStart();
 }
 function aiBind(){
@@ -8733,10 +9382,14 @@ function aiBind(){
     if(act==='optimize'){aiOpenOptModal();return;}
     if(act==='review'){rvOpen();return;}
     if(act==='dessend'){aiDesSend();return;}
-    if(act==='desskip'){if(aiDesState.busy){aiToast('AI 正在输出，可先点「■ 停止」再跳过');return;}if(!aiDesState.qa.length){aiToast('先回答一个问题，或提供一点想法吧');return;}aiDesFinish();return;}
+    if(act==='desadvise'){var di=document.getElementById('aiDesInput');if(di){di.value='我不确定，请结合我前面的描述给出一个合理建议，并标记为待确认。';aiDesSend();}return;}
+    if(act==='desskip'){if(aiDesState.busy){aiToast('AI 正在输出，可先点「■ 停止」再查看方案');return;}if(!aiDesState.qa.length){aiToast('先回答一个问题，或提供一点想法吧');return;}aiDesState.assumptions.push('未继续回答的部分：AI 建议（待确认）');aiDesRenderState();aiDesFinish();return;}
     if(act==='desstop'){if(aiDesState.abort){try{aiDesState.abort.abort();}catch(e){}}aiCancelFlag=true;return;}
     if(act==='desfinish'){aiDesFinish();return;}
     if(act==='desclose'){try{closeModal('aiDesignModal');}catch(e){var dmx=document.getElementById('aiDesignModal');if(dmx)dmx.classList.remove('open');}return;}
+    if(act==='desskelback'){try{closeModal('aiDesSkeletonModal');openModal('aiDesignModal');}catch(e){var smx=document.getElementById('aiDesSkeletonModal'),dmx2=document.getElementById('aiDesignModal');if(smx)smx.classList.remove('open');if(dmx2)dmx2.classList.add('open');}return;}
+    if(act==='desskelclose'){try{closeModal('aiDesSkeletonModal');}catch(e){var smc=document.getElementById('aiDesSkeletonModal');if(smc)smc.classList.remove('open');}return;}
+    if(act==='desskelconfirm'){aiDesConfirmSkeleton();return;}
     if(act==='align'){aiAlign();return;}
     if(act==='gen'){aiOpenGenModal();return;}
     if(act==='genclose'){try{closeModal('aiGenModal');}catch(e){var gmm=document.getElementById('aiGenModal');if(gmm)gmm.classList.remove('open');}return;}
@@ -8772,6 +9425,7 @@ function aiBind(){
       return;
     }
     if(act==='jump'){try{openSection(t.dataset.sid);}catch(e){}return;}
+    if(act==='lock-section'){aiToggleSectionLock(t.dataset.sid);return;}
     if(act==='ignore'||act==='correct'){aiToggleIgnore(t.dataset.key,act==='correct');return;}
     if(act==='unignore'){aiToggleIgnore(t.dataset.key,false);return;}
     if(act==='accept'||act==='reject'||act==='defer'){aiDecideDiff(t.dataset.did,act==='accept'?'accepted':act==='reject'?'rejected':'deferred');return;}
@@ -8815,9 +9469,10 @@ function aiChatMsgHtml(m){
   var chips=acts.map(function(a){return '<span class="ai-act-chip" title="'+aiEsc(JSON.stringify(a.payload||{}))+'">'+ICONS.bolt+' '+aiEsc(a.name)+'</span>';}).join('');
   var body=aiEsc(txt.replace(/<action[^>]*\/>/g,''));
   var think='';
-  if(m.reasoning){
-    var rl=String(m.reasoning);
-    think='<details class="ai-think"'+(m.pending?' open':'')+'><summary><span class="ai-think-h-t">'+(m.pending?'<span class="ai-think-dot"></span>':'<span class="ai-think-ic">'+ICONS.brain+'</span>')+'深度思考</span><span class="ai-think-cnt">'+rl.length+' 字</span><span class="ai-think-caret">▾</span></summary><div class="ai-think-body">'+aiEsc(rl)+'</div></details>';
+  if(m.reasoning||m.pending){
+    var rl=String(m.reasoning||'');
+    var pendingText='已收到你的消息，正在理解问题并规划下一步…';
+    think='<details class="ai-think"'+(m.pending?' open':'')+'><summary><span class="ai-think-h-t">'+(m.pending?'<span class="ai-think-dot"></span>':'<span class="ai-think-ic">'+ICONS.brain+'</span>')+(rl?'深度思考':'深度思考已启动')+'</span><span class="ai-think-cnt">'+(rl.length?rl.length+' 字':'准备中')+'</span><span class="ai-think-caret">▾</span></summary><div class="ai-think-body">'+aiEsc(rl||pendingText)+'</div></details>';
   }
   return '<div class="ai-msg bot"><div class="ai-msg-b">'+think+body+(chips?'<div class="ai-act-chips">'+chips+'</div>':'')+(m.pending?'<span class="ai-orb ai-orb--working" style="--s:13px;--d:2.5px" aria-label="AI 正在回复"></span>':'')+'</div></div>';
 }
@@ -9020,7 +9675,9 @@ function aiChatSecData(p){
   var data=pj.data[sec.id]||(pj.data[sec.id]=sectionEmpty(sec.type,sec.id));
   return {sec:sec,data:data};
 }
-function aiBlocksOf(html){
+// 聊天段落操作只需 HTML 字符串数组；不能覆盖前面的结构化 aiBlocksOf，
+// 后者被优化、结构对齐等流程依赖并返回 {html,text} 对象。
+function aiChatBlocksOf(html){
   var div=document.createElement('div');
   div.innerHTML=String(html||'');
   var arr=[];
@@ -9031,9 +9688,9 @@ function aiChatSecIsTextual(type){return type==='text'||type==='timeline'||type=
 function aiChatAddPara(p){
   var sd=aiChatSecData(p);if(!sd)return '未找到节';
   if(!aiChatSecIsTextual(sd.sec.type))return '「'+sd.sec.title+'」不是文本类节，暂不支持段落级改写（请用 editSection 整体写入）';
-  var newBlocks=aiBlocksOf(aiMdToHtml(p.content||''));
+  var newBlocks=aiChatBlocksOf(aiMdToHtml(p.content||''));
   if(!newBlocks.length)return '请提供 content 内容';
-  var blocks=aiBlocksOf(sd.data.html||'');
+  var blocks=aiChatBlocksOf(sd.data.html||'');
   var para=parseInt(p.para,10);
   if(para>=1&&para<=blocks.length+1){blocks.splice(para-1,0,newBlocks.join('\n'));}
   else{blocks=blocks.concat(newBlocks);para=blocks.length;}
@@ -9044,10 +9701,10 @@ function aiChatAddPara(p){
 function aiChatEditPara(p){
   var sd=aiChatSecData(p);if(!sd)return '未找到节';
   if(!aiChatSecIsTextual(sd.sec.type))return '「'+sd.sec.title+'」不是文本类节';
-  var blocks=aiBlocksOf(sd.data.html||'');
+  var blocks=aiChatBlocksOf(sd.data.html||'');
   var para=parseInt(p.para,10);
   if(!(para>=1&&para<=blocks.length))return '段落序号无效（当前共 '+blocks.length+' 段）';
-  var newBlocks=aiBlocksOf(aiMdToHtml(p.content||''));
+  var newBlocks=aiChatBlocksOf(aiMdToHtml(p.content||''));
   if(!newBlocks.length)return '请提供 content 内容';
   blocks.splice(para-1,1,newBlocks.join('\n'));
   sd.data.html=blocks.join('\n');
@@ -9057,7 +9714,7 @@ function aiChatEditPara(p){
 function aiChatDeletePara(p){
   var sd=aiChatSecData(p);if(!sd)return '未找到节';
   if(!aiChatSecIsTextual(sd.sec.type))return '「'+sd.sec.title+'」不是文本类节';
-  var blocks=aiBlocksOf(sd.data.html||'');
+  var blocks=aiChatBlocksOf(sd.data.html||'');
   var para=parseInt(p.para,10);
   if(!(para>=1&&para<=blocks.length))return '段落序号无效（当前共 '+blocks.length+' 段）';
   blocks.splice(para-1,1);
@@ -9303,6 +9960,7 @@ window.__AICtrl={
   togglePanel:aiTogglePanel,
   renderPanel:aiRenderPanel,
   getSettings:aiGetSettings,
+  privacyConfirm:function(meta){return aiPrivacyConfirm(meta,aiGetSettings());},
   runScore:aiRunScore,
   runOptimize:aiRunOptimize,
   runAlign:aiAlign,
@@ -9350,6 +10008,10 @@ window.__AICtrl={
     mdToHtml:aiMdToHtml,
     normItems:aiGenNormItems,
     normRows:aiGenNormRows,
+    privacyMeta:aiPrivacyMeta,
+    privacyConfirm:aiPrivacyConfirm,
+    privacySeen:function(){return aiPrivacySeen;},
+    clearPrivacySeen:function(){aiPrivacySeen={};try{localStorage.removeItem(AI_PRIVACY_ACK_KEY);}catch(e){}},
     backup:aiBackupState,
     recover:aiRecoverFromBackup,
     recoverOffer:function(){return aiRecoverOffer;},
@@ -9362,5 +10024,3 @@ aiBoot();
 </script>
 </body>
 </html>
-
-

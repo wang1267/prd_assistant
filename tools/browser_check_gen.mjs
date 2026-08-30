@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
+const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
 const candidates = [
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
@@ -72,15 +73,15 @@ async function evalJs(expr) {
 
 await send('Page.enable');
 await send('Runtime.enable');
-await send('Page.navigate', { url: 'file:///' + encodeURI('E:/vibecoding/prd_assistant/PRD智能看板.html') });
+await send('Page.navigate', { url: appUrl });
 await new Promise(r => setTimeout(r, 3500));
 
 let pass = 0, fail = 0;
 function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + name); } else { fail++; console.log('FAIL  ' + name + '  >>> ' + detail); } }
 
 try {
-  const badge = await evalJs(`(document.getElementById('vbadge')||{}).textContent || ''`);
-  check('browser v17.1x/17.2x 水印', /v17\.(1[5-9]|2\d)/.test(badge), badge);
+  const appShell = await evalJs(`({title:document.title,legacyBadge:!!document.getElementById('vbadge')})`);
+  check('browser 当前应用加载且无废弃顶栏版本水印', appShell.title==='需求文档工作台' && !appShell.legacyBadge, JSON.stringify(appShell));
 
   // 预置 AI 设置（Key 只进独立键）
   await evalJs(`(()=>{
@@ -141,7 +142,7 @@ try {
   const styled = await evalJs(`(()=>{
     const b=window.__aiBodies||[];
     const first=b[0]&&b[0].messages&&b[0].messages[0]&&b[0].messages[0].content||'';
-    return {has: first.indexOf('【模板风格：智能硬件/车规】')>=0&&first.indexOf('功能安全等级')>=0, dbgStyle: (window.__AICtrl._test.state().lastGenDebug||{}).style||''};
+    return {has: first.indexOf('【模板风格：通用硬件/物联网】')>=0&&first.indexOf('功能安全等级')>=0&&first.indexOf('接口必须写协议')>=0, dbgStyle: (window.__AICtrl._test.state().lastGenDebug||{}).style||''};
   })()`);
   check('browser 撰写按硬件模板风格：请求注入风格约束', styled.has && styled.dbgStyle==='hardware', JSON.stringify(styled));
 

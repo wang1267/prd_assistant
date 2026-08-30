@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
+const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
 const browserExe = ['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe'].find(p => fs.existsSync(p));
 if (!browserExe) { console.log('NO_BROWSER'); process.exit(2); }
 const port = 11600 + Math.floor(Math.random() * 100);
@@ -23,8 +24,7 @@ ws.onmessage = ev => { const m = JSON.parse(ev.data); if (m.id && pend.has(m.id)
 function send(method, params) { return new Promise((r, j) => { const i = ++id; const t = setTimeout(() => { pend.delete(i); j(new Error('TO ' + method)); }, 8000); pend.set(i, { r: v => { clearTimeout(t); r(v); }, j: e => { clearTimeout(t); j(e); } }); ws.send(JSON.stringify({ id: i, method, params })); }); }
 async function ev(expr) { const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true }); if (r.exceptionDetails) throw new Error('EVAL ' + JSON.stringify(r.exceptionDetails).slice(0, 600)); return r.result && r.result.value; }
 await send('Page.enable'); await send('Runtime.enable');
-const url = 'file:///' + encodeURI('E:/vibecoding/prd_assistant/PRD智能看板.html');
-await send('Page.navigate', { url }); await new Promise(r => setTimeout(r, 3500));
+await send('Page.navigate', { url: appUrl }); await new Promise(r => setTimeout(r, 3500));
 
 let pass = 0, fail = 0;
 function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + name); } else { fail++; console.log('FAIL  ' + name + '  >>> ' + detail); } }
@@ -51,7 +51,7 @@ try {
   check('rtbl 拖拽改宽后落盘（html 含 width: 300px）', afterDrag.has300===true, JSON.stringify(afterDrag));
 
   // 刷新页面 → 宽度保留
-  await send('Page.navigate', { url }); await new Promise(r => setTimeout(r, 3500));
+  await send('Page.navigate', { url: appUrl }); await new Promise(r => setTimeout(r, 3500));
   const afterReload = await ev(`(()=>{
     const p=currentProj(); if(!p)return {none:true};
     const h=p.data.purpose.html||'';
@@ -90,6 +90,23 @@ try {
     return {rows: t.rows.length, w0: newRow.cells[0].style.width, w1: newRow.cells[1].style.width};
   })()`);
   check('rtbl 插行：新行复制列宽', afterRow.rows===3 && afterRow.w0==='300px' && afterRow.w1==='150px', JSON.stringify(afterRow));
+
+  // 浮动选区工具栏：行内格式只能作用于精确选区，块级格式不能误改整段
+  await ev(`(()=>{
+    const p=currentProj();
+    p.data.purpose={html:'<p><span id="fmtPrefix">前缀</span> <span id="fmtTarget">只改这里</span> <span id="fmtSuffix">后缀</span></p>',cards:[]};
+    render();
+    const ed=document.querySelector('#sec-purpose .editable'),target=ed.querySelector('#fmtTarget');
+    const range=document.createRange();range.selectNodeContents(target.firstChild);
+    const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);document.dispatchEvent(new Event('selectionchange'));
+    applyFmt('bold');
+    const afterBold=ed.innerHTML;
+    const suffix=ed.querySelector('#fmtSuffix');const range2=document.createRange();range2.selectNodeContents(suffix.firstChild);sel.removeAllRanges();sel.addRange(range2);document.dispatchEvent(new Event('selectionchange'));
+    applyFmt('h2');
+    return {afterBold,hasHeading:!!ed.querySelector('h2'),prefix:ed.querySelector('#fmtPrefix').innerHTML,suffix:ed.querySelector('#fmtSuffix').innerHTML,saved:(currentProj().data.purpose.html||'')};
+  })()`);
+  const fmt = await ev(`(()=>{ const ed=document.querySelector('#sec-purpose .editable'); return {target:ed.querySelector('#fmtTarget').innerHTML,prefix:ed.querySelector('#fmtPrefix').innerHTML,suffix:ed.querySelector('#fmtSuffix').innerHTML,hasHeading:!!ed.querySelector('h2'),saved:(currentProj().data.purpose.html||'')}; })()`);
+  check('浮动工具栏：加粗仅修改选中文字，标题命令不再扩大为整段', /<(b|strong)>只改这里<\/(b|strong)>/i.test(fmt.target) && !/<(b|strong)>/i.test(fmt.prefix) && !/<(b|strong)>/i.test(fmt.suffix) && !fmt.hasHeading && fmt.saved.indexOf('只改这里')>=0, JSON.stringify(fmt));
 } catch (e) {
   fail++; console.log('FAIL  browser 脚本异常  >>> ' + (e && e.message || e));
 }

@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
+const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
 const candidates = [
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
@@ -70,15 +71,15 @@ async function evalJs(expr) {
 
 await send('Page.enable');
 await send('Runtime.enable');
-await send('Page.navigate', { url: 'file:///' + encodeURI('E:/vibecoding/prd_assistant/PRD智能看板.html') });
+await send('Page.navigate', { url: appUrl });
 await new Promise(r => setTimeout(r, 3500));
 
 let pass = 0, fail = 0;
 function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + name); } else { fail++; console.log('FAIL  ' + name + '  >>> ' + detail); } }
 
 try {
-  const badge = await evalJs(`(document.getElementById('vbadge')||{}).textContent || ''`);
-  check('dash v17.1x/17.2x 水印', /v17\.(1[6-9]|2\d)/.test(badge), badge);
+  const appShell = await evalJs(`({title:document.title,legacyBadge:!!document.getElementById('vbadge')})`);
+  check('dash 当前应用加载且无废弃顶栏版本水印', appShell.title==='需求文档工作台' && !appShell.legacyBadge, JSON.stringify(appShell));
 
   // ---------- v17.25 顶栏收纳：设置/评论/框架移入「更多」 ----------
   const more1 = await evalJs(`(()=>{
@@ -99,8 +100,51 @@ try {
   await new Promise(r => setTimeout(r, 250));
   const more2 = await evalJs(`(()=>{ const m=document.getElementById('settingsModal'); return !!m&&m.classList.contains('open'); })()`);
   check('更多→设置 打开设置弹窗', more2===true, String(more2));
+  const density = await evalJs(`(()=>{
+    const compact=document.querySelector('#tabPrefs .dens-btn[data-v="compact"]');
+    const standard=document.querySelector('#tabPrefs .dens-btn[data-v="standard"]');
+    const comfortable=document.querySelector('#tabPrefs .dens-btn[data-v="comfortable"]');
+    if(!compact||!standard||!comfortable)return {missing:true};
+    compact.click();
+    const compactState={body:document.body.getAttribute('data-density'),active:compact.classList.contains('on'),pressed:compact.getAttribute('aria-pressed'),text:(document.getElementById('densityCurrent')||{}).textContent||''};
+    comfortable.click();
+    const comfortableState={body:document.body.getAttribute('data-density'),active:comfortable.classList.contains('on'),pressed:comfortable.getAttribute('aria-pressed'),text:(document.getElementById('densityCurrent')||{}).textContent||''};
+    standard.click();
+    return {compactState,comfortableState,restored:{body:document.body.getAttribute('data-density'),active:standard.classList.contains('on'),pressed:standard.getAttribute('aria-pressed'),text:(document.getElementById('densityCurrent')||{}).textContent||''}};
+  })()`);
+  check('设置密度：点击后即时更新选中态、说明与页面状态', !density.missing && density.compactState.body==='compact' && density.compactState.active && density.compactState.pressed==='true' && density.compactState.text.indexOf('紧凑')>=0 && density.comfortableState.body==='comfortable' && density.comfortableState.active && density.comfortableState.pressed==='true' && density.comfortableState.text.indexOf('宽松')>=0 && density.restored.body==='standard' && density.restored.active && density.restored.pressed==='true' && density.restored.text.indexOf('标准')>=0, JSON.stringify(density));
   await evalJs(`(()=>{ const b=document.querySelector('#settingsModal .x'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 150));
+
+  // ---------- P0 重置范围：先明确影响，再执行对应范围 ----------
+  await evalJs(`(()=>{ const b=document.querySelector('#ddMore .top-dd-trigger'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 120));
+  await evalJs(`(()=>{ const b=document.querySelector('#ddMore [data-act="reset"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 120));
+  const resetUi = await evalJs(`(()=>{
+    const modal=document.getElementById('resetModal');
+    const confirm=document.getElementById('resetConfirm');
+    const pick=document.querySelector('#resetModal [data-scope="projectsTemplates"]');
+    const before={open:!!(modal&&modal.classList.contains('open')),disabled:!!(confirm&&confirm.disabled)};
+    if(pick)pick.click();
+    const cs=confirm?getComputedStyle(confirm):null;
+    const rect=confirm?confirm.getBoundingClientRect():null;
+    return {before,selected:!!(pick&&pick.classList.contains('selected')),checked:pick&&pick.getAttribute('aria-checked'),confirm:confirm?{disabled:confirm.disabled,text:confirm.textContent,display:cs.display,visibility:cs.visibility,opacity:cs.opacity,width:rect.width,height:rect.height,inViewport:rect.bottom>0&&rect.top<innerHeight&&rect.right>0&&rect.left<innerWidth}:null,summary:(document.getElementById('resetSummary')||{}).textContent||''};
+  })()`);
+  check('重置：未选范围不可确认，选中后展示影响清单和可见确认按钮', resetUi.before.open && resetUi.before.disabled && resetUi.selected && resetUi.checked==='true' && resetUi.confirm && !resetUi.confirm.disabled && resetUi.confirm.text.indexOf('项目 + 模板')>=0 && resetUi.confirm.display!=='none' && resetUi.confirm.visibility!=='hidden' && Number(resetUi.confirm.opacity)>0 && resetUi.confirm.width>0 && resetUi.confirm.height>0 && resetUi.confirm.inViewport && resetUi.summary.indexOf('会删除')>=0 && resetUi.summary.indexOf('会保留')>=0, JSON.stringify(resetUi));
+  await evalJs(`(()=>{ const b=document.querySelector('#resetModal [data-act="closemodal"]'); if(b)b.click(); return true; })()`);
+  const resetData = await evalJs(`(()=>{
+    const keys={state:'prdKanbanStateV3',backup:'prdKanbanStateV3.bak',draft:'prdKanbanTplDraftV1',custom:'prdKanbanTplCustom',theme:'prdKanbanTheme',ai:'prdKanbanAiSettings'};
+    function setShared(){localStorage.setItem(keys.draft,'draft');localStorage.setItem(keys.custom,'[]');localStorage.setItem(keys.theme,'dark');localStorage.setItem(keys.ai,'{"apiKey":"reset-test"}');localStorage.setItem(keys.backup,'{"projects":[{"id":"old"}]}');}
+    createProject('重置测试-项目',null);STATE.frameworkPresets.push({id:'keep-reset-preset',name:'保留预设',framework:[]});save();setShared();resetLocalData('projects');
+    const projects={projects:STATE.projects.length,keepPreset:STATE.frameworkPresets.some(x=>x.id==='keep-reset-preset'),draft:localStorage.getItem(keys.draft),custom:localStorage.getItem(keys.custom),theme:localStorage.getItem(keys.theme),ai:localStorage.getItem(keys.ai),backup:localStorage.getItem(keys.backup)};
+    createProject('重置测试-模板',null);save();setShared();resetLocalData('projectsTemplates');
+    const projectsTemplates={projects:STATE.projects.length,keepPreset:STATE.frameworkPresets.some(x=>x.id==='keep-reset-preset'),draft:localStorage.getItem(keys.draft),custom:localStorage.getItem(keys.custom),theme:localStorage.getItem(keys.theme),ai:localStorage.getItem(keys.ai),backup:localStorage.getItem(keys.backup),state:!!localStorage.getItem(keys.state)};
+    createProject('重置测试-全部',null);save();setShared();resetLocalData('all');
+    const all={projects:STATE.projects.length,state:localStorage.getItem(keys.state),backup:localStorage.getItem(keys.backup),draft:localStorage.getItem(keys.draft),custom:localStorage.getItem(keys.custom),theme:localStorage.getItem(keys.theme),ai:localStorage.getItem(keys.ai),rootTheme:document.documentElement.dataset.theme,bodyDensity:document.body.dataset.density};
+    return {projects,projectsTemplates,all};
+  })()`);
+  check('重置：仅项目保留模板与 AI 设置，项目+模板保留偏好，全部清除独立键', resetData.projects.projects===0 && resetData.projects.keepPreset && resetData.projects.draft==='draft' && resetData.projects.custom==='[]' && resetData.projects.theme==='dark' && resetData.projects.ai && resetData.projects.backup===null && resetData.projectsTemplates.projects===0 && !resetData.projectsTemplates.keepPreset && resetData.projectsTemplates.draft===null && resetData.projectsTemplates.custom===null && resetData.projectsTemplates.theme==='dark' && resetData.projectsTemplates.ai && resetData.projectsTemplates.backup===null && resetData.projectsTemplates.state && resetData.all.projects===0 && resetData.all.state===null && resetData.all.backup===null && resetData.all.draft===null && resetData.all.custom===null && resetData.all.theme===null && resetData.all.ai===null && resetData.all.rootTheme==='light' && resetData.all.bodyDensity==='standard', JSON.stringify(resetData));
 
   // ---------- v17.23 新手引导 + 默认框架精简 ----------
   // v17.24：引导移入「更多 → 帮助」，不再首启自动弹出
@@ -112,18 +156,11 @@ try {
     const helpBtn=document.querySelector('[data-act="help"]');
     const menuOpen=document.querySelector('#ddMore .top-dd-menu')&&document.querySelector('#ddMore .top-dd-menu').classList.contains('open');
     if(helpBtn)helpBtn.click();
-    return {menuOpen, open: !!m&&m.classList.contains('open'), text0: t0?t0.textContent:''};
+    return {menuOpen, open: !!m&&m.classList.contains('open'), text0: t0?t0.textContent:'', idea:!!document.querySelector('[data-act="wz-ai"][data-genmode="design"]'), tpl:!!document.querySelector('[data-act="wz-template"]'), imp:!!document.querySelector('[data-act="wz-import"]'), blank:!!document.querySelector('[data-act="wz-newproj"]')};
   })()`);
   await new Promise(r => setTimeout(r, 200));
   const wzOpen = await evalJs(`(()=>{ const m=document.getElementById('wizardModal'); return m&&m.classList.contains('open'); })()`);
-  check('帮助：更多菜单打开→点「帮助」弹出引导', wz.menuOpen && wzOpen && wz.text0.indexOf('AI 撰写草稿')>=0 && wz.text0.indexOf('多项目总览')>=0 && wz.text0.indexOf('模板')>=0, JSON.stringify(wz));
-  await evalJs(`(()=>{ const b=document.querySelector('[data-act="wznext"]'); if(b)b.click(); return true; })()`);
-  await new Promise(r => setTimeout(r, 200));
-  const wz1 = await evalJs(`(()=>{
-    const t1=document.querySelector('#wizardModal .wz-step[data-step="1"]');
-    return {vis: t1?getComputedStyle(t1).display:'', hasNew: !!document.querySelector('[data-act="wz-newproj"]'), hasAi: !!document.querySelector('[data-act="wz-ai"]')};
-  })()`);
-  check('新手引导：第二步含新建/示例/AI 撰写入口', wz1.vis==='block' && wz1.hasNew && wz1.hasAi, JSON.stringify(wz1));
+  check('帮助：一屏只给四个可执行起步选择，不堆叠低频功能', wz.menuOpen && wzOpen && wz.text0.indexOf('只选一种最接近你的情况')>=0 && wz.text0.indexOf('创建后只做两件事')>=0 && wz.text0.indexOf('多角色评审')<0 && wz.idea && wz.tpl && wz.imp && wz.blank, JSON.stringify(wz));
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="wz-newproj"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 300));
   const np = await evalJs(`(()=>{
@@ -139,11 +176,67 @@ try {
   const bootOv = await evalJs(`(()=>{ const p=document.getElementById('overviewPanel'); return p?getComputedStyle(p).display:'missing'; })()`);
   check('总览浮层启动即隐藏（不糊屏）', bootOv==='none', String(bootOv));
 
+  // ---------- v18.53 小白需求澄清：先看可编辑方案，再确认生成 ----------
+  const desGuide = await evalJs(`(()=>{
+    aiDesignOpen();
+    const des=document.getElementById('aiDesignModal');
+    const state=document.getElementById('aiDesState');
+    const input=document.getElementById('aiDesInput');
+    if(input)input.value='我想做一个记录每天喝水的小网页，具体怎么做我不确定';
+    const send=document.getElementById('aiDesSendBtn'); if(send)send.click();
+    const skip=document.getElementById('aiDesSkip'); if(skip)skip.click();
+    const sk=document.getElementById('aiDesSkeletonModal');
+    const ed=document.getElementById('aiDesSkeletonEditor');
+    return {desOpen:!!(des&&des.classList.contains('open')), stateText:state?state.textContent:'', skOpen:!!(sk&&sk.classList.contains('open')), editor:ed?ed.value:'', confirm:!!document.querySelector('[data-ai="desskelconfirm"]')};
+  })()`);
+  check('AI 澄清：展示理解/待确认/假设，并先打开可编辑方案确认层', !desGuide.desOpen && desGuide.stateText.indexOf('我已理解')>=0 && desGuide.stateText.indexOf('还需要确认')>=0 && desGuide.stateText.indexOf('AI 暂定假设')>=0 && desGuide.skOpen && desGuide.editor.indexOf('AI 建议（待确认）')>=0 && desGuide.confirm, JSON.stringify(desGuide));
+  await evalJs(`(()=>{ const b=document.querySelector('[data-ai="desskelclose"]'); if(b)b.click(); return true; })()`);
+  const desStream = await evalJs(`(async()=>{
+    const oldFetch=window.fetch,oldSettings=localStorage.getItem('prdKanbanAiSettings'),oldTest=window.__AI_TEST_MODE;
+    window.__AI_TEST_MODE=true;
+    localStorage.setItem('prdKanbanAiSettings',JSON.stringify({provider:'custom',apiKey:'test-key',baseUrl:'https://mock.local/v1',model:'mock-model'}));
+    window.fetch=()=>{const body='data: '+JSON.stringify({choices:[{delta:{content:'【我已理解】你想做一个喝水记录工具。\\n【还需确认】提醒频率。\\n【AI假设】无。\\n【进入下一题】你希望谁使用它？'}}]})+'\\n\\ndata: [DONE]\\n\\n';return Promise.resolve(new Response(body,{headers:{'Content-Type':'text/event-stream'}}));};
+    aiDesignOpen();const input=document.getElementById('aiDesInput');if(input)input.value='我想记录每天喝水';const send1=document.getElementById('aiDesSendBtn');if(send1)send1.click();
+    await new Promise(r=>setTimeout(r,120));
+    const replyLog=(document.getElementById('aiDesLog')||{}).textContent||'',replyStop=getComputedStyle(document.getElementById('aiDesStop')).display;
+    aiDesignOpen();const input2=document.getElementById('aiDesInput');if(input2)input2.value='我想做一个简单工具';const send2=document.getElementById('aiDesSendBtn');if(send2)send2.click();const stop=document.getElementById('aiDesStop');if(stop)stop.click();
+    await new Promise(r=>setTimeout(r,80));
+    const stopLog=(document.getElementById('aiDesLog')||{}).textContent||'',stopDisplay=getComputedStyle(document.getElementById('aiDesStop')).display;
+    window.fetch=oldFetch;if(oldSettings===null)localStorage.removeItem('prdKanbanAiSettings');else localStorage.setItem('prdKanbanAiSettings',oldSettings);window.__AI_TEST_MODE=oldTest;
+    const close=document.querySelector('[data-ai="desclose"]');if(close)close.click();
+    return {reply:replyLog.indexOf('你希望谁使用它')>=0,replyStop,stopped:stopLog.indexOf('已停止本轮引导')>=0,stopDisplay};
+  })()`);
+  check('AI 澄清：流式首答会解除思考态；请求尚未开始时停止也能恢复操作', desStream.reply && desStream.replyStop==='none' && desStream.stopped && desStream.stopDisplay==='none', JSON.stringify(desStream));
+
   // 加载示例 → 触发 render（标准 14 节框架，验收黄）
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="sample"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 1800));
-  const sampleOk = await evalJs(`(()=>{ const p=currentProj(); return p?((p.data.purpose&&p.data.purpose.html||'').indexOf('多意图')>=0 && (p.data.feat&&p.data.feat.items?p.data.feat.items.length:0)===7):false; })()`);
+  const sampleOk = await evalJs(`(()=>{ const p=currentProj(); return p?((p.data.purpose&&p.data.purpose.html||'').indexOf('核心需求')>=0 && (p.data.feat&&p.data.feat.items?p.data.feat.items.length:0)===8):false; })()`);
   check('示例加载后内容完整（标准 14 节）', sampleOk===true, String(sampleOk));
+  const sampleGuide = await evalJs(`(()=>{ const g=document.getElementById('sampleNext'); return {shown:!!g,edit:!!document.querySelector('[data-act="sample-edit"]'),health:!!document.querySelector('[data-act="sample-health"]'),rename:!!document.querySelector('[data-act="sample-rename"]')}; })()`);
+  check('示例 PRD：展示可执行的下一步建议', sampleGuide.shown && sampleGuide.edit && sampleGuide.health && sampleGuide.rename, JSON.stringify(sampleGuide));
+  const stage4 = await evalJs(`(()=>{
+    const sid='purpose';
+    const btn=document.querySelector('[data-ai="lock-section"][data-sid="'+sid+'"]');
+    const rules=(STATE.ruleSet||[]).filter(r=>/^R-XCONS-0[1-5]$/.test(r.id)).map(r=>r.id);
+    const before=typeof runHealth==='function'?runHealth():null;
+    return {hasBtn:!!btn,label:btn?btn.textContent:'',rules,health:!!before};
+  })()`);
+  check('阶段四：跨章节规则已加载，章节旁提供 AI 锁定入口且保留规则体检能力', stage4.hasBtn && stage4.label.indexOf('锁定 AI')>=0 && stage4.rules.length===5 && stage4.health, JSON.stringify(stage4));
+  const traceability = await evalJs(`(()=>{ const panel=document.querySelector('.trace-panel');const table=panel&&panel.querySelector('.trace-table');const rows=table?Array.from(table.querySelectorAll('tbody tr')):[];return {shown:!!panel,header:table?table.querySelector('thead').textContent:'',rows:rows.length,hasFeature:rows.some(r=>(r.cells[0]||{}).textContent.trim().length>0),hasLink:!!document.querySelector('.trace-panel [data-act="opensec"]'),p0Gate:(document.querySelector('.delivery-ready')||{}).textContent||''}; })()`);
+  check('需求追溯链：展示功能到用户、验收、测试、埋点，并提示 P0 交付门槛', traceability.shown && traceability.header.indexOf('用户需求')>=0 && traceability.header.indexOf('验收标准')>=0 && traceability.header.indexOf('测试点')>=0 && traceability.header.indexOf('埋点')>=0 && traceability.rows>0 && traceability.hasFeature && traceability.hasLink && traceability.p0Gate.indexOf('P0 功能缺少关联验收或测试点')>=0, JSON.stringify(traceability));
+  const exportPreflight = await evalJs(`(()=>{const b=document.querySelector('#dashboard [data-act="exportmd"]');if(b)b.click();const m=document.getElementById('exportPreflightModal');return {open:!!(m&&m.classList.contains('open')),title:m?m.querySelector('.m-head').textContent:'',summary:(document.getElementById('exportPreflightSummary')||{}).textContent||'',gaps:(document.getElementById('exportPreflightGaps')||{}).textContent||'',confirm:(document.getElementById('exportPreflightConfirm')||{}).textContent||''};})()`);
+  check('导出前：先展示交付检查与追溯缺口，允许作为继续编辑稿导出', exportPreflight.open && exportPreflight.title.indexOf('导出前交付检查')>=0 && exportPreflight.summary.indexOf('当前未达到完整交付就绪条件')>=0 && exportPreflight.gaps.indexOf('P0 追溯缺口')>=0 && exportPreflight.confirm.indexOf('仍然导出')>=0, JSON.stringify(exportPreflight));
+  await evalJs(`(()=>{ const b=document.querySelector('#exportPreflightModal [data-act="closemodal"]'); if(b)b.click(); return true; })()`);
+  const gapPriority = await evalJs(`(()=>{
+    const order={'阻塞研发':0,'阻塞测试':1,'影响目标':2,'建议优化':3};
+    const table=document.querySelector('.gap-table');
+    const rows=Array.from(document.querySelectorAll('.gap-row'));
+    const impacts=rows.map(r=>((r.cells[3]||{}).textContent||'').trim());
+    const ranks=impacts.map(x=>order[x]);
+    return {hasTable:!!table,header:table?table.querySelector('thead').textContent:'',count:rows.length,impacts,ranks,linked:rows.every(r=>!!r.querySelector('[data-hi]'))};
+  })()`);
+  check('交付缺口：按研发、测试、目标、建议优化排序并保留展开关联', gapPriority.hasTable && gapPriority.header.indexOf('交付影响')>=0 && gapPriority.header.indexOf('下一步')>=0 && gapPriority.count>0 && gapPriority.ranks.every((v,i,a)=>v!==undefined&&(i===0||a[i-1]<=v)) && gapPriority.linked, JSON.stringify(gapPriority));
 
   const dash = await evalJs(`(()=>{
     const sub=document.getElementById('heroSub');
@@ -189,6 +282,19 @@ try {
     return {has: !!card, score86: txt.indexOf('86')>=0, dims: document.querySelectorAll('#dashboard .dash-dim').length, summary: txt.indexOf('验收')>=0};
   })()`);
   check('dash AI 总评卡：总分+6 维迷你条+摘要', aiCard.has && aiCard.score86 && aiCard.dims===6 && aiCard.summary, JSON.stringify(aiCard));
+
+  const dimDrill = await evalJs(`(()=>{
+    const dim=document.querySelector('#dashboard .dash-dim[data-i="0"]');
+    const box=document.getElementById('dimd-0');
+    if(!dim||!box)return {missing:true};
+    const chev=dim.querySelector('.dd-chev'),cr=chev.getBoundingClientRect();
+    const before=window.scrollY;dim.click();
+    const crAfter=chev.getBoundingClientRect();
+    const opened={tag:dim.tagName,expanded:dim.getAttribute('aria-expanded'),shown:getComputedStyle(box).display,detailsBelow:box.getBoundingClientRect().top>=dim.getBoundingClientRect().bottom-1,chevronFixed:Math.abs(cr.left-crAfter.left)<=1&&Math.abs(cr.top-crAfter.top)<=1&&Math.abs(cr.width-crAfter.width)<=1,chevronWidth:Math.round(crAfter.width),scrollDelta:Math.abs(window.scrollY-before)};
+    dim.click();
+    return {opened,closed:{expanded:dim.getAttribute('aria-expanded'),shown:getComputedStyle(box).display}};
+  })()`);
+  check('AI 总评维度：展开箭头固定在分数右侧，仅旋转且不改变页面滚动', !dimDrill.missing && dimDrill.opened.tag==='BUTTON' && dimDrill.opened.expanded==='true' && dimDrill.opened.shown==='block' && dimDrill.opened.detailsBelow && dimDrill.opened.chevronFixed && dimDrill.opened.chevronWidth===12 && dimDrill.opened.scrollDelta<=1 && dimDrill.closed.expanded==='false' && dimDrill.closed.shown==='none', JSON.stringify(dimDrill));
 
   // 复制体检摘要 → 生成 Markdown 且含节状态
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="copyhealth"]'); if(b)b.click(); return true; })()`);
@@ -239,7 +345,7 @@ try {
     const h=window.healthForProject?window.healthForProject(window.__dashRiskProj||currentProj()):null;
     const riskProj=STATE.projects.find(p=>p.name==='风险项目');
     const h2=riskProj?window.healthForProject(riskProj):null;
-    return {cards: cards.length, hasRiskStat: txt.indexOf('有风险项目 1')>=0, riskCardComp: riskCard?(riskCard.textContent.indexOf('完成度 0%')>=0):false, riskCardDots: riskCard?riskCard.querySelectorAll('.ov-dots i.red').length:0, h: h2?JSON.stringify(h2.metrics):'null', fwLen: riskProj?(riskProj.framework||[]).length:0};
+    return {cards: cards.length, hasRiskStat: txt.indexOf('风险项目')>=0, riskCardComp: riskCard?(riskCard.textContent.indexOf('完成度 0%')>=0):false, riskCardDots: riskCard?riskCard.querySelectorAll('.ov-dots i.red').length:0, h: h2?JSON.stringify(h2.metrics):'null', fwLen: riskProj?(riskProj.framework||[]).length:0};
   })()`);
   check('总览：两项目+风险项目统计+红点', ov2.cards===2 && ov2.hasRiskStat && ov2.riskCardComp && ov2.riskCardDots>=1, JSON.stringify(ov2));
 
@@ -252,7 +358,7 @@ try {
     const sp=STATE.projects.find(p=>p.name==='示例 PRD');
     return {closed: !panel.classList.contains('open'), name: tp?tp.textContent:'', spPurpose: sp&&sp.data.purpose?(sp.data.purpose.html||'').slice(0,30):'EMPTY'};
   })()`);
-  check('总览：点击卡片切换项目并关闭（目标项目内容不被覆盖）', ovSwitch.closed && ovSwitch.name!=='风险项目' && ovSwitch.spPurpose.indexOf('多意图')>=0, JSON.stringify(ovSwitch));
+  check('总览：点击卡片切换项目并关闭（目标项目内容不被覆盖）', ovSwitch.closed && ovSwitch.name!=='风险项目' && ovSwitch.spPurpose.indexOf('核心需求')>=0, JSON.stringify(ovSwitch));
 
   // 再打开 → 关闭按钮
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="toggleoverview"]'); if(b)b.click(); return true; })()`);
@@ -262,19 +368,21 @@ try {
   const ovClosed = await evalJs(`(()=>!document.getElementById('overviewPanel').classList.contains('open'))()`);
   check('总览：ovclose 关闭浮层', ovClosed===true, String(ovClosed));
 
-  // ---------- v17.18 模板库 + 热力图下钻 ----------
+  // ---------- v18.62 小白场景模板 + 热力图下钻 ----------
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="tpl"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 300));
   const tpl1 = await evalJs(`(()=>{
     const sel=document.getElementById('tplPreset');
     const ed=document.getElementById('tplEditor');
-    return {open: !!document.getElementById('tplModal')&&document.getElementById('tplModal').classList.contains('open'), opts: sel?sel.options.length:0, editor: !!(ed&&ed.value&&ed.value.indexOf('# PRD')>=0)};
+    const advanced=document.getElementById('tplAdvanced');
+    const cards=Array.from(document.querySelectorAll('#tplGallery .tpl-card'));
+    return {open: !!document.getElementById('tplModal')&&document.getElementById('tplModal').classList.contains('open'), opts: sel?sel.options.length:0, cards:cards.length, selected:cards.some(c=>c.classList.contains('on')&&c.dataset.tpl==='standard'), advancedHidden:!!advanced&&getComputedStyle(advanced).display==='none', editor: !!(ed&&ed.value&&ed.value.indexOf('# PRD')>=0)};
   })()`);
-  check('模板库：弹窗打开+3 套预设+编辑器已载入', tpl1.open && tpl1.opts===3 && tpl1.editor, JSON.stringify(tpl1));
-  await evalJs(`(()=>{ const sel=document.getElementById('tplPreset'); if(sel)sel.value='hardware'; const b=document.querySelector('[data-act="tpl-preset"]'); if(b)b.click(); return true; })()`);
+  check('场景模板：默认展示 6 个小白场景，Markdown 编辑默认收起', tpl1.open && tpl1.opts===6 && tpl1.cards===6 && tpl1.selected && tpl1.advancedHidden && tpl1.editor, JSON.stringify(tpl1));
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="tplchoose"][data-tpl="hardware"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 200));
-  const tpl2 = await evalJs(`(()=>{ const v=(document.getElementById('tplEditor')||{}).value||''; return {hw: v.indexOf('智能硬件 / 车规需求模板')>=0, safety: v.indexOf('功能安全等级')>=0, env: v.indexOf('高低温')>=0}; })()`);
-  check('模板库：套用硬件/车规预设（安全/环境/验证）', tpl2.hw && tpl2.safety && tpl2.env, JSON.stringify(tpl2));
+  const tpl2 = await evalJs(`(()=>{ const v=(document.getElementById('tplEditor')||{}).value||'',p=(document.getElementById('tplPreviewTitle')||{}).textContent||'';const card=document.querySelector('[data-tpl="hardware"]'); return {hw: v.indexOf('通用硬件 / 物联网产品需求模板')>=0, safety: v.indexOf('功能安全等级')>=0, env: v.indexOf('高低温')>=0, chosen:!!card&&card.classList.contains('on'), preview:p.indexOf('智能硬件')>=0}; })()`);
+  check('场景模板：选择硬件场景即载入安全、环境和验证框架', tpl2.hw && tpl2.safety && tpl2.env && tpl2.chosen && tpl2.preview, JSON.stringify(tpl2));
   await evalJs(`(()=>{ const b=document.querySelector('#tplModal .x'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 200));
   const drill = await evalJs(`(()=>{ const c=document.querySelector('.dash-cell'); return {act: c?c.dataset.act:''}; })()`);
@@ -283,10 +391,12 @@ try {
   // ---------- v17.20 自定义模板存取 + 总览排序 ----------
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="tpl"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 250));
+  await evalJs(`(()=>{ const b=document.querySelector('[data-act="tpladvanced"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 150));
   await evalJs(`(()=>{ const ed=document.getElementById('tplEditor'); if(ed)ed.value='# 我的车规模板\\n\\n## 安全需求\\n功能安全等级 ASIL B。'; window.__tplSaveName='我的车规模板'; const b=document.querySelector('[data-act="tpl-saveas"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 250));
   const c1 = await evalJs(`(()=>{ const sel=document.getElementById('tplPreset'); const opts=Array.from(sel.options).map(o=>o.value); const saved=localStorage.getItem('prdKanbanTplCustom')||''; return {opts: opts.length, hasCustom: opts.some(v=>v.indexOf('custom:')===0), stored: saved.indexOf('我的车规模板')>=0}; })()`);
-  check('自定义模板：保存后入下拉+本地存储', c1.opts===4 && c1.hasCustom && c1.stored, JSON.stringify(c1));
+  check('自定义模板：从高级编辑保存后入下拉+本地存储', c1.opts===7 && c1.hasCustom && c1.stored, JSON.stringify(c1));
   await evalJs(`(()=>{ const sel=document.getElementById('tplPreset'); const cv=Array.from(sel.options).find(o=>o.value.indexOf('custom:')===0); if(cv){sel.value=cv.value;const b=document.querySelector('[data-act="tpl-preset"]');b.click();} return true; })()`);
   await new Promise(r => setTimeout(r, 200));
   const c2 = await evalJs(`(()=>{ const v=(document.getElementById('tplEditor')||{}).value||''; return {has: v.indexOf('我的车规模板')>=0 && v.indexOf('功能安全等级')>=0}; })()`);
@@ -294,7 +404,7 @@ try {
   await evalJs(`(()=>{ window.__tplDelOk=true; const b=document.querySelector('[data-act="tpl-delcustom"]'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 200));
   const c3 = await evalJs(`(()=>{ const sel=document.getElementById('tplPreset'); return {opts: sel.options.length, stored: (localStorage.getItem('prdKanbanTplCustom')||'').indexOf('我的车规模板')<0}; })()`);
-  check('自定义模板：删除后下拉恢复 3 项', c3.opts===3 && c3.stored, JSON.stringify(c3));
+  check('自定义模板：删除后下拉恢复 6 项', c3.opts===6 && c3.stored, JSON.stringify(c3));
   await evalJs(`(()=>{ const b=document.querySelector('#tplModal .x'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 200));
 
@@ -307,6 +417,77 @@ try {
   const s2 = await evalJs(`(()=>{ const b=document.querySelector('[data-act="ovsort"]'); return {mode: window.ovSortMode, label: b?b.textContent:''}; })()`);
   check('总览排序：点击切换模式+标签更新', s2.mode===1 && s2.label.indexOf('完成度升序')>=0, JSON.stringify(s2));
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="ovclose"]'); if(b)b.click(); return true; })()`);
+
+  // ---------- P0 删除框架节与备份覆盖保护 ----------
+  const fwDelete = await evalJs(`(()=>{
+    const p=STATE.projects.find(x=>x.name==='示例 PRD')||currentProj();
+    STATE.activeProjectId=p.id;STATE.framework=JSON.parse(JSON.stringify(p.framework));refreshData();
+    openFwEditor(STATE.framework,{context:'settings',sourceId:null,baseName:'自定义框架',saveAs:false});
+    const sourceIndex=fwEditorBuf.findIndex(s=>s.id==='purpose');
+    openFwDeleteModal(sourceIndex);
+    const modal=document.getElementById('fwDeleteModal');const wasOpen=!!(modal&&modal.classList.contains('open'));
+    const impact=(document.getElementById('fwDeleteImpact')||{}).textContent||'';
+    const target=document.getElementById('fwDeleteTarget'); if(target)target.value='meta';
+    confirmFwDelete();
+    const b=document.querySelector('#fwEditModal [data-act="fwedit-done"]');if(b)b.click();
+    const now=currentProj(), archived=now.data.meta&&now.data.meta.cards&&now.data.meta.cards.some(c=>(c.title||'').indexOf('已归档：目的')>=0);
+    return {modalOpen:wasOpen,impact,archiveOption:!!document.querySelector('#fwDeleteModal input[value="archive"]'),deleteOption:!!document.querySelector('#fwDeleteModal input[value="delete"]'),removed:!now.framework.some(s=>s.id==='purpose'),sourceGone:!now.data.purpose,archived};
+  })()`);
+  check('框架删节：先展示内容/导出影响，并可归档后再提交', fwDelete.modalOpen && fwDelete.impact.indexOf('受影响内容')>=0 && fwDelete.impact.indexOf('导出影响')>=0 && fwDelete.archiveOption && fwDelete.deleteOption && fwDelete.removed && fwDelete.sourceGone && fwDelete.archived, JSON.stringify(fwDelete));
+
+  const backupImport = await evalJs(`(()=>{
+    localStorage.removeItem(RESET_LOCAL_KEYS.preImport);
+    const incoming=JSON.parse(JSON.stringify(STATE));incoming.projects=[];incoming.groups=[];incoming.activeProjectId=null;
+    openBackupImportModal(incoming,'import');
+    const modal=document.getElementById('backupImportModal');const wasOpen=!!(modal&&modal.classList.contains('open'));const summary=(document.getElementById('backupImportSummary')||{}).textContent||'';
+    applyBackupImport();
+    return {opened:wasOpen,summary,restored:!!localStorage.getItem(RESET_LOCAL_KEYS.preImport),projects:STATE.projects.length,hasRestoreEntry:!!document.querySelector('[data-act="restorepreimport"]')};
+  })()`);
+  check('备份导入：先展示覆盖范围并写入独立导入前恢复点', backupImport.opened && backupImport.summary.indexOf('会覆盖')>=0 && backupImport.summary.indexOf('保护')>=0 && backupImport.restored && backupImport.projects===0 && backupImport.hasRestoreEntry, JSON.stringify(backupImport));
+
+  const storageAdvice = await evalJs(`(()=>{ updateStorageAdvice('x'.repeat(Math.ceil(3.6*1024*1024/2))); const el=document.getElementById('storageAdvice'); const shown={display:getComputedStyle(el).display,text:el.textContent||''}; updateStorageAdvice('{}'); return {shown,hidden:getComputedStyle(el).display}; })()`);
+  check('存储预警：接近上限时提示备份和图片压缩建议', storageAdvice.shown.display==='flex' && storageAdvice.shown.text.indexOf('导出备份')>=0 && storageAdvice.shown.text.indexOf('图片')>=0 && storageAdvice.hidden==='none', JSON.stringify(storageAdvice));
+
+  const aiPrivacy = await evalJs(`(async()=>{ const t=window.__AICtrl._test;t.clearPrivacySeen();const st=Object.assign(window.__AICtrl.getSettings(),{provider:'deepseek',model:'privacy-test'});const p=t.privacyConfirm({label:'AI 深度体检',scope:'当前项目的 PRD 全文、章节结构和规则命中摘要',key:'privacy-test'} ,st);const m=document.getElementById('aiPrivacyModal');const text=m?m.textContent||'':'';const b=m&&m.querySelector('[data-priv="confirm"]');if(b)b.click();await p;await t.privacyConfirm({label:'AI 优化',scope:'当前项目的 PRD 全文',key:'another-action'},st);return {shown:!!m,provider:text.indexOf('DeepSeek')>=0,scope:text.indexOf('发送范围')>=0&&text.indexOf('PRD 全文')>=0,sensitive:text.indexOf('敏感信息提醒')>=0,approved:!!t.privacySeen().firstUse,noSecondModal:!document.getElementById('aiPrivacyModal')}; })()`);
+  check('AI 外发前：仅首次展示服务商、范围与脱敏提示，后续操作不重复打断', aiPrivacy.shown && aiPrivacy.provider && aiPrivacy.scope && aiPrivacy.sensitive && aiPrivacy.approved && aiPrivacy.noSecondModal, JSON.stringify(aiPrivacy));
+
+  // ---------- P1 空白页四条主路径 ----------
+  const blankPaths = await evalJs(`(()=>{
+    STATE.activeProjectId=null; refreshData(); render();
+    const items=Array.from(document.querySelectorAll('.wk-entry')).map(el=>({text:(el.textContent||'').replace(/\\s+/g,' ').trim(),act:el.dataset.act||''}));
+    const grid=document.querySelector('.wk-entries');const cols=grid?getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length:0;
+    return {count:items.length,items,hasGuide:!!document.querySelector('.wk-guide'),hasDuplicateImport:!!document.getElementById('importCard'),cols};
+  })()`);
+  const blankText=blankPaths.items.map(x=>x.text).join(' | ');
+  check('空白页：四条主路径均说明产物、耗时与适用条件，含显式新建空白项目', blankPaths.count===4 && blankPaths.cols===2 && blankPaths.items.some(x=>x.act==='wz-ai') && blankPaths.items.some(x=>x.act==='newproj') && blankPaths.items.some(x=>x.act==='import') && blankPaths.items.some(x=>x.act==='tpl') && blankText.indexOf('从想法开始')>=0 && blankText.indexOf('从空白开始')>=0 && blankText.indexOf('导入已有 PRD')>=0 && blankText.indexOf('使用场景模板')>=0 && blankText.indexOf('约 5–10 分钟')>=0 && blankText.indexOf('适合已有需求文档')>=0 && blankText.indexOf('适合不想从头搭结构')>=0 && !blankPaths.hasDuplicateImport, JSON.stringify(blankPaths));
+  await evalJs(`(()=>{ const b=document.querySelector('.wk-entry[data-act="newproj"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 150));
+  const blankNew = await evalJs(`(()=>{ const m=document.getElementById('newProjModal'); return {open:!!(m&&m.classList.contains('open')),hasName:!!document.getElementById('npName'),hasFramework:!!document.getElementById('npFramework')}; })()`);
+  check('空白页：从空白开始直接打开新建项目与框架选择', blankNew.open && blankNew.hasName && blankNew.hasFramework, JSON.stringify(blankNew));
+  await evalJs(`(()=>{ const b=document.querySelector('#newProjModal .x'); if(b)b.click(); return true; })()`);
+  check('空白页：不再重复展示快速上手入口', blankPaths.hasGuide===false, JSON.stringify(blankPaths));
+
+  // ---------- P1 文档导入预览 ----------
+  const importPreview = await evalJs(`(()=>{
+    closeModal('wizardModal'); if(!currentProj())loadSample();
+    const before=STATE.projects.length;
+    beginImportPreview('# 目的\\n导入目标\\n# 功能需求\\n导入功能\\n# 自定义风险\\n需评审','导入预览测试','预览样例.md');
+    const modal=document.getElementById('importPreviewModal');
+    const mapping=(document.getElementById('importPreviewMapping')||{}).textContent||'';
+    const unknown=(document.getElementById('importPreviewUnmatched')||{}).textContent||'';
+    const options=(document.getElementById('importPreviewOptions')||{}).textContent||'';
+    return {open:!!(modal&&modal.classList.contains('open')),mapping,unknown,options,before,after:STATE.projects.length};
+  })()`);
+  check('文档导入：写入前预览章节映射、未识别内容与覆盖范围', importPreview.open && importPreview.mapping.indexOf('目的')>=0 && importPreview.mapping.indexOf('功能需求')>=0 && importPreview.unknown.indexOf('自定义风险')>=0 && importPreview.options.indexOf('导入为新项目')>=0 && importPreview.before===importPreview.after, JSON.stringify(importPreview));
+  await evalJs(`(()=>{ const b=document.querySelector('#importPreviewModal [data-act="importpreviewconfirm"]'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 250));
+  const imported = await evalJs(`(()=>{ const p=currentProj(),report=document.getElementById('importReportModal'); const reportText=report?report.textContent||'':''; return {name:p?p.name:'',auto:!!(p&&p.autoGen),hasPurpose:!!(p&&p.framework.some(s=>s.title==='目的')),hasCustom:!!(p&&p.framework.some(s=>s.title==='自定义风险')),closed:!document.getElementById('importPreviewModal').classList.contains('open'),reportOpen:!!(report&&report.classList.contains('open')),reportStored:!!(p&&p.importReport),reportText}; })()`);
+  check('文档导入：确认后新建项目并保留原文标题结构', imported.name==='导入预览测试' && imported.auto && imported.hasPurpose && imported.hasCustom && imported.closed, JSON.stringify(imported));
+  check('文档导入：完成后生成可回看的报告和待处理项', imported.reportOpen && imported.reportStored && imported.reportText.indexOf('导入报告')>=0 && imported.reportText.indexOf('核对非标准章节')>=0 && imported.reportText.indexOf('下一步')>=0, JSON.stringify(imported));
+  await evalJs(`(()=>{ closeModal('importReportModal'); const b=document.querySelector('.import-report-chip'); if(b)b.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 100));
+  const reportRecall = await evalJs(`(()=>{const m=document.getElementById('importReportModal');return {open:!!(m&&m.classList.contains('open')),chip:!!document.querySelector('.import-report-chip')};})()`);
+  check('文档导入：项目页可重新打开最近一次导入报告', reportRecall.open && reportRecall.chip, JSON.stringify(reportRecall));
 } catch (e) {
   fail++; console.log('FAIL  browser 脚本异常  >>> ' + (e && e.message || e));
 }

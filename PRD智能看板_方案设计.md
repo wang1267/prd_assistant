@@ -1,16 +1,26 @@
 # 需求文档工作台 · 方案设计（整合版）
 
-> 状态：**已实现至 v18.38** · 版本：v2.0 · 更新：2026-08-20
-> 本文件为**唯一权威方案设计文档**，整合《AI 方案设计（v17.0）》《v17.1 方案设计（可信度）》《v17.2 方案设计（结构对齐 + 演进记录）》；旧文档已归档至 `archive/`。
-> 配套：[交接文档](PRD智能看板_交接文档.md)（上手与运维）、[代码架构白皮书](PRD智能看板_代码架构白皮书.md)（代码级认知）。演进历史见 §12。
+> 当前实现基线：**v18.65** · 更新：2026-08-30
+> 文档定位：正文保留 v18.38 及以前的设计快照与演进历史；**当前产品决策、执行顺序、验收记录以 [优化实施计划](docs/个人本地PRD输出助手_优化实施计划.md) 为准**。旧版本号、旧模板数量和旧发布方式不应作为当前实现依据。
+> 配套：[交接文档](PRD智能看板_交接文档.md)（运行与验证）、[代码架构白皮书](PRD智能看板_代码架构白皮书.md)（代码级认知）。历史演进见 §12。
 
 ---
 
-## 1. 产品定位与目标
+## 当前版本补充（v18.39–v18.65）
 
-**一句话**：本地优先、单文件、零网络的 PRD 撰写 + 健康度自检工具——把"写 PRD"从空白页变成"模板/描述 → 起草 → 体检 → 优化 → 评审"的完整闭环。
+- **用户与入口**：核心用户是准备使用 Vibe Coding 落地想法、但不会写专业 PRD 的新手。首页提供从想法、从空白、导入已有 PRD、使用场景模板四条清晰路径；模板已提供标准 PRD、精简 MVP、SaaS / Web、移动 App、AI 功能和智能硬件六种场景，原始 Markdown 编辑为可选高级能力。
+- **AI 生成**：AI 先以自然语言动态澄清用户、现状、目标、MVP 范围和不可接受结果，再展示可编辑方案骨架；用户确认后才按节生成。AI 推导统一标为待确认假设，不强迫新手填写专业指标。
+- **可信检测与优化**：健康度明确区分评审、研发、测试的就绪条件；跨章节规则检查追溯、目标与埋点、权限、依赖和范围。AI 优化支持章节锁定、原文证据、独立复核与应用后复检。
+- **数据与隐私**：应用仍是纯前端、本地优先架构。首次 AI 外发会说明服务商与发送范围，同一范围在当前会话不重复打断；导入、重置、备份和导出均有明确范围提示。
+- **维护规则**：主文件改动后，使用 `tools/sync_test_blocks.js` 同步抽取副本，并运行 `tools/qa_current.js` 与浏览器回归检查。
 
-**目标用户**：产品经理 / 座舱等智能硬件产品/测试/研发；需要把 PRD 文档写规范、可量化、可验收的团队。
+---
+
+## 1. 产品定位与目标（历史设计快照）
+
+**一句话**：本地优先、单文件的 PRD 撰写与健康度自检工具——把“想法 / 模板 / 导入文档 → 澄清 → 起草 → 体检 → 优化 → 评审”变成完整闭环。
+
+**目标用户**：以准备使用 Vibe Coding 落地想法、但不会写专业 PRD 的新手为核心；产品、设计、研发和测试可作为协作与交付补充角色。
 
 **核心价值**：
 
@@ -289,19 +299,12 @@ Rule = { id, dim, desc, level:'red'|'yellow', weight, enabled, scope, threshold?
 | node 回归 | `regress_v162~166`（17/26/17/13/12 断言） | 规则引擎/表格/撤销/评论/手柄等历史能力 |
 | node 回归 | `regress_v170`（85 断言） | AI 评分/优化/对齐/ops/导入/示例 |
 | node 回归 | `regress_v1715/1719/1722/1723`（22/7/8/3 断言） | AI 撰写/风格注入/分块评分/预设迁移 |
-| 浏览器端到端 | `browser_check.mjs`（评论）、`browser_check_grid.mjs`（表格网格）、`browser_check_ai.mjs`（19）、`browser_check_gen.mjs`（6）、`browser_check_dash.mjs`（27）、`browser_check_rtbl.mjs`（5） | 真实 DOM/交互/数据完整性 |
+| 浏览器端到端 | `browser_check.mjs`（评论）、`browser_check_grid.mjs`（表格网格）、`browser_check_ai.mjs`（19）、`browser_check_gen.mjs`（6）、`browser_check_dash.mjs`（29）、`browser_check_rtbl.mjs`（5） | 真实 DOM/交互/数据完整性 |
 | 截图基线 | `screenshot_ui.mjs` | 首页/看板/总览/模板/撰写/设置，深浅色 |
 
-截至 v17.24：**210 项 node 断言 + 57 项浏览器断言全绿，控制台零报错**。浏览器脚本在受限沙箱内须以 PowerShell `Start-Process` 拉起 Edge/Chrome（`--no-sandbox --disable-breakpad --disable-crash-reporter --remote-allow-origins=*`）。
+当前基线：`node tools/sync_test_blocks.js` 后执行 `node tools/qa_current.js` 与上述 Node 回归；浏览器脚本使用相对主文件 URL，可在任意项目目录运行。浏览器脚本在受限沙箱内须以 PowerShell `Start-Process` 拉起 Edge/Chrome（`--no-sandbox --disable-breakpad --disable-crash-reporter --remote-allow-origins=*`）。
 
-**上线前 QA（v18.37 起，脚本在 `.workbuddy/qa/`）**：
-
-| 脚本 | 覆盖 |
-| --- | --- |
-| `qa-runtime.js`（jsdom） | 全 script 块真实执行、0 未捕获错误、DOM 结构完整性 |
-| `qa-flow.js`（jsdom） | 加载示例→健康度、设置/版本号、评审 5 角色 + SVG 图标、无 Key 拦截、AI 面板渲染、浮动面板、导出 MD |
-| `qa-regression.js` | 上次修复回归（流式超时/按钮颜色/TDZ/__AICtrl/深度思考滚动/SVG/版本号） |
-| 静态分析（node 内联） | 8 script 块语法、132 data-act + 40 data-ai 事件分发全覆盖、getElementById ID 存在性、跨 IIFE 调用干净、XSS 转义抽查 |
+**已下线的历史 QA**：`.workbuddy/qa/` 是未纳入版本控制的本地历史目录，脚本仍指向已删除的 `newest.html`，部分还依赖未安装的 `jsdom`。它们不再是有效测试入口，也不得据其结果宣称当前版本通过；当前唯一正式入口为本节 `tools/` 下的检查脚本与 [`docs/个人本地PRD输出助手_优化实施计划.md`](docs/个人本地PRD输出助手_优化实施计划.md)。
 
 ---
 

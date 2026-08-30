@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
+const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
 const candidates = [
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
@@ -85,8 +86,7 @@ async function shot(name) {
 try {
   await send('Page.enable');
   await send('Runtime.enable');
-  const fileUrl = 'file:///' + encodeURI('E:/vibecoding/prd_assistant/PRD智能看板.html');
-  await send('Page.navigate', { url: fileUrl });
+  await send('Page.navigate', { url: appUrl });
   await new Promise(r => setTimeout(r, 3500));
 
   console.log('badge: ' + await evalJs(`(document.getElementById('vbadge')||{}).textContent || ''`));
@@ -113,6 +113,11 @@ try {
   })()`);
   console.log('UI_FACTS ' + JSON.stringify(facts, null, 1));
   await shot('02_sample_editor');
+
+  // AI 总评：点击某一维度后，详情应紧随该指标原地展开。
+  await evalJs(`(()=>{ const p=currentProj(); if(!p)return false; p.ai=p.ai||{}; p.ai.lastReport={total:82,summary:'示例总评：需求基本完整，可进一步补足验收与验证细节。',dimensions:[{name:'完整性',score:80,issues:[{sectionTitle:'验收',severity:'medium',reason:'验收条件还可更量化。',quote:'验收标准',suggestion:'补充可测量的通过条件。'}]},{name:'一致性',score:75,issues:[]},{name:'可验证性',score:80,issues:[]}]}; render(); const b=document.querySelector('.dash-dim[data-i="0"]');if(b)b.click();return true; })()`);
+  await new Promise(r => setTimeout(r, 350));
+  await shot('03_ai_dim_drill');
 
   // 打开多项目总览
   await evalJs(`(()=>{ const b=document.querySelector('[data-act="toggleoverview"]'); if(b)b.click(); return true; })()`);
@@ -141,6 +146,26 @@ try {
   await evalJs(`(()=>{ try{ openSettings('ai'); }catch(e){ try{ openModal('settingsModal'); setSettingsTab('ai'); }catch(e2){} } return true; })()`);
   await new Promise(r => setTimeout(r, 600));
   await shot('04_settings_ai');
+
+  // 设置 → 偏好：用于人工确认主题入口仅保留一组。
+  await evalJs(`(()=>{ try{ openSettings('prefs'); }catch(e){ try{ setSettingsTab('prefs'); }catch(e2){} } return true; })()`);
+  await new Promise(r => setTimeout(r, 600));
+  const themeSettings = await evalJs(`(()=>({rows:document.querySelectorAll('#tabPrefs .theme-row').length,options:document.querySelectorAll('#tabPrefs .theme-opt').length}))()`);
+  console.log('THEME_SETTINGS ' + JSON.stringify(themeSettings));
+  await shot('05_settings_prefs');
+
+  // 重置：选择范围后必须显式展示删除与保留内容，供人工核验。
+  await evalJs(`(()=>{ try{ closeModal('settingsModal'); }catch(e){} const m=document.querySelector('#ddMore .top-dd-trigger'); if(m)m.click(); const r=document.querySelector('#ddMore [data-act="reset"]'); if(r)r.click(); const p=document.querySelector('#resetModal [data-scope="projectsTemplates"]'); if(p)p.click(); return true; })()`);
+  await new Promise(r => setTimeout(r, 600));
+  await shot('06_reset_projects_templates');
+
+  // P0：删节与备份覆盖均应在真正写入前说明影响范围。
+  await evalJs(`(()=>{ closeModal('resetModal'); loadSample(); openFwEditor(STATE.framework,{context:'settings',sourceId:null,baseName:'自定义框架',saveAs:false}); const i=fwEditorBuf.findIndex(s=>s.id==='purpose'); openFwDeleteModal(i); return true; })()`);
+  await new Promise(r => setTimeout(r, 450));
+  await shot('07_framework_delete_impact');
+  await evalJs(`(()=>{ closeModal('fwDeleteModal'); closeModal('fwEditModal'); const incoming=JSON.parse(JSON.stringify(STATE)); incoming.projects=[]; incoming.groups=[]; incoming.activeProjectId=null; openBackupImportModal(incoming,'import'); return true; })()`);
+  await new Promise(r => setTimeout(r, 450));
+  await shot('08_backup_import_preview');
 } catch (e) {
   console.log('SCRIPT_ERROR ' + String(e && e.message || e));
 } finally {

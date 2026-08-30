@@ -1,6 +1,10 @@
 # 需求文档工作台 · 代码架构白皮书
 
-> 版本基线：v16.1（项目下拉弹窗）｜ 整理日期：2026-08-14     用途：给后续接手修改本工具的任何 AI / 开发者，快速建立完整认知，避免改出 bug。     一句话心智模型：**数据在内存（STATE/DATA）→ `render()` 全量重建 DOM → 事件委托 `bindStatic` 分发 → 改数据 → `save()` 落 localStorage**。
+> 当前实现基线：**v18.65**（2026-08-30）。本正文保留 v16.1 起的架构演进快照；当前事项与验收以 [优化实施计划](docs/个人本地PRD输出助手_优化实施计划.md) 为准，不能把下文的旧行号、版本号或功能入口当作当前事实。
+>
+> 当前维护要点：主应用是 `PRD智能看板.html`；项目数据与 AI 设置在浏览器本地存储，AI 请求由浏览器直连用户配置的 OpenAI 兼容服务。主文件中供测试抽取的脚本块由 `node tools/sync_test_blocks.js` 同步到 `tools/block1.js` 和 `tools/ai-controller.js`，这两个副本不应手工编辑。每次改动后至少运行 `node tools/qa_current.js` 与 `node tools/browser_check_dash.mjs`。
+>
+> 以下为历史基线：v16.1（项目下拉弹窗）｜整理日期：2026-08-14。适用于理解早期的核心心智模型：**数据在内存（STATE/DATA）→ `render()` 全量重建 DOM → 事件委托 `bindStatic` 分发 → 改数据 → `save()` 落 localStorage**。
 
 >   ⚠️ v16.3 变更提示（本白皮书正文仍以 v16.1 为准）：判分规则已冻结为 12 条内置基线（`DEFAULT_RULES`），设置页规则 tab 改为只读清单；`hitsFor` 改为按「节类型 / 标题关键词」定位，不再依赖 `feat/accept/meta` 等写死节 id；`isEmpty()` 与 `plain()` 已把表格节 `rows` 纳入判定；`runHealth` 对内置规则统一放行（`scope:'all'`），仅历史自定义规则仍走 `default` 分支的关键词/正则匹配。规则管理相关代码（`addCustomRule`/`handleRuleFile`/`ruleFileInput` 及 bindStatic 的 rule-* 分支）已删除。
 

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
 const candidates = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
   'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
@@ -60,7 +61,7 @@ function send(method, params) {
 
 await send('Page.enable');
 await send('Runtime.enable');
-await send('Page.navigate', { url: 'file:///E:/vibecoding/prd_assistant/PRD智能看板.html' });
+await send('Page.navigate', { url: appUrl });
 await new Promise(r => setTimeout(r, 3000));
 
 const expr = `(async()=>{
