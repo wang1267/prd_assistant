@@ -197,8 +197,74 @@ try {
     const name=document.getElementById('aiDesProjectName'),nameHint=document.getElementById('aiDesProjectNameHint'),framework=document.getElementById('aiDesFramework'),frameworkHint=document.getElementById('aiDesFrameworkHint');
     return {desOpen:!!(des&&des.classList.contains('open')), stateText:state?state.textContent:'', skOpen:!!(sk&&sk.classList.contains('open')), editor:ed?ed.value:'', confirm:!!document.querySelector('[data-ai="desskelconfirm"]'),nameInput:!!name,nameValue:name?name.value:'',nameHint:nameHint?nameHint.textContent:'',framework:framework?framework.value:'',frameworkOptions:framework?Array.from(framework.options).map(o=>o.textContent).join(' / '):'',frameworkHint:frameworkHint?frameworkHint.textContent:''};
   })()`);
-  check('AI 澄清：展示理解/待确认/假设，并先打开含用户命名权和通用目录的可编辑方案确认层', !desGuide.desOpen && desGuide.stateText.indexOf('我已理解')>=0 && desGuide.stateText.indexOf('还需要确认')>=0 && desGuide.stateText.indexOf('AI 暂定假设')>=0 && desGuide.skOpen && desGuide.editor.indexOf('AI 建议（待确认）')>=0 && desGuide.editor.indexOf('产品中的 AI 功能边界')>=0 && desGuide.confirm && desGuide.nameInput && desGuide.nameValue==='' && desGuide.nameHint.indexOf('不会自动采用')>=0 && desGuide.framework==='__IDEA_STANDARD__' && desGuide.frameworkOptions.indexOf('通用产品 PRD')>=0 && desGuide.frameworkOptions.indexOf('精简 MVP')>=0 && desGuide.frameworkHint.indexOf('不会继承旧项目')>=0, JSON.stringify(desGuide));
+  check('AI 澄清：展示理解/待确认/假设，并先打开含用户命名权和通用目录的可编辑方案确认层', !desGuide.desOpen && desGuide.stateText.indexOf('我已理解')>=0 && desGuide.stateText.indexOf('还需要确认')>=0 && desGuide.stateText.indexOf('AI 暂定假设')>=0 && desGuide.skOpen && desGuide.editor.indexOf('用户原始想法')>=0 && desGuide.editor.indexOf('产品中的 AI 功能边界')>=0 && desGuide.confirm && desGuide.nameInput && desGuide.nameValue==='' && desGuide.nameHint.indexOf('不会自动采用')>=0 && desGuide.framework==='__IDEA_STANDARD__' && desGuide.frameworkOptions.indexOf('通用产品 PRD')>=0 && desGuide.frameworkOptions.indexOf('精简 MVP')>=0 && desGuide.frameworkHint.indexOf('不会继承旧项目')>=0, JSON.stringify(desGuide));
   await evalJs(`(()=>{ const b=document.querySelector('[data-ai="desskelclose"]'); if(b)b.click(); return true; })()`);
+  const desV1904 = await evalJs(`(()=>{
+    aiDesignOpen();
+    const turns=[{question:'想做什么？',answer:'我想做一个给自己用的喝水记录网页'},{question:'谁会用？',answer:'只有我自己用，记得更规律'},{question:'第一版做什么？',answer:'每天一键记录，并看到当天是否喝够'},{question:'有什么限制？',answer:'手机上也要能用，不需要登录'},{question:'什么算成功？',answer:'我能一眼看出今天还差多少水'}];
+    window.__AICtrl._test.designSetState({turns,qa:turns.map(x=>x.answer),understood:'做一个帮助自己坚持喝水的简单网页',needs:['是否需要提醒'],conflicts:[],assumptions:[],skeletonFields:{},skeletonAdvanced:false});
+    const researchEligible=window.__AICtrl._test.designShouldOfferResearch();window.__AICtrl._test.designOfferResearch();
+    const researchOffer=!!document.querySelector('[data-ai="desresearchstart"]')&&!!document.querySelector('[data-ai="desresearchlater"]');
+    window.__AICtrl._test.designAbsorbResponse(['【本轮方案卡】','[已确认] 使用边界：只给自己使用，不需要登录。','[AI建议] 首版路径：手机打开后，一键记录喝水量并查看当天进度。','【三条建议】1. 极简记录：适合先养成习惯；上手快；没有提醒。 2. 记录加提醒：适合容易忘记；更主动；需要处理通知。 3. 记录加周报：适合想复盘趋势；有反馈；首版更复杂。','【关键取舍】','问题：第一版是否需要喝水提醒？','AI建议：先不做提醒。','原因：先验证记录和进度查看是否能让用户坚持。','其他选择：加入本地提醒。'].join('\\n'));
+    window.__AICtrl._test.designAppendRoundCards();
+    const optionLabels=Array.from(document.querySelectorAll('.ai-des-recommend button')).map(b=>b.textContent.trim());
+    const longTextInButton=Array.from(document.querySelectorAll('.ai-des-recommend button')).some(b=>b.textContent.indexOf('极简记录')>=0);
+    const recommend=document.querySelector('[data-ai="despickrecommend"]');if(recommend)recommend.click();
+    const selected=(document.getElementById('aiDesInput')||{}).value||'';
+    window.__AICtrl._test.designFinish();
+    const sk=document.getElementById('aiDesSkeletonModal'),cards=document.querySelectorAll('#aiDesSkeletonCards [data-desplan-card]');
+    const goal=document.querySelector('[data-desplan-card="0"]');if(goal){goal.value='我手动改写的个人使用边界';goal.dispatchEvent(new Event('input',{bubbles:true}));}
+    const decide=document.querySelector('[data-ai="desdecisionrecommend"]');if(decide)decide.click();
+    const newTitle=document.getElementById('aiDesNewCardTitle'),newContent=document.getElementById('aiDesNewCardContent');if(newTitle)newTitle.value='隐私边界';if(newContent)newContent.value='所有记录只保存在本地浏览器。';const add=document.querySelector('[data-ai="desaddplancard"]');if(add)add.click();
+    const manual=document.getElementById('aiDesManualInput');if(manual){manual.value='我手动补充：不要做登录，也不要做社交排名';manual.dispatchEvent(new Event('input',{bubbles:true}));}
+    const editor=document.getElementById('aiDesSkeletonEditor'),editorText=editor?editor.value||'':'',evidence=(document.getElementById('aiDesEvidence')||{}).textContent||'',decisionText=(document.getElementById('aiDesDecisionCards')||{}).textContent||'',skOpen=!!(sk&&sk.classList.contains('open'));
+    const configMissing=window.__AICtrl._test.designConfigReady({apiKey:'k',baseUrl:'https://mock.local/v1',model:''})===false;
+    const configReady=window.__AICtrl._test.designConfigReady({apiKey:'k',baseUrl:'https://mock.local/v1',model:'mock'})===true;
+    const close=document.querySelector('[data-ai="desskelclose"]');if(close)close.click();
+    return {hasEarly:!!document.getElementById('aiDesReadiness')||!!document.querySelector('[data-ai="desreadyfinish"]'),skOpen,cards:cards.length,manual:!!manual,advanced:!!editor,editorText,evidence,decisionText,configMissing,configReady,researchEligible,researchOffer,selected,optionLabels,longTextInButton,addCard:editorText.indexOf('隐私边界')>=0};
+  })()`);
+  check('AI 澄清：不再按三轮提前结束；方案卡按每轮对话动态累积、可手改和手动新增，并保留全部对话依据', !desV1904.hasEarly && desV1904.skOpen && desV1904.cards===2 && desV1904.manual && desV1904.advanced && desV1904.evidence.indexOf('我能一眼看出今天还差多少水')>=0 && desV1904.editorText.indexOf('我手动改写的个人使用边界')>=0 && desV1904.editorText.indexOf('我手动补充：不要做登录')>=0 && desV1904.addCard, JSON.stringify(desV1904));
+  check('AI 澄清：形成五轮有效产品方向后仅提示是否进行真实竞品研究，不会自动联网打断当前任务', desV1904.researchEligible && desV1904.researchOffer, JSON.stringify(desV1904));
+  check('AI 澄清：主动建议使用内容卡说明方向，仅给 A/B/C/D 小按钮；点选后留给用户修改，关键取舍和模型配置守卫仍有效', desV1904.optionLabels.join('|')==='A|B|C|D · 我自己填写' && !desV1904.longTextInButton && desV1904.selected.indexOf('我选择第 1 个建议')>=0 && desV1904.decisionText.indexOf('先不做提醒')>=0 && desV1904.editorText.indexOf('第一版是否需要喝水提醒')>=0 && desV1904.configMissing && desV1904.configReady, JSON.stringify(desV1904));
+  const domesticWeb = await evalJs(`(()=>{
+    const t=window.__AICtrl._test;
+    const base={web:true,baseUrl:'https://example.test/v1',apiKey:'test-key',model:'test-model',deepModel:'test-deep'};
+    const providers=['deepseek','qwen','zhipu'].map(provider=>({provider,mode:t.webResearchMode(Object.assign({},base,{provider})),ready:t.webResearchAvailable(Object.assign({},base,{provider}))}));
+    const none=t.webResearchAvailable(Object.assign({},base,{provider:'custom'}));
+    const sources=t.webResponseSources({output:[{type:'web_search_call',action:{sources:[{title:'官方来源',url:'https://example.com/doc'}]}}],search_result:[{title:'结构化来源',link:'https://example.org/search'}],web_search:[{search_result:[{title:'工具来源',link:'https://example.net/web'}]}]});
+    openSettings('ai');
+    const opts=Array.from((document.getElementById('aiProvider')||{}).options||[]).map(o=>o.value);
+    closeModal('settingsModal');
+    return {providers,none,sourceUrls:sources.map(x=>x.url),opts};
+  })()`);
+  check('AI 设置：DeepSeek、Qwen、GLM 均具备真实联网适配路径，来源仅从服务商返回结构提取', domesticWeb.providers.every(x=>x.ready&&x.mode) && !domesticWeb.none && ['https://example.com/doc','https://example.org/search','https://example.net/web'].every(url=>domesticWeb.sourceUrls.includes(url)) && ['deepseek','qwen','zhipu'].every(x=>domesticWeb.opts.includes(x)), JSON.stringify(domesticWeb));
+  const researchFlow = await evalJs(`(async()=>{
+    const oldFetch=window.fetch,oldSettings=localStorage.getItem('prdKanbanAiSettings'),oldTest=window.__AI_TEST_MODE,t=window.__AICtrl._test;
+    const turns=[{question:'想做什么？',answer:'我想做一个给自己用的喝水记录网页'},{question:'谁会用？',answer:'只有我自己用，记得更规律'},{question:'第一版做什么？',answer:'每天一键记录，并看到当天是否喝够'},{question:'有什么限制？',answer:'手机上也要能用，不需要登录'},{question:'什么算成功？',answer:'我能一眼看出今天还差多少水'}];
+    window.__AI_TEST_MODE=true;localStorage.setItem('prdKanbanAiSettings',JSON.stringify({provider:'zhipu',web:true,apiKey:'test-key',baseUrl:'https://open.bigmodel.cn/api/paas/v4',model:'mock-model',deepModel:'mock-deep'}));
+    aiDesignOpen();t.designSetState({turns,qa:turns.map(x=>x.answer),understood:'做一个帮助自己坚持喝水的简单网页',facts:['只给自己使用','手机可用，不需要登录'],needs:['是否需要提醒'],pendingNextQuestion:'第一版是否需要本地提醒？'});t.designOfferResearch(true);
+    let releaseSearch;window.fetch=(url,opts)=>{if(String(url).indexOf('/web_search')>=0)return new Promise((resolve,reject)=>{if(opts.signal)opts.signal.addEventListener('abort',()=>reject(new DOMException('aborted','AbortError')));releaseSearch=()=>resolve(new Response(JSON.stringify({search_result:[{title:'开源喝水记录示例',link:'https://github.com/example/water',content:'可参考本地记录与每日进度。'}]}),{headers:{'Content-Type':'application/json'}}));});return Promise.resolve(new Response(JSON.stringify({choices:[{message:{content:'结合刚才搜到的同类做法，第一版要先做本地提醒，还是先只做记录和进度？'}}]}),{headers:{'Content-Type':'application/json'}}));};
+    const start=document.querySelector('[data-ai="desresearchstart"]');if(start)start.click();await new Promise(r=>setTimeout(r,10));
+    const during={stop:getComputedStyle(document.getElementById('aiDesStop')).display,researching:t.designState().researching,state:(document.getElementById('aiDesState')||{}).textContent||''};
+    if(releaseSearch)releaseSearch();await new Promise(r=>setTimeout(r,80));
+    const afterState=t.designState(),afterLog=(document.getElementById('aiDesLog')||{}).textContent||'',saved=afterState.researchHistory[0]||{};
+    aiDesignOpen();t.designSetState({turns,qa:turns.map(x=>x.answer),pendingNextQuestion:'原来的下一问'});t.designOfferResearch(true);t.designSkipResearch();const skipLog=(document.getElementById('aiDesLog')||{}).textContent||'';
+    window.fetch=oldFetch;if(oldSettings===null)localStorage.removeItem('prdKanbanAiSettings');else localStorage.setItem('prdKanbanAiSettings',oldSettings);window.__AI_TEST_MODE=oldTest;
+    const close=document.querySelector('[data-ai="desclose"]');if(close)close.click();
+    return {during,history:afterState.researchHistory.length,sources:(saved.sources||[]).length,followUp:saved.followUp||'',afterLog,skipLog,pending:afterState.pendingNextQuestion};
+  })()`);
+  check('AI 澄清：联网搜索期间展示可停止状态；真实来源与结论写入本次记忆，再基于研究追问；暂不搜索才恢复原问题', researchFlow.during.stop!=='none' && researchFlow.during.researching && researchFlow.during.state.indexOf('正在联网搜索')>=0 && researchFlow.history===1 && researchFlow.sources===1 && researchFlow.followUp.indexOf('？')>=0 && researchFlow.afterLog.indexOf('已存入本次需求记忆')>=0 && researchFlow.afterLog.indexOf('根据研究继续确认')>=0 && researchFlow.pending==='' && researchFlow.skipLog.indexOf('暂不搜索')>=0 && researchFlow.skipLog.indexOf('原来的下一问')>=0, JSON.stringify(researchFlow));
+  const deterministicFacts = await evalJs(`(()=>{
+    const t=window.__AICtrl._test,local=t.localDateText(),answer=t.chatDateAnswer('今天几月几日？'),nonDate=t.chatDateAnswer('项目今天要做什么？');
+    return {local,answer,nonDate,zhipu:t.inferProvider('custom','https://open.bigmodel.cn/api/paas/v4'),deepseek:t.inferProvider('custom','https://api.deepseek.com/v1'),qwen:t.inferProvider('custom','https://workspace.cn-beijing.maas.aliyuncs.com/compatible-mode/v1'),proxy:t.inferProvider('custom','https://my-proxy.example/v1'),prompt:t.chatPrompt()};
+  })()`);
+  check('项目助手：短日期问题直接使用本机日期，旧版 GLM/DeepSeek/Qwen 官方地址自动进入对应服务商，代理不误判', deterministicFacts.answer==='今天是'+deterministicFacts.local+'（以这台设备的本地时间为准）。' && deterministicFacts.nonDate==='' && deterministicFacts.zhipu==='zhipu' && deterministicFacts.deepseek==='deepseek' && deterministicFacts.qwen==='qwen' && deterministicFacts.proxy==='custom' && deterministicFacts.prompt.indexOf('当前客户端日期是 '+deterministicFacts.local)>=0, JSON.stringify(deterministicFacts));
+  const ideaHandoff = await evalJs(`(()=>{
+    window.__AICtrl.openPanel();const oldActive=STATE.activeProjectId;let createdId='';let st=window.__AICtrl._test.state();if(!st){createProject('交接摘要测试','__IDEA_STANDARD__');createdId=(currentProj()||{}).id||'';st=window.__AICtrl._test.state();}if(!st)return {missing:true};const old=st.pendingDiffs;
+    st.pendingDiffs={id:'handoff-test',gen:true,items:[{id:'h1',sectionId:'purpose',sectionTitle:'目的',type:'text',status:'pending',validation:{ok:true,warnings:[],blocked:[]}}],handoff:'# Coding Agent 交接摘要\\n\\n## P0：第一版必须完成\\n每日记录喝水'};
+    window.__AICtrl.renderPanel();const panel=document.getElementById('aiBody'),text=panel?panel.textContent||'':'';const copy=!!document.querySelector('[data-ai="deshandoffcopy"]');st.pendingDiffs=old;if(createdId){STATE.projects=STATE.projects.filter(p=>p.id!==createdId);STATE.activeProjectId=oldActive;refreshData();save();render();}window.__AICtrl.renderPanel();return {missing:false,text,copy};
+  })()`);
+  check('AI 草稿待确认时显示可复制的 Coding Agent 交接摘要', !ideaHandoff.missing && ideaHandoff.text.indexOf('Coding Agent 交接摘要')>=0 && ideaHandoff.text.indexOf('每日记录喝水')>=0 && ideaHandoff.copy, JSON.stringify(ideaHandoff));
   const isolatedIdeaFramework = await evalJs(`(()=>{
     const before=deep(STATE);
     STATE.framework=[{id:'legacy-ai',title:'AI 助手旧目录',type:'text',required:true,weight:1}];

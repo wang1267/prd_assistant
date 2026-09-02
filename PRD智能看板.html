@@ -1555,7 +1555,7 @@ button,.btn,.top-icon-btn,a[data-tocid],.pp-proj,input,select,textarea,.fw-row .
       <div id="tabAI" style="display:none"></div>
     </div>
   </div>
-  <div class="m-foot"><!-- 版本号按计划书的 v19 / v19.01–v19.19 约定更新 --><span class="set-ver" id="settingsVer">版本 v19.01 · 模型分档与免费接入引导</span><button data-act="closemodal">关闭</button></div>
+  <div class="m-foot"><!-- 版本号按计划书的 v19 / v19.01–v19.19 约定更新 --><span class="set-ver" id="settingsVer">版本 v19.11 · 联网研究闭环</span><button data-act="closemodal">关闭</button></div>
 </div></div>
 
 <div class="modal" id="wizardModal"><div class="box">
@@ -6551,12 +6551,22 @@ function aiSectionEmpty(type,id){if(typeof sectionEmpty==='function'){try{return
 function aiHashOf(o){return aiKey('obj',JSON.stringify(o));}
 
 /* ---------- 设置存取 ---------- */
+function aiInferProvider(provider,baseUrl){
+  if(provider&&provider!=='custom')return provider;
+  var base=String(baseUrl||'').trim().toLowerCase();
+  if(/^https?:\/\/open\.bigmodel\.cn(?:\/|$)/.test(base))return 'zhipu';
+  if(/^https?:\/\/api\.deepseek\.com(?:\/|$)/.test(base))return 'deepseek';
+  if(/(?:dashscope|maas)\.aliyuncs\.com/.test(base)&&/compatible-mode/.test(base))return 'qwen';
+  return provider||'custom';
+}
 function aiGetSettings(){
   var def=defaultSettings();
   try{
     var raw=localStorage.getItem(AI_SETTINGS_KEY);
     if(raw){var s=JSON.parse(raw);if(s&&typeof s==='object'){def=Object.assign(def,s);def.dims=Object.assign(def.dims,s.dims||{});Object.keys(DIM_META).forEach(function(k){if(!def.dims[k])def.dims[k]={weight:10,enabled:true};});}}
   }catch(e){}
+  /* 兼容 v19.08 前用户已保存的官方地址：只识别明确的官方域名，不猜测第三方代理。 */
+  def.provider=aiInferProvider(def.provider,def.baseUrl);
   return def;
 }
 function aiSaveSettings(s){
@@ -6573,6 +6583,9 @@ function aiModelFor(tier,st){
   if(tier==='fast')return String(st.fastModel||st.model||'').trim();
   if(tier==='deep')return String(st.deepModel||st.model||'').trim();
   return String(st.model||'').trim();
+}
+function aiProviderLabel(provider){
+  return {deepseek:'DeepSeek',qwen:'Qwen / 阿里云百炼',zhipu:'GLM / 智谱 AI',openai:'OpenAI',ollama:'本地 Ollama',custom:'自定义 OpenAI 兼容服务'}[provider]||provider||'当前服务商';
 }
 
 /* ---------- 项目内 AI 状态 ---------- */
@@ -6679,14 +6692,108 @@ function aiExtractJson(text){
   function aiTryParse(s){try{return JSON.parse(s);}catch(e){return null;}}
 }
 function aiApplyWebSearch(body,st){
-  var u=(st.baseUrl||'').toLowerCase();
-  if(/bigmodel|zhipuai/.test(u)){
-    body.tools=[{type:'web_search',web_search:{enable:true,search_result:true}}];
-  }else if(/dashscope|qwen|aliyun/.test(u)){
-    body.enable_search=true;
-  }else{
-    body.tools=[{type:'web_search',web_search:{enable:true}}];
+  /* 常规 AI 对话不猜测性注入服务商私有参数。联网竞品研究只走下方已适配、可提取真实来源的专用路径。 */
+  return body;
+}
+function aiWebResearchMode(st){
+  if(!st||!st.web)return '';
+  return {deepseek:'responses',qwen:'responses',zhipu:'zhipu-search',openai:'responses'}[st.provider]||'';
+}
+function aiWebResearchAvailable(st){
+  st=st||aiGetSettings();
+  return !!(aiWebResearchMode(st)&&String(st.baseUrl||'').trim()&&String(st.apiKey||'').trim()&&aiModelFor('deep',st));
+}
+function aiResearchResponseBase(st){
+  var base=aiNormBase(st.baseUrl);
+  /* DeepSeek 的 Responses 官方地址不带历史 Chat Completions 的 /v1 前缀；兼容用户已有配置。 */
+  return st.provider==='deepseek'?base.replace(/\/v1$/i,''):base;
+}
+function aiResponseText(payload){
+  if(payload&&payload.output_text)return String(payload.output_text);
+  var out=[];(payload&&payload.output||[]).forEach(function(item){(item.content||[]).forEach(function(part){if(part&&typeof part.text==='string')out.push(part.text);});});
+  return out.join('\n').trim();
+}
+function aiResponseSources(payload){
+  var seen={},out=[];
+  function add(src){
+    if(!src||typeof src!=='object')return;
+    var url=String(src.url||src.link||src.refer||'').trim();
+    var title=String(src.title||src.name||url).trim();
+    if(/^https?:\/\//i.test(url)&&!seen[url]){seen[url]=true;out.push({url:url,title:title||url});}
   }
+  function scan(v,depth){
+    if(!v||depth>5)return;
+    if(Array.isArray(v)){v.forEach(function(x){scan(x,depth+1);});return;}
+    if(typeof v!=='object')return;
+    add(v);
+    ['sources','search_result','search_results','references','citations','annotations','web_search','web_search_result','tool_calls','outputs','data'].forEach(function(k){if(v[k])scan(v[k],depth+1);});
+    if(v.action)scan(v.action,depth+1);
+    if(v.output)scan(v.output,depth+1);
+  }
+  scan(payload,0);return out.slice(0,12);
+}
+function aiResearchPrompt(query){
+  return '你是竞品研究与产品决策顾问。围绕「'+String(query||'当前产品').slice(0,500)+'」搜索直接竞品、相邻产品、独立开发者/SaaS、国内外替代方案及 GitHub/GitLab 开源项目。必须根据本次实际搜索来源作答，不确定就写“未验证”。开源项目单列【可复用】并说明可复用模块、License/维护/技术兼容性和接入成本；闭源项目单列【可借鉴方向】。再按【行业标配】【可复用】【可借鉴方向】【差异化机会】【低优先级 / 不建议投入】分类，给出 P0/P1/P2/P3/暂缓，并以“## 竞品研究结论”收束为不超过 3 条下一阶段重点。不要照抄 UI，不要因竞品存在就建议照搬。';
+}
+function aiWebResearchPrivacy(st){
+  return {label:'联网竞品研究',scope:'当前需求澄清中的产品方向、已确认问题和搜索关键词；会发送给 '+aiProviderLabel(st.provider)+' 并调用其真实联网检索',key:'web-research'};
+}
+function aiResearchPayloadError(payload){
+  var err=payload&&payload.error;
+  if(err)return String(err.message||err.msg||err.code||'服务商返回业务错误');
+  if(payload&&payload.code&&payload.message&&String(payload.code)!=='0')return String(payload.message);
+  return '';
+}
+function aiResearchRequireSources(payload,provider){
+  var serviceError=aiResearchPayloadError(payload);
+  if(serviceError)throw {kind:'webprovider',message:(aiProviderLabel(provider)+' 联网检索未执行：'+serviceError)};
+  var sources=aiResponseSources(payload);
+  if(!sources.length){
+    var intent='';
+    if(provider==='zhipu'&&Array.isArray(payload&&payload.search_intent)&&payload.search_intent[0])intent=String(payload.search_intent[0].intent||'');
+    var tip=intent==='SEARCH_NONE'?'本次请求被服务商判定为不搜索。':'服务商没有返回网页链接。';
+    throw {kind:'websource',message:aiProviderLabel(provider)+' 联网检索未取得可展示来源：'+tip+'本次不会被记录为联网竞品研究；请确认联网搜索权限、模型和余额后重试。'};
+  }
+  return sources;
+}
+function aiRunResponseWebResearch(st,prompt,opts){
+  opts=opts||{};
+  var base=aiResearchResponseBase(st),model=aiModelFor('deep',st)||st.model;
+  var body={model:model,input:prompt,tools:[{type:'web_search'}],tool_choice:{type:'web_search'},store:false};
+  /* OpenAI 需要显式请求 sources；DeepSeek/Qwen 的兼容 Responses 会随 web_search_call 返回 action.sources。 */
+  if(st.provider==='openai')body.include=['web_search_call.action.sources'];
+  return fetch(base+'/responses',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+String(st.apiKey||'').trim()},body:JSON.stringify(body),signal:opts.signal}).then(function(resp){
+    if(!resp.ok)return resp.json().then(function(j){throw aiClassify(null,resp,(j&&j.error&&j.error.message)||'');});
+    return resp.json();
+  }).then(function(payload){
+    var text=aiResponseText(payload),sources=aiResearchRequireSources(payload,st.provider);
+    if(!text)throw {kind:'webempty',message:'联网请求完成但未返回可用研究结论。'};
+    return {text:text,sources:sources};
+  });
+}
+function aiRunZhipuWebResearch(st,query,prompt,opts){
+  opts=opts||{};
+  var searchUrl='https://open.bigmodel.cn/api/paas/v4/web_search';
+  return fetch(searchUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+String(st.apiKey||'').trim()},body:JSON.stringify({search_query:String(query||'当前产品').slice(0,500),search_engine:'search_std',/* 用户已经确认要查竞品，因此跳过“是否需要搜索”的意图判断，直接检索。 */search_intent:false,count:8,search_recency_filter:'noLimit',content_size:'high'}),signal:opts.signal}).then(function(resp){
+    if(!resp.ok)return resp.json().then(function(j){throw aiClassify(null,resp,(j&&j.error&&j.error.message)||'');});
+    return resp.json();
+  }).then(function(payload){
+    var sources=aiResearchRequireSources(payload,'zhipu');
+    var evidence=(payload.search_result||[]).slice(0,8).map(function(x,i){return '['+(i+1)+'] '+String(x.title||'未命名来源')+'\n链接：'+String(x.link||'')+'\n摘要：'+String(x.content||'').slice(0,1200);}).join('\n\n');
+    return aiChatOnce([{role:'system',content:'你是严谨的竞品研究与产品决策顾问。只能依据用户消息中附带的真实搜索结果作答；结果没有覆盖的事实必须写“未验证”，不能假装继续联网或补造来源。'},{role:'user',content:prompt+'\n\n【本次 GLM 真实搜索结果】\n'+evidence}],{tier:'deep',maxTokens:4200,temperature:0.2}).then(function(text){
+      if(!String(text||'').trim())throw {kind:'webempty',message:'已取得真实来源，但分析模型没有返回研究结论。'};
+      return {text:String(text).trim(),sources:sources};
+    });
+  });
+}
+function aiRunWebResearch(query,opts){
+  opts=opts||{};
+  var st=aiGetSettings();
+  if(!aiWebResearchAvailable(st))return Promise.reject({kind:'webconfig',message:'真实联网竞品研究支持 DeepSeek、Qwen、GLM 和 OpenAI。请在 设置→AI 勾选联网研究，并填写当前服务商的地址、API Key 和支持联网的深度模型；不满足条件时不会生成或伪装搜索结果。'});
+  var prompt=aiResearchPrompt(query),mode=aiWebResearchMode(st);
+  return aiPrivacyConfirm(aiWebResearchPrivacy(st),st).then(function(){
+    return mode==='zhipu-search'?aiRunZhipuWebResearch(st,query,prompt,opts):aiRunResponseWebResearch(st,prompt,opts);
+  });
 }
 var AI_PRIVACY_ACK_KEY='prdKanbanAiPrivacyAckV1';
 var aiPrivacySeen=(function(){try{return JSON.parse(localStorage.getItem(AI_PRIVACY_ACK_KEY)||'{}')||{};}catch(e){return {};}})();
@@ -6707,7 +6814,7 @@ function aiPrivacyConfirm(meta,st){
   if(aiPrivacySeen.firstUse)return Promise.resolve(true);
   return new Promise(function(resolve,reject){
     var old=document.getElementById('aiPrivacyModal');if(old)old.remove();
-    var provider={deepseek:'DeepSeek',openai:'OpenAI',ollama:'本地 Ollama',custom:'自定义 OpenAI 兼容服务'}[st.provider]||st.provider||'当前服务商';
+    var provider=aiProviderLabel(st.provider);
     var m=document.createElement('div');m.className='modal open';m.id='aiPrivacyModal';
     m.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-labelledby="aiPrivacyTitle" style="max-width:600px"><div class="m-head"><h3 id="aiPrivacyTitle">发送前确认 · '+aiEsc(meta.label)+'</h3><button class="x" type="button" data-priv="cancel" aria-label="取消">×</button></div><div class="m-body"><div class="impact-summary"><b>本次会发送到 '+aiEsc(provider)+'：</b><ul><li><b>模型：</b>'+aiEsc(st.model||'未填写')+'</li><li><b>服务地址：</b>'+aiEsc(aiNormBase(st.baseUrl||''))+'</li><li><b>发送范围：</b>'+aiEsc(meta.scope)+'</li><li><b>不会发送：</b>API Key、界面主题和本机其他项目数据（除非它们已写入本次选中的正文/对话）。</li></ul></div><div class="impact-summary" style="margin-top:10px"><b>敏感信息提醒</b><br>请先删除或替换账号密码、Token、身份证/手机号、客户名单、未公开合同与生产数据；需要时可用“[已脱敏]”占位后再发送。</div></div><div class="m-foot"><button type="button" data-priv="cancel">取消本次发送</button><button type="button" class="btn btn--primary" data-priv="confirm">确认并发送</button></div></div>';
     document.body.appendChild(m);
@@ -6722,7 +6829,6 @@ function aiChatOnce(messages,opts){
   var body={model:opts.model||aiModelFor(opts.tier,st),messages:messages,stream:!!opts.stream,temperature:opts.temperature==null?0.3:opts.temperature};
   if(opts.json)body.response_format={type:'json_object'};
   if(opts.maxTokens)body.max_tokens=opts.maxTokens;
-  if(st.web&&!opts.json)aiApplyWebSearch(body,st);
   return aiPrivacyConfirm(aiPrivacyMeta(messages,opts),st).then(function(){
   var ctrl=new AbortController();
   if(aiGlobalAbort){
@@ -8530,7 +8636,7 @@ function aiGenStart(){
       aiValidateChange(it);
       items.push(it);
     });
-    st.pendingDiffs={id:aiUid(),gen:true,genLabel:'AI 草稿',scoreBefore:null,scoreAfter:null,target:null,rounds:0,createdAt:Date.now(),review:null,engineDelta:null,items:items};
+    st.pendingDiffs={id:aiUid(),gen:true,genLabel:'AI 草稿',scoreBefore:null,scoreAfter:null,target:null,rounds:0,createdAt:Date.now(),review:null,engineDelta:null,handoff:aiGenMode==='design'?aiDesState.handoffBrief:'',items:items};
     st.lastGenDebug=dbg;
     aiPersist();
     aiBusy=false;
@@ -8751,7 +8857,8 @@ function aiReadForm(){
   var s=aiGetSettings();
   var g=function(id){var el=document.getElementById(id);return el?el.value.trim():'';};
   var key=g('aiKey');
-  var out={provider:g('aiProvider')||s.provider,baseUrl:g('aiBaseUrl')||s.baseUrl,model:g('aiModel')||s.model,fastModel:g('aiFastModel')||s.fastModel,deepModel:g('aiDeepModel')||s.deepModel,apiKey:key||s.apiKey,targetScore:aiClamp(+(g('aiTarget')||s.targetScore),50,100),maxRounds:aiClamp(+(g('aiRounds')||s.maxRounds),1,5),web:(function(){var el=document.getElementById('aiWeb');return el?el.checked:s.web;})(),dims:{}};
+  var baseUrl=g('aiBaseUrl')||s.baseUrl;
+  var out={provider:aiInferProvider(g('aiProvider')||s.provider,baseUrl),baseUrl:baseUrl,model:g('aiModel')||s.model,fastModel:g('aiFastModel')||s.fastModel,deepModel:g('aiDeepModel')||s.deepModel,apiKey:key||s.apiKey,targetScore:aiClamp(+(g('aiTarget')||s.targetScore),50,100),maxRounds:aiClamp(+(g('aiRounds')||s.maxRounds),1,5),web:(function(){var el=document.getElementById('aiWeb');return el?el.checked:s.web;})(),dims:{}};
   out.reviewModel=g('aiReviewModel')||s.reviewModel;
   Object.keys(DIM_META).forEach(function(k){
     var en=document.getElementById('aiDimOn-'+k);
@@ -8819,16 +8926,16 @@ function aiRenderTab(){
   el.innerHTML='<div class="muted" style="margin-bottom:10px">AI 深度体检（与红黄绿规则引擎并列，不覆盖）。Key 仅存本机浏览器，不进备份/导出/日志；公开分享的链接不会携带你的 Key。</div>'
     +'<div class="impact-summary" style="margin-bottom:12px"><b>先选择接入方式</b><div style="margin:7px 0"><button type="button" data-ai="preset-local-free">本地免费 · Ollama（推荐尝试）</button> <button type="button" data-ai="preset-online">配置在线 API</button></div><div class="muted">本地免费不会把项目发到外部服务：安装 Ollama 后运行 <code>ollama run qwen3:8b</code>，再点击左侧按钮自动填入。在线服务的免费额度、可用模型和隐私条款会变化，需按服务商页面自行配置；不要把试用额度当作长期免费承诺。</div></div>'
     +'<div class="impact-summary" style="margin-bottom:12px"><b>AI 数据边界</b><ul><li>首次使用 AI 时会显示服务商、模型和数据边界；确认后不再因不同操作重复打断。</li><li>体检/全文优化/评审会发送当前项目 PRD；单节优化仅发送该节和相关问题；对话只发送本轮对话内容。</li><li>请先脱敏账号、密钥、个人信息、客户数据和未公开合同；API Key、主题及其他本机项目不会作为请求字段发送。</li></ul></div>'
-    +'<div class="field"><label>服务商</label><select id="aiProvider">'+[['custom','自定义 OpenAI 兼容服务'],['ollama','本地 Ollama'],['openai','OpenAI'],['deepseek','DeepSeek']].map(function(o){return '<option value="'+o[0]+'"'+(s.provider===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>'
+    +'<div class="field"><label>服务商</label><select id="aiProvider">'+[['custom','自定义 OpenAI 兼容服务'],['ollama','本地 Ollama'],['deepseek','DeepSeek'],['qwen','Qwen / 阿里云百炼'],['zhipu','GLM / 智谱 AI'],['openai','OpenAI']].map(function(o){return '<option value="'+o[0]+'"'+(s.provider===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>'
     +'<div class="field"><label>Base URL（OpenAI 兼容）</label><input id="aiBaseUrl" value="'+aiEsc(s.baseUrl)+'" placeholder="例如：http://localhost:11434/v1 或你的服务商地址"></div>'
-    +'<div class="field"><label>标准模型（需求澄清、PRD 生成；必填）</label><input id="aiModel" value="'+aiEsc(s.model)+'" placeholder="填写服务商提供的模型名" list="aiModelList"><datalist id="aiModelList"><option value="qwen3:8b"><option value="gpt-oss:20b"><option value="deepseek-chat"></datalist></div>'
+    +'<div class="field"><label>标准模型（需求澄清、PRD 生成；必填）</label><input id="aiModel" value="'+aiEsc(s.model)+'" placeholder="填写服务商提供的模型名" list="aiModelList"><datalist id="aiModelList"><option value="qwen3:8b"><option value="qwen3.7-max"><option value="deepseek-v4-flash"><option value="deepseek-chat"><option value="glm-4.7"><option value="gpt-oss:20b"></datalist></div>'
     +'<div class="impact-summary" style="margin:8px 0"><b>按任务分配模型（可选）</b><div class="muted">留空就使用标准模型。快速模型用于项目助手聊天；深度模型用于体检、优化、结构对齐和评审，通常更慢或更贵。</div><div class="field" style="margin:8px 0 0"><label>快速模型（可选）</label><input id="aiFastModel" value="'+aiEsc(s.fastModel||'')+'" placeholder="留空=标准模型"></div><div class="field" style="margin:8px 0 0"><label>深度模型（可选）</label><input id="aiDeepModel" value="'+aiEsc(s.deepModel||'')+'" placeholder="留空=标准模型"></div></div>'
     +'<div class="field"><label>复检模型（可选，留空=深度模型）</label><input id="aiReviewModel" value="'+aiEsc(s.reviewModel||'')+'" placeholder="留空=深度模型"></div>'
     +'<div class="field"><label>API Key</label><input id="aiKey" type="password" placeholder="'+(keyMask?('已保存 '+keyMask+'（输入新值将覆盖）'):'sk-...')+'"><div class="muted">'+ (keyMask?'当前 Key：'+aiEsc(keyMask):'尚未配置 Key') +'</div></div>'
     +'<div class="ai-dim-grid"><div class="ai-dim-grid-t"><span>评分维度</span><span>权重（可调，总分会按权重加权）</span></div>'+dimsHtml+'</div>'
     +'<div class="field"><label>目标分（一键优化达标线）</label><input id="aiTarget" type="number" min="50" max="100" value="'+s.targetScore+'"></div>'
     +'<div class="field"><label>最大优化轮数（护栏：2-5，超出自动停止）</label><input id="aiRounds" type="number" min="1" max="5" value="'+s.maxRounds+'"></div>'
-    +'<div class="field ai-web-field"><label class="ai-toggle"><input type="checkbox" class="sw" id="aiWeb"'+(s.web?' checked':'')+'> 开启联网（模型原生搜索，按服务商自动适配）</label><div class="muted">智谱走 web_search 工具、通义走 enable_search；不确定服务商时按智谱风格注入，不支持的服务商会报错提示。仅对话流生效，不影响体检/优化（JSON 模式自动跳过）。</div></div>'
+    +'<div class="field ai-web-field"><label class="ai-toggle"><input type="checkbox" class="sw" id="aiWeb"'+(s.web?' checked':'')+'> 开启真实联网竞品研究</label><div class="muted">只在你确认“搜索同类型产品”后联网，并展示实际来源。优先支持：DeepSeek（Responses Web Search）→ Qwen / 阿里云百炼（Responses Web Search）→ GLM / 智谱（Web Search API + 当前深度模型分析）；OpenAI 仍可用。未返回来源时，本次不会记为联网研究，也不会生成模拟结论。</div><div class="muted" style="margin-top:6px">配置提示：DeepSeek 填官方地址 <code>https://api.deepseek.com</code>，深度模型需支持 <code>web_search</code>；Qwen 请从百炼控制台复制 OpenAI 兼容地址并选支持联网的 Qwen 模型；GLM 填常规聊天兼容地址和 GLM Key，搜索地址由应用固定使用官方 Web Search API。三者都需要在“深度模型”中填写可用模型名。</div></div>'
     +'<div class="row-act"><button data-ai="savesettings">保存设置</button><button data-ai="testconn">测试连接</button></div>'
     +'<div id="aiConnStatus" class="muted" style="margin-top:6px"></div>';
 }
@@ -8912,6 +9019,7 @@ function aiRenderPanel(){
     if(pd.reviewSource)html+='<div class="ai-review">本轮依据 <b>'+pd.reviewSource.items.length+'</b> 条多角色评审建议生成；已锁定或校验失败的章节不会自动写入。</div>';
     if(pd.review)html+='<div class="ai-review">独立复核：<b>'+pd.review.score+'</b> 分 · '+(pd.review.verdict==='pass'?'通过':pd.review.verdict==='fail'?'不通过':'需改进')+(pd.review.summary?' · '+aiEsc(pd.review.summary):'')+'</div>';
     if(pd.engineDelta&&pd.engineDelta.riskBefore!=null)html+='<div class="ai-engine-delta">规则引擎：风险 '+pd.engineDelta.riskBefore+'→'+pd.engineDelta.riskAfter+' · 完成度 '+pd.engineDelta.completionBefore+'%→'+pd.engineDelta.completionAfter+'%</div>';
+    if(pd.handoff)html+='<details class="ai-review" style="margin-top:8px"><summary style="cursor:pointer"><b>Coding Agent 交接摘要</b> · 基于你确认的方案</summary><pre style="white-space:pre-wrap;margin:8px 0 0">'+aiEsc(pd.handoff)+'</pre><button class="btn btn--ghost btn--sm" data-ai="deshandoffcopy" style="margin-top:8px">复制交接摘要</button></details>';
     html+='<div class="ai-diff-all"><button class="btn btn--primary" data-ai="acceptall">全部接受并写入</button></div>';
     pd.items.forEach(function(it){
       var stT=it.status;
@@ -9317,8 +9425,12 @@ function aiInjectPanel(){
   document.body.appendChild(cm);
   var sm=document.createElement('div');
   sm.className='modal';sm.id='aiDesSkeletonModal';
-  sm.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-labelledby="aiDesSkelTitle" style="width:640px;max-width:94vw"><div class="m-head"><h3 id="aiDesSkelTitle">确认产品方案</h3><button class="x" data-ai="desskelclose" aria-label="关闭">×</button></div><div class="m-body" style="display:flex;flex-direction:column;gap:10px"><div class="muted">这是将交给 Coding Agent 的可读方案。请直接修改不准确的地方；标为“AI 建议（待确认）”的内容不会被当成已确认事实。</div><div class="field" style="margin:0"><label for="aiDesProjectName">项目名称（由你决定）</label><input id="aiDesProjectName" maxlength="40" placeholder="例如：我的喝水记录" autocomplete="off" aria-describedby="aiDesProjectNameHint"><div id="aiDesProjectNameHint" class="muted" style="font-size:12px;margin-top:4px">请为这份需求取名；AI 的名称建议仅供参考，不会自动采用。</div></div><div class="field" style="margin:0"><label for="aiDesFramework">生成目录</label><select id="aiDesFramework" aria-describedby="aiDesFrameworkHint"><option value="__IDEA_STANDARD__">通用产品 PRD（推荐，14 节）</option><option value="__IDEA_MINIMAL__">精简 MVP（7 节）</option></select><div id="aiDesFrameworkHint" class="muted" style="font-size:12px;margin-top:4px">默认目录覆盖目标、范围、用户、功能、异常、验收、测试与上线；不会继承旧项目，也不会默认套用 AI 专属目录。</div></div><textarea id="aiDesSkeletonEditor" rows="16" style="width:100%;box-sizing:border-box;resize:vertical" aria-label="可编辑产品方案"></textarea><div id="aiDesSkeletonHint" class="muted" style="font-size:12px"></div></div><div class="m-foot" style="justify-content:space-between"><button class="btn btn--ghost" data-ai="desskelback">继续澄清</button><button class="btn btn--primary" data-ai="desskelconfirm">确认方案并生成 PRD</button></div></div>';
+  sm.innerHTML='<div class="box" role="dialog" aria-modal="true" aria-labelledby="aiDesSkelTitle" style="width:640px;max-width:94vw"><div class="m-head"><h3 id="aiDesSkelTitle">确认产品方案</h3><button class="x" data-ai="desskelclose" aria-label="关闭">×</button></div><div class="m-body" style="display:flex;flex-direction:column;gap:10px;max-height:68vh;overflow:auto"><div class="muted">这六张卡片由全部对话整理而来。AI 的内容只是建议，你可以直接改写，也可以手动补充自己的想法。</div><div class="field" style="margin:0"><label for="aiDesProjectName">项目名称（由你决定）</label><input id="aiDesProjectName" maxlength="40" placeholder="例如：我的喝水记录" autocomplete="off" aria-describedby="aiDesProjectNameHint"><div id="aiDesProjectNameHint" class="muted" style="font-size:12px;margin-top:4px">请为这份需求取名；AI 的名称建议仅供参考，不会自动采用。</div></div><div id="aiDesSkeletonCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px" aria-label="可编辑产品方案卡片"></div><div id="aiDesDecisionCards" aria-label="关键取舍"></div><details><summary class="muted" style="cursor:pointer">查看本次方案依据（全部对话）</summary><div id="aiDesEvidence" style="font-size:12px;white-space:pre-wrap;padding:8px 0"></div></details><div class="field" style="margin:0"><label for="aiDesManualInput">还有想自己补充的吗？</label><textarea id="aiDesManualInput" rows="3" placeholder="可直接写任何你在意的功能、限制、例外情况或想法；不需要使用专业术语。" style="width:100%;box-sizing:border-box;resize:vertical"></textarea></div><div class="field" style="margin:0"><label for="aiDesFramework">生成目录</label><select id="aiDesFramework" aria-describedby="aiDesFrameworkHint"><option value="__IDEA_STANDARD__">通用产品 PRD（推荐，14 节）</option><option value="__IDEA_MINIMAL__">精简 MVP（7 节）</option></select><div id="aiDesFrameworkHint" class="muted" style="font-size:12px;margin-top:4px">默认目录覆盖目标、范围、用户、功能、异常、验收、测试与上线；不会继承旧项目，也不会默认套用 AI 专属目录。</div></div><details><summary class="muted" style="cursor:pointer">高级：查看或手动编辑完整方案</summary><textarea id="aiDesSkeletonEditor" rows="12" style="width:100%;box-sizing:border-box;resize:vertical;margin-top:8px" aria-label="可编辑完整产品方案"></textarea></details><div id="aiDesSkeletonHint" class="muted" style="font-size:12px"></div></div><div class="m-foot" style="justify-content:space-between"><button class="btn btn--ghost" data-ai="desskelback">继续澄清</button><button class="btn btn--primary" data-ai="desskelconfirm">确认方案并生成 PRD</button></div></div>';
   document.body.appendChild(sm);
+  var skelIntro=sm.querySelector('.m-body > .muted');if(skelIntro)skelIntro.textContent='每轮对话都会产生或更新方案卡。AI 的内容只是建议，你可以直接改写，也可以添加自己的方案卡。';
+  var skelCards=sm.querySelector('#aiDesSkeletonCards');if(skelCards){var addCard=document.createElement('div');addCard.id='aiDesAddPlanCard';addCard.className='field';addCard.style.cssText='margin:0;padding:9px;border:1px dashed var(--line,#e4e1da);border-radius:10px;grid-column:1/-1';addCard.innerHTML='<label for="aiDesNewCardTitle" style="font-weight:700">添加自己的方案卡</label><input id="aiDesNewCardTitle" maxlength="40" placeholder="例如：隐私边界" style="width:100%;box-sizing:border-box;margin:5px 0"><textarea id="aiDesNewCardContent" rows="2" placeholder="用自己的话补充这条要求，不需要使用专业术语。" style="width:100%;box-sizing:border-box;resize:vertical"></textarea><button class="btn btn--ghost btn--sm" data-ai="desaddplancard" style="margin-top:5px">加入方案卡</button>';
+    skelCards.insertAdjacentElement('afterend',addCard);
+  }
   var desInp=dm.querySelector('#aiDesInput');
   if(desInp)desInp.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();aiDesSend();}});
   var fp=document.createElement('div');
@@ -9331,10 +9443,10 @@ function aiInjectPanel(){
   if(!document.getElementById('aiFloatBtn'))document.body.appendChild(fb);
 }
 /* P1-②A AI 产品设计引导：只有想法 → 一步步引导成型 → 生成 PRD（与「创建新需求」直接填写的实现逻辑不同） */
-var aiDesState={step:0,sub:0,qa:[],turns:[],facts:[],lastQuestion:'',busy:false,name:'',summary:'',understood:'',needs:[],assumptions:[],conflicts:[],productAi:'未确认（默认不加入产品功能）',checkpointAt:0};
+var aiDesState={step:0,sub:0,qa:[],turns:[],facts:[],lastQuestion:'',busy:false,researching:false,name:'',summary:'',understood:'',needs:[],assumptions:[],conflicts:[],productAi:'未确认（默认不加入产品功能）',checkpointAt:0,adviceRequested:false,researchPromptAt:0,researchHistory:[],researchCheckAfterReply:false,pendingNextQuestion:'',skeletonFields:{},skeletonManualFields:{},skeletonAdvanced:false,cardDrafts:{},planCards:[],latestPlanCards:[],recommendations:[],decisions:[],handoffBrief:''};
 var AI_DES_Q=['先用一句话说说：你想做一个什么东西，或者希望它帮你完成什么？','谁最可能会用它？他们现在通常怎么解决这件事？','第一版最想让它帮用户完成哪一两件事？','如果它真的有用，你希望用户最后得到什么结果？不确定也可以让 AI 建议。','有没有绝对不能发生的情况，或你已经知道的限制（例如只能自己用、要手机能用、时间很赶）？'];
 var AI_DES_TOPICS=['你想做什么','谁会用、现在怎么做','第一版先完成什么','希望得到什么结果','限制、风险与例外情况'];
-function aiDesNewState(){return {step:0,sub:0,qa:[],turns:[],facts:[],lastQuestion:AI_DES_Q[0],busy:false,name:'',summary:'',understood:'',needs:[AI_DES_TOPICS[0]],assumptions:[],conflicts:[],productAi:'未确认（默认不加入产品功能）',checkpointAt:0};}
+function aiDesNewState(){return {step:0,sub:0,qa:[],turns:[],facts:[],lastQuestion:AI_DES_Q[0],busy:false,researching:false,name:'',summary:'',understood:'',needs:[AI_DES_TOPICS[0]],assumptions:[],conflicts:[],productAi:'未确认（默认不加入产品功能）',checkpointAt:0,adviceRequested:false,researchPromptAt:0,researchHistory:[],researchCheckAfterReply:false,pendingNextQuestion:'',skeletonFields:{},skeletonManualFields:{},skeletonAdvanced:false,cardDrafts:{},planCards:[],latestPlanCards:[],recommendations:[],decisions:[],handoffBrief:''};}
 function aiDesPlain(txt){return String(txt||'').replace(/【[^】]{1,16}】/g,'').replace(/^项目名[:：].*$/m,'').trim();}
 function aiDesMarker(txt,name){var m=String(txt||'').match(new RegExp('【'+name+'】\\s*([\\s\\S]*?)(?=【|$)'));return m?m[1].trim():'';}
 function aiDesFactKey(txt){return aiDesPlain(txt).replace(/\s+/g,'').replace(/[，。；、,.!！?？:：]/g,'').slice(0,72);}
@@ -9351,6 +9463,7 @@ function aiDesNextQuestion(txt){
 function aiDesTranscript(){
   return aiDesState.turns.map(function(turn,i){return (i+1)+'. 问题：'+String(turn.question||'未能识别的问题').slice(0,180)+'\n   回答：'+String(turn.answer||'').slice(0,220);}).join('\n')||'（尚未提供）';
 }
+function aiDesResearchContext(){return aiDesState.researchHistory.map(function(item,i){return '研究 '+(i+1)+'：'+String(item.summary||'').slice(0,4000);}).join('\n\n')||'（尚未进行竞品研究）';}
 function aiDesFactsText(){return aiDesState.facts.map(function(x){return '- '+String(x).slice(0,180);}).join('\n')||'（AI 尚未整理出独立事实，仍须以上面的问答为准）';}
 function aiDesConflictHints(){
   var all=aiDesState.qa.join(' '),out=[];
@@ -9366,7 +9479,45 @@ function aiDesRenderState(){
   var needs=(aiDesState.conflicts.length?aiDesState.conflicts:aiDesState.needs.length?aiDesState.needs:fallback).slice(0,2);
   var assumptions=aiDesState.assumptions.slice(-2);
   var cell=function(title,text,color){return '<div style="padding:7px 8px;border:1px solid var(--line,#e4e1da);border-radius:8px;background:var(--panel,#fff);min-width:0"><strong style="display:block;color:'+color+';font-size:11px;margin-bottom:2px">'+title+'</strong><span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+aiEsc(text||'暂无')+'">'+aiEsc(text||'暂无')+'</span></div>';};
-  el.innerHTML=cell('我已理解',understood,'var(--color-success-text,#2e6f4e)')+cell('还需要确认',needs.join('；')||'AI 正在判断下一步','var(--color-warning-text,#8a5b13)')+cell('AI 暂定假设',assumptions.join('；')||'没有；不知道时可让 AI 建议','var(--ink-2,#667)');
+  el.innerHTML=cell('我已理解',understood,'var(--color-success-text,#2e6f4e)')+cell('还需要确认',needs.join('；')||'AI 正在判断下一步','var(--color-warning-text,#8a5b13)')+cell('AI 暂定假设',assumptions.join('；')||'没有；不知道时可让 AI 建议','var(--ink-2,#667)')+(aiDesState.researching?'<div style="grid-column:1/-1;padding:7px 8px;border:1px solid var(--color-warning-border,#e5c98e);border-radius:8px;background:var(--color-warning-bg,#fff9e8);color:var(--color-warning-text,#8a5b13)"><strong>正在联网搜索</strong> · 正在查找同类产品、开源项目与实际来源；可随时点“停止”。</div>':'');
+}
+function aiDesConfigReady(st){st=st||aiGetSettings();return !!(String(st.apiKey||'').trim()&&String(st.baseUrl||'').trim()&&aiModelFor('standard',st));}
+function aiDesConfigHint(){return '请先在 设置→高级→AI 设置 中配置 API Key、地址和标准模型。';}
+function aiDesLabelValue(block,label){var m=String(block||'').match(new RegExp('(?:^|\\n)\\s*'+label+'[：:]\\s*([^\\n]+)','i'));return m?aiDesPlain(m[1]).replace(/^[-•]\s*/,'').trim():'';}
+function aiDesAbsorbCardDrafts(txt){
+  var block=aiDesMarker(txt,'方案卡片');if(!block)return;
+  var map={goal:'要做什么',audience:'给谁用',journey:'用户怎样完成',scope:'第一版先做什么',notDo:'第一版暂不做什么',risks:'待确认与风险'};
+  Object.keys(map).forEach(function(key){var value=aiDesLabelValue(block,map[key]);if(value)aiDesState.cardDrafts[key]=value;});
+}
+function aiDesPlanCardKey(title){return aiDesFactKey(title).slice(0,48);}
+function aiDesAbsorbRoundCards(txt){
+  var block=aiDesMarker(txt,'本轮方案卡');aiDesState.latestPlanCards=[];if(!block)return;
+  String(block).split(/\n/).forEach(function(line){
+    var m=String(line).match(/^\s*[-•]?\s*\[(已确认|AI建议|待确认)\]\s*([^：:]{2,40})[：:]\s*(.+)$/);if(!m)return;
+    var title=aiDesPlain(m[2]).trim(),content=aiDesPlain(m[3]).trim(),key=aiDesPlanCardKey(title);if(!title||!content)return;
+    var old=aiDesState.planCards.filter(function(card){return card.key===key;})[0];
+    if(old){if(!old.manual){old.content=content;old.status=m[1];}aiDesState.latestPlanCards.push(old);return;}
+    var card={key:key,title:title,content:content,status:m[1],manual:false};aiDesState.planCards.push(card);aiDesState.latestPlanCards.push(card);
+  });
+  if(aiDesState.planCards.length>18)aiDesState.planCards=aiDesState.planCards.slice(-18);
+}
+function aiDesAbsorbRecommendations(txt){
+  var block=aiDesMarker(txt,'三条建议');aiDesState.recommendations=[];if(!block)return;
+  var re=/(?:^|\s)([123])[.、]\s*([\s\S]*?)(?=(?:\s+[123][.、]\s*)|$)/g,m;
+  while((m=re.exec(String(block))))aiDesState.recommendations.push(aiDesPlain(m[2]).trim());
+  aiDesState.recommendations=aiDesState.recommendations.filter(Boolean).slice(0,3);
+}
+function aiDesAbsorbDecision(txt){
+  var block=aiDesMarker(txt,'关键取舍');if(!block||/^(无|暂无|不需要)/.test(aiDesPlain(block)))return;
+  var question=aiDesLabelValue(block,'问题')||aiDesPlain(block).split(/\n/)[0];
+  var recommendation=aiDesLabelValue(block,'AI建议')||aiDesLabelValue(block,'建议');
+  if(!question||!recommendation)return;
+  var why=aiDesLabelValue(block,'原因'),alternatives=aiDesLabelValue(block,'其他选择')||aiDesLabelValue(block,'其他可选');
+  var key=aiDesFactKey(question);
+  var old=aiDesState.decisions.filter(function(item){return aiDesFactKey(item.question)===key;})[0];
+  if(old){old.recommendation=recommendation;old.why=why;old.alternatives=alternatives;return;}
+  aiDesState.decisions.push({question:question,recommendation:recommendation,why:why,alternatives:alternatives,value:'',source:'ai'});
+  if(aiDesState.decisions.length>3)aiDesState.decisions=aiDesState.decisions.slice(-3);
 }
 function aiDesAbsorbResponse(txt){
   var understood=aiDesMarker(txt,'我已理解');if(understood){aiDesState.understood=aiDesPlain(understood).slice(0,120);aiDesAddFact(understood);}
@@ -9374,6 +9525,7 @@ function aiDesAbsorbResponse(txt){
   var needs=aiDesMarker(txt,'还需确认');if(needs)aiDesState.needs=needs.split(/[；;\n]/).map(function(x){return aiDesPlain(x).replace(/^[-•]\s*/,'').trim();}).filter(Boolean).slice(0,3);
   var assume=aiDesMarker(txt,'AI假设');if(assume){assume.split(/[；;\n]/).map(function(x){return aiDesPlain(x).replace(/^[-•]\s*/,'').trim();}).filter(Boolean).forEach(function(x){if(aiDesState.assumptions.indexOf(x)<0)aiDesState.assumptions.push(x);});}
   var productAi=aiDesMarker(txt,'产品AI功能');if(productAi){aiDesState.productAi=aiDesPlain(productAi).slice(0,180);if(/^不需要/.test(aiDesState.productAi))aiDesAddFact('产品本身不需要 AI 功能；AI 仅用于辅助开发');}
+  aiDesAbsorbCardDrafts(txt);aiDesAbsorbRoundCards(txt);aiDesAbsorbRecommendations(txt);aiDesAbsorbDecision(txt);
   var nextQuestion=aiDesNextQuestion(txt);if(nextQuestion)aiDesState.lastQuestion=nextQuestion;
   aiDesState.conflicts=aiDesConflictHints();aiDesRenderState();
 }
@@ -9383,6 +9535,42 @@ function aiDesLogAdd(role,txt){
   d.innerHTML='<span class="ai-msg-b">'+aiEsc(String(txt))+'</span>';
   log.appendChild(d);log.scrollTop=log.scrollHeight;
 }
+function aiDesAppendRoundCards(){
+  var host=document.querySelector('#aiDesLog .ai-msg.bot:last-child .ai-msg-b');if(!host){aiDesLogAdd('bot','');host=document.querySelector('#aiDesLog .ai-msg.bot:last-child .ai-msg-b');}if(!host)return;
+  if(aiDesState.latestPlanCards.length){host.innerHTML+='<div class="ai-des-round-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px;margin-top:8px">'+aiDesState.latestPlanCards.map(function(card){return '<div style="padding:7px;border:1px solid var(--line,#e4e1da);border-radius:8px;background:var(--panel,#fff);font-size:11.5px"><b>'+aiEsc(card.title)+'</b><span class="muted" style="display:block;margin:2px 0">'+aiEsc(card.status)+'</span><span>'+aiEsc(card.content)+'</span></div>';}).join('')+'</div>';}
+  if(aiDesState.recommendations.length===3){host.innerHTML+='<div class="ai-des-recommend" style="margin-top:8px"><b style="font-size:12px">AI 给你的 3 个可选方向</b><div style="display:grid;gap:6px;margin-top:5px">'+aiDesState.recommendations.map(function(item,i){var letter=String.fromCharCode(65+i);return '<div style="padding:8px;border:1px solid var(--line,#e4e1da);border-radius:8px;background:var(--panel,#fff);font-size:12px;line-height:1.45"><div>'+aiEsc(item)+'</div><button type="button" class="btn btn--ghost btn--sm" data-ai="despickrecommend" data-recommend="'+i+'" style="margin-top:6px;min-width:34px" aria-label="选择方案 '+letter+'">'+letter+'</button></div>';}).join('')+'</div><div style="margin-top:6px"><button type="button" class="btn btn--ghost btn--sm" data-ai="deswriterecommend" aria-label="自己填写方向">D · 我自己填写</button></div></div>';}
+  var log=document.getElementById('aiDesLog');if(log)log.scrollTop=log.scrollHeight;
+}
+function aiDesResearchQuery(){return [aiDesState.understood,aiDesState.facts.slice(-5).join('；'),aiDesState.turns.slice(-5).map(function(turn){return turn.answer;}).join('；')].filter(Boolean).join('；').slice(0,1200)||'当前产品方向';}
+function aiDesShouldOfferResearch(){var n=aiDesState.turns.length,recent=aiDesState.turns.slice(-5).map(function(turn){return turn.answer;}).join(' ');return n>=5&&n-aiDesState.researchPromptAt>=5&&recent.length>=30&&!/(?:只改|文案|颜色|样式|间距|按钮|小\s*Bug)/i.test(recent);}
+function aiDesOfferResearch(force){if(!force&&!aiDesShouldOfferResearch())return false;aiDesState.researchPromptAt=aiDesState.turns.length;aiDesState.researchCheckAfterReply=false;aiDesLogAdd('sys','我已确认这一轮的信息。现在要不要搜索一下同类型产品和开源项目，看看行业通常怎么做，以及有没有可以直接复用的方案？');var host=document.querySelector('#aiDesLog .ai-msg.sys:last-child .ai-msg-b');if(host)host.innerHTML+='<div class="row-act" style="margin:7px 0 0"><button type="button" class="btn btn--primary btn--sm" data-ai="desresearchstart">搜索同类产品</button><button type="button" class="btn btn--ghost btn--sm" data-ai="desresearchlater">暂不搜索</button></div>';return true;}
+function aiDesShowResearch(result){aiDesLogAdd('bot',result.text);var host=document.querySelector('#aiDesLog .ai-msg.bot:last-child .ai-msg-b');if(host&&result.sources&&result.sources.length)host.innerHTML+='<details style="margin-top:8px"><summary class="muted" style="cursor:pointer">查看实际搜索来源（'+result.sources.length+'）</summary><ul style="margin:5px 0;padding-left:18px">'+result.sources.map(function(src){return '<li><a href="'+aiEsc(src.url)+'" target="_blank" rel="noopener noreferrer">'+aiEsc(src.title)+'</a></li>';}).join('')+'</ul></details>';}
+function aiDesStopControl(show){var btn=document.getElementById('aiDesStop');if(btn)btn.style.display=show?'':'none';}
+function aiDesResumePendingQuestion(){var next=String(aiDesState.pendingNextQuestion||'').trim();aiDesState.pendingNextQuestion='';if(next)aiDesLogAdd('bot','【进入下一题】\n'+next);else aiDesLogAdd('bot','你还想先补充哪一点？也可以继续说你的想法。');}
+function aiDesSkipResearch(){aiDesLogAdd('sys','好的，本轮暂不搜索；这不会影响后续形成新方向时再次询问。');aiDesResumePendingQuestion();}
+function aiDesResearchFollowup(result){
+  var research=aiDesResearchContext(),facts=aiDesFactsText(),transcript=aiDesTranscript();
+  var sys='你是面向 Vibe Coding 小白的需求澄清助手。刚完成一轮真实竞品研究，研究结论已保存为本次需求上下文。只能基于研究结论、已确认事实和全部问答，选出一个会影响当前第一版取舍、且用户尚未回答的点。用小白语言只问一个问题，不要复述完整研究报告，不要再问已知信息，不要输出任何标记、方案卡或多余说明。';
+  var user='【研究结论】\n'+research+'\n\n【已确认事实】\n'+facts+'\n\n【全部问答】\n'+transcript;
+  return aiChatOnce([{role:'system',content:sys},{role:'user',content:user}],{tier:'standard',maxTokens:700,temperature:0.25}).then(function(text){var question=aiDesNextQuestion(text)||String(text||'').replace(/【[^】]+】/g,'').trim().split(/\n+/)[0];if(!question||question.length<4)question='结合刚才搜到的同类做法，第一版你最想优先保留哪一种核心体验？';return question.slice(0,180);});
+}
+function aiDesStartResearch(){
+  if(aiDesState.busy){aiToast('当前 AI 仍在回复，请稍后再搜索');return;}
+  var query=aiDesResearchQuery(),savedMemory=false;
+  aiDesState.busy=true;aiDesState.researching=true;aiDesState.abort=new AbortController();aiGlobalAbort=aiDesState.abort;aiCancelFlag=false;aiDesStopControl(true);aiDesRenderState();
+  aiDesLogAdd('sys','正在真实联网搜索同类产品、替代方案和开源项目…搜索过程中可点“停止”。');
+  aiRunWebResearch(query,{signal:aiDesState.abort.signal}).then(function(result){
+    var memory={at:Date.now(),query:query,summary:result.text,sources:result.sources||[],followUp:''};
+    aiDesState.researchHistory.push(memory);savedMemory=true;aiDesShowResearch(result);
+    aiDesLogAdd('sys','搜索完成，已存入本次需求记忆。正在根据研究结果挑选下一件最值得确认的事…');
+    return aiDesResearchFollowup(result).then(function(question){memory.followUp=question;aiDesState.lastQuestion=question;aiDesState.pendingNextQuestion='';aiDesLogAdd('bot','我已把这次研究作为后续对话依据。\n【根据研究继续确认】'+question);});
+  }).catch(function(e){
+    if(e&&(e.kind==='canceled'||e.name==='AbortError'))aiDesLogAdd('sys',savedMemory?'研究已保存，但已停止生成研究后的下一问；将继续原来的问题。':'已停止联网搜索；没有保存或使用不完整的研究结果。');
+    else if(savedMemory)aiDesLogAdd('sys','研究已保存，但根据研究生成下一问失败：'+((e&&e.message)||e)+'。将继续原来的问题。');
+    else aiDesLogAdd('sys','联网竞品研究未执行：'+((e&&e.message)||e)+'。本次不会被记录为联网竞品研究；已继续保留原来的下一问。');
+    aiDesResumePendingQuestion();
+  }).finally(function(){aiDesState.busy=false;aiDesState.researching=false;aiGlobalAbort=null;aiDesState.abort=null;aiCancelFlag=false;aiDesStopControl(false);aiDesRenderState();});
+}
 var aiDesStreamEl=null;
 function aiDesSend(forceEnd){
   forceEnd=!!forceEnd;
@@ -9390,20 +9578,26 @@ function aiDesSend(forceEnd){
   var inp=document.getElementById('aiDesInput');var txt=(inp&&inp.value||'').trim();
   if(!txt){aiToast('先回答当前问题吧');return;}
   if(inp)inp.value='';
+  aiDesState.adviceRequested=/我不确定\s*[，,]?\s*让\s*AI\s*建议/.test(txt);
   aiDesLogAdd('user',txt);
   aiDesState.qa.push(txt);
   aiDesState.turns.push({question:aiDesState.lastQuestion||AI_DES_Q[Math.min(aiDesState.step,AI_DES_Q.length-1)],answer:txt});
+  /* 这一轮若已形成新的方向，先让 AI 确认，再由界面单独询问是否研究；不能把搜索提示和下一题并排抛给用户。 */
+  aiDesState.researchCheckAfterReply=!aiDesState.adviceRequested&&aiDesShouldOfferResearch();
   if(/不确定|不知道|没想好|随便|都可以/.test(txt))aiDesState.assumptions.push((AI_DES_TOPICS[Math.min(aiDesState.step,AI_DES_TOPICS.length-1)]||'当前问题')+'：AI 建议（待确认）');
   aiDesState.conflicts=aiDesConflictHints();aiDesRenderState();
   aiDesState.busy=true;
   aiDesStreamEl=null;
   var st=aiGetSettings();
-  if(!String(st.apiKey||'').trim()||!String(st.baseUrl||'').trim()){aiDesLogAdd('sys','请先在 设置→高级→AI 设置 中配置 API Key 与地址。');aiDesState.busy=false;return;}
+  if(!aiDesConfigReady(st)){aiDesLogAdd('sys',aiDesConfigHint());aiDesState.busy=false;return;}
   var collected=aiDesTranscript();
+  var research=aiDesResearchContext();
   var facts=aiDesFactsText();
   var cur=Math.min(aiDesState.step,AI_DES_Q.length-1);
   var conflicts=aiDesConflictHints();
-  var sys='你是面向 Vibe Coding 小白的需求澄清助手，正在把一句想法整理成可确认的产品方案。Vibe Coding 表示用户用 AI 辅助开发，不等于产品本身要有 AI 功能；产品能力默认不含 AI，除非用户明确选择需要。\n已完成问答（每一条都视为用户已确认的上下文；不得换一种说法重复提问）：\n'+collected+'\n已确认事实摘要（与问答冲突时，以问答为准）：\n'+facts+'\n当前产品 AI 功能结论：'+aiDesState.productAi+'。\n规则：①每轮先逐项核对“已完成问答”和“已确认事实摘要”。只要已有回答足以确定某个信息，必须把它视为已知，绝不能再问同义问题。只有发现具体矛盾或用户明确说“不知道”时才可追问，并要说明矛盾/不确定在哪里。②先判断当前最大的缺口，优先澄清谁会用/现在怎么做、想完成什么、第一版最小范围、不能接受什么；只有会改变方案时才问权限、数据或技术限制。若“产品本身是否需要 AI 帮最终用户生成、判断或推荐”会明显改变功能、数据或风险，且尚未确认，才可用一句小白话追问，例如“这个产品需要 AI 帮使用者做事吗，还是 AI 只用来帮你开发它？”；不能因用户提到 Vibe Coding 而默认产品需要 AI。③不要按固定题序；候选问题「'+AI_DES_Q[cur]+'」仅在它仍是最大缺口且没有回答过时才使用。④不用 PRD、指标、优先级等术语。⑤本轮只问 1 个最容易回答的问题，可给生活化例子。⑥用户说“不知道”时给 2 个简单选项，或标记“AI 建议（待确认）”，不要强迫填写指标。⑦若发现前后矛盾，必须先澄清矛盾，不能直接汇总。当前规则检测到的可能矛盾：'+(conflicts.join('；')||'无')+'。⑧每次输出都先给五个短标记：\n【我已理解】一句话复述\n【已确认事实】最多 4 条，保留已有事实并补充本轮新增事实\n【还需确认】最多 2 个未确认点\n【AI假设】没有则写“无”；所有推导都必须写“AI 建议（待确认）”\n【产品AI功能】写“需要：具体帮助用户做什么”“不需要：AI 仅用于辅助开发”或“待确认：是否会影响方案”。\n然后：信息足够时输出【汇总】及小白可读方案（要做什么、给谁用、怎样完成、第一版做/不做、成功结果、风险/待确认项）；可额外输出【名称建议】<8字以内建议>，但绝不能把建议当项目名，项目名称将由用户在生成前自己填写。否则输出【进入下一题】再提出唯一一个从未回答过的最关键问题。';
+  var sys='你是面向 Vibe Coding 小白的需求澄清助手，正在把一句想法整理成可确认的产品方案。Vibe Coding 表示用户用 AI 辅助开发，不等于产品本身要有 AI 功能；产品能力默认不含 AI，除非用户明确选择需要。\n已完成问答（每一条都视为用户已确认的上下文；不得换一种说法重复提问）：\n'+collected+'\n已完成竞品研究（仅以实际来源为准；不要把未验证内容写成事实）：\n'+research+'\n已确认事实摘要（与问答冲突时，以问答为准）：\n'+facts+'\n当前产品 AI 功能结论：'+aiDesState.productAi+'。\n规则：①每轮先逐项核对“已完成问答”和“已确认事实摘要”。只要已有回答足以确定某个信息，必须把它视为已知，绝不能再问同义问题。只有发现具体矛盾或用户明确说“不知道”时才可追问，并要说明矛盾/不确定在哪里。②先判断当前最大的缺口，优先澄清谁会用/现在怎么做、想完成什么、第一版最小范围、不能接受什么；只有会改变方案时才问权限、数据或技术限制。若“产品本身是否需要 AI 帮最终用户生成、判断或推荐”会明显改变功能、数据或风险，且尚未确认，才可用一句小白话追问，例如“这个产品需要 AI 帮使用者做事吗，还是 AI 只用来帮你开发它？”；不能因用户提到 Vibe Coding 而默认产品需要 AI。③不要按固定题序；候选问题「'+AI_DES_Q[cur]+'」仅在它仍是最大缺口且没有回答过时才使用。④不用 PRD、指标、优先级等术语。⑤本轮只问 1 个最容易回答的问题，可给生活化例子。⑥用户说“不知道”时给 2 个简单选项，或标记“AI 建议（待确认）”，不要强迫填写指标。⑦若发现前后矛盾，必须先澄清矛盾，不能直接汇总。当前规则检测到的可能矛盾：'+(conflicts.join('；')||'无')+'。⑧每次输出都先给六个短标记：\n【我已理解】一句话复述\n【已确认事实】最多 4 条，保留已有事实并补充本轮新增事实\n【还需确认】最多 2 个未确认点\n【AI假设】没有则写“无”；所有推导都必须写“AI 建议（待确认）”\n【产品AI功能】写“需要：具体帮助用户做什么”“不需要：AI 仅用于辅助开发”或“待确认：是否会影响方案”\n【方案卡片】必须根据全部已完成问答（不是只看本轮）更新六行：要做什么：…；给谁用：…；用户怎样完成：…；第一版先做什么：…；第一版暂不做什么：…；待确认与风险：…。没有的信息写 AI 建议（待确认）。\n【关键取舍】只有出现会明显改变第一版范围的未确认选择时才输出，格式为：问题：…；AI建议：…；原因：…；其他选择：…。没有则写“无”。\n然后：信息足够时输出【汇总】及小白可读方案（要做什么、给谁用、怎样完成、第一版做/不做、成功结果、风险/待确认项）；可额外输出【名称建议】<8字以内建议>，但绝不能把建议当项目名，项目名称将由用户在生成前自己填写。否则输出【进入下一题】再提出唯一一个从未回答过的最关键问题。';
+  sys=sys.replace(/⑧每次输出都先给六个短标记：[\s\S]*?没有则写“无”。\n然后：/,'⑧每次输出先给五个短标记：\n【我已理解】一句话复述\n【已确认事实】最多 4 条，保留已有事实并补充本轮新增事实\n【还需确认】最多 2 个未确认点\n【AI假设】没有则写“无”；所有推导都必须写“AI 建议（待确认）”\n【产品AI功能】写“需要：具体帮助用户做什么”“不需要：AI 仅用于辅助开发”或“待确认：是否会影响方案”\n【本轮方案卡】每次都必须输出 1–3 行，格式为“[已确认|AI建议|待确认] 标题：内容”。只输出本轮新增或修正的方案点，标题由对话决定，不得固定成六个字段；内容短、可编辑。\n【关键取舍】只有出现会明显改变第一版范围的未确认选择时才输出，格式为：问题：…；AI建议：…；原因：…；其他选择：…。没有则写“无”。\n【三条建议】只有当用户本轮明确说“我不确定，让 AI 建议”时才输出，必须恰好 3 行，格式为“1. 方向：适合什么情况；好处；代价”。三条必须是不同的合理方向，不可同义改写；否则写“无”。\n然后：');
+  if(aiDesState.adviceRequested)sys+='\n本轮是用户主动请求建议：必须输出【三条建议】且三条编号可以换行或同一行，但不得省略。输出建议后立即结束，绝不能输出【进入下一题】、问题或任何催促回答的文字；必须等待用户点选 A/B/C/D。';
   aiDesState.abort=new AbortController();
   aiGlobalAbort=aiDesState.abort;
   var stopBtn=document.getElementById('aiDesStop');if(stopBtn)stopBtn.style.display='';
@@ -9425,26 +9619,35 @@ function aiDesSend(forceEnd){
     aiDesState.busy=false;aiGlobalAbort=null;aiDesState.abort=null;aiCancelFlag=false;
     if(stopBtn)stopBtn.style.display='none';
     var t=String(text||'').trim();
-    if(aiDesStreamEl){aiDesStreamEl.innerHTML=(aiDesReasoning?'<details class="ai-think"><summary><span class="ai-think-h-t"><span class="ai-think-ic">'+ICONS.brain+'</span>深度思考</span><span class="ai-think-cnt">'+aiDesReasoning.length+' 字</span><span class="ai-think-caret">▾</span></summary><div class="ai-think-body">'+aiEsc(aiDesReasoning)+'</div></details>':'')+'<div class="ai-des-out">'+aiEsc(t||'（AI 没有回应，请再试一次）')+'</div>';}
-    else{aiDesLogAdd('bot',t||'（AI 没有回应，请再试一次）');}
+    if(aiDesState.adviceRequested&&t.indexOf('【三条建议】')>=0)t=t.replace(/\s*【进入下一题】[\s\S]*$/,'').trim();
+    var deferResearch=!!aiDesState.researchCheckAfterReply&&!aiDesState.adviceRequested&&t.indexOf('【汇总】')<0&&t.indexOf('【进入下一题】')>=0;
+    var shown=t;
+    if(deferResearch){aiDesState.pendingNextQuestion=aiDesMarker(t,'进入下一题')||aiDesNextQuestion(t);shown=t.replace(/\s*【进入下一题】[\s\S]*$/,'').trim();}
+    if(aiDesStreamEl){aiDesStreamEl.innerHTML=(aiDesReasoning?'<details class="ai-think"><summary><span class="ai-think-h-t"><span class="ai-think-ic">'+ICONS.brain+'</span>深度思考</span><span class="ai-think-cnt">'+aiDesReasoning.length+' 字</span><span class="ai-think-caret">▾</span></summary><div class="ai-think-body">'+aiEsc(aiDesReasoning)+'</div></details>':'')+'<div class="ai-des-out">'+aiEsc(shown||'（AI 没有回应，请再试一次）')+'</div>';}
+    else{aiDesLogAdd('bot',shown||'（AI 没有回应，请再试一次）');}
     aiDesStreamEl=null;
     var finish=function(){
       var fin=document.getElementById('aiDesFinish');if(fin)fin.style.display='inline-block';
       var hint=document.getElementById('aiDesInput');if(hint)hint.placeholder='点击下方「据此生成 PRD」继续';
       var sb=document.getElementById('aiDesSendBtn');if(sb)sb.style.display='none';
     };
-    aiDesAbsorbResponse(t);
+    aiDesAbsorbResponse(t);aiDesAppendRoundCards();
     if(t.indexOf('【汇总】')>=0){
       aiDesState.summary=t.replace(/【汇总】/g,'').trim();
       aiDesState.name=aiDesMarker(t,'名称建议').replace(/^(?:项目名|名称建议)[:：]\s*/,'').slice(0,40);
       finish();
-    }else if(t.indexOf('【进入下一题】')>=0){
+    }else if(!aiDesState.adviceRequested&&t.indexOf('【进入下一题】')>=0){
       aiDesState.step++;aiDesState.sub=0;
     }else{
       aiDesState.sub++;
       if(aiDesState.sub>=3){aiDesState.step++;aiDesState.sub=0;}
     }
+    aiDesState.adviceRequested=false;
     if(t.indexOf('【汇总】')<0&&aiDesState.turns.length>0&&aiDesState.turns.length%10===0&&aiDesState.checkpointAt<aiDesState.turns.length)aiDesOpenCheckpoint();
+    if(t.indexOf('【汇总】')<0){
+      if(deferResearch)aiDesOfferResearch(true);
+      else{aiDesState.researchCheckAfterReply=false;aiDesOfferResearch();}
+    }else aiDesState.researchCheckAfterReply=false;
   }).catch(function(e){
     aiDesState.busy=false;aiGlobalAbort=null;aiDesState.abort=null;aiCancelFlag=false;
     if(stopBtn)stopBtn.style.display='none';
@@ -9468,25 +9671,71 @@ function aiDesignOpen(){
   aiDesRenderState();
   var stp=document.getElementById('aiDesStop');if(stp)stp.style.display='none';
   var st=aiGetSettings();
-  if(!String(st.apiKey||'').trim()||!String(st.baseUrl||'').trim()){
-    aiDesLogAdd('sys','请先在 设置→高级→AI 设置 中配置 API Key 与地址。');
+  if(!aiDesConfigReady(st)){
+    aiDesLogAdd('sys',aiDesConfigHint());
   }else{
     aiDesLogAdd('bot','你好，我是需求澄清助手。你不用会写 PRD，先告诉我一个想法就好；不确定的地方我会给建议，并标成待确认。\n\n'+AI_DES_Q[0]);
   }
   try{openModal('aiDesignModal');}catch(e){var mm=document.getElementById('aiDesignModal');if(mm)mm.classList.add('open');}
 }
 window.aiDesignOpen=aiDesignOpen;
+function aiDesCardDefinitions(){
+  var answer=function(i,empty){return String((aiDesState.turns[i]&&aiDesState.turns[i].answer)||empty||'').trim();};
+  var draft=aiDesState.cardDrafts||{};
+  var allAnswers=aiDesState.turns.map(function(turn){return String(turn.answer||'').trim();}).filter(Boolean).join('；');
+  var needs=(aiDesState.conflicts.length?aiDesState.conflicts:aiDesState.needs).slice(0,3).join('；')||'暂无；生成时会保留 AI 建议（待确认）';
+  var suggestions=aiDesState.assumptions.slice(-3).join('；')||'第一版先只完成核心任务，其余想法可先不做。';
+  return [
+    {key:'goal',title:'要做什么',hint:'AI 会综合全部对话；你可用一句话改写。',value:draft.goal||aiDesState.understood||answer(0,'请用自己的话补充想做什么。')},
+    {key:'audience',title:'给谁用',hint:'来自全部对话；可以写“我自己”“健身新手”等。',value:draft.audience||'AI 建议（待确认）：请结合全部对话确认目标用户。'},
+    {key:'journey',title:'用户怎样完成',hint:'写用户从打开到得到结果的主要过程。',value:draft.journey||aiDesPlain(aiDesState.summary)||'AI 建议（待确认）：请结合全部对话整理主要过程。'},
+    {key:'scope',title:'第一版先做什么',hint:'只保留最能验证想法的部分。',value:draft.scope||'AI 建议（待确认）：'+(allAnswers||answer(2,'先做一个能走通核心任务的最小版本。'))},
+    {key:'notDo',title:'第一版暂不做什么',hint:'这不是放弃，而是避免第一版变复杂。',value:draft.notDo||('除已确认的核心任务外，其余功能暂不加入；'+suggestions)},
+    {key:'risks',title:'待确认与风险',hint:'不确定或不能接受的情况都可以写在这里。',value:draft.risks||needs}
+  ];
+}
+function aiDesRememberSkeletonCards(){
+  var cards=document.querySelectorAll('#aiDesSkeletonCards [data-desplan-card]');
+  cards.forEach(function(el){var i=+el.dataset.desplanCard;if(aiDesState.planCards[i]){aiDesState.planCards[i].content=el.value;aiDesState.planCards[i].manual=true;}});
+  var manual=document.getElementById('aiDesManualInput');if(manual)aiDesState.skeletonFields.manual=manual.value;
+  document.querySelectorAll('[data-desdecision-input]').forEach(function(el){var i=+el.dataset.desdecisionInput;if(aiDesState.decisions[i])aiDesState.decisions[i].value=el.value;});
+}
+function aiDesRenderSkeletonCards(){
+  var box=document.getElementById('aiDesSkeletonCards');if(!box)return;
+  if(!aiDesState.planCards.length){var fallback=aiDesState.understood||aiDesState.turns.map(function(turn){return turn.answer;}).filter(Boolean).join('；')||'请用自己的话补充产品想法。';aiDesState.planCards.push({key:'user-idea',title:'用户原始想法',content:fallback,status:'待确认',manual:false});}
+  box.innerHTML=aiDesState.planCards.map(function(card,i){return '<div class="field" style="margin:0;padding:9px;border:1px solid var(--line,#e4e1da);border-radius:10px;background:var(--panel,#fff)"><label for="aiDesPlanCard_'+i+'" style="font-weight:700">'+aiEsc(card.title)+'</label><div class="muted" style="font-size:11px;margin:2px 0">'+aiEsc(card.status)+(card.manual?' · 已由你修改':'')+'</div><textarea id="aiDesPlanCard_'+i+'" data-desplan-card="'+i+'" rows="3" style="width:100%;box-sizing:border-box;resize:vertical;font-size:12px">'+aiEsc(card.content||'')+'</textarea></div>';}).join('');
+  var manual=document.getElementById('aiDesManualInput');if(manual)manual.value=aiDesState.skeletonFields.manual||'';
+}
+function aiDesRenderDecisionCards(){
+  var box=document.getElementById('aiDesDecisionCards');if(!box)return;
+  if(!aiDesState.decisions.length){box.innerHTML='';return;}
+  box.innerHTML=aiDesState.decisions.map(function(item,i){return '<div style="padding:9px;border:1px solid var(--color-warning-border,#e5c98e);border-radius:10px;background:var(--color-warning-bg,#fff9e8);font-size:12px"><b>需要你决定：'+aiEsc(item.question)+'</b><div style="margin-top:4px">AI 建议：'+aiEsc(item.recommendation)+(item.why?' · '+aiEsc(item.why):'')+'</div>'+(item.alternatives?'<div class="muted" style="margin-top:3px">其他选择：'+aiEsc(item.alternatives)+'</div>':'')+'<div style="margin-top:6px"><button class="btn btn--ghost btn--sm" data-ai="desdecisionrecommend" data-decision="'+i+'">采用 AI 建议</button></div><textarea data-desdecision-input="'+i+'" rows="2" placeholder="也可以自己填写最终选择" style="width:100%;box-sizing:border-box;resize:vertical;margin-top:6px;font-size:12px">'+aiEsc(item.value||'')+'</textarea></div>';}).join('');
+}
+function aiDesRenderEvidence(){
+  var box=document.getElementById('aiDesEvidence');if(!box)return;
+  var transcript=aiDesTranscript();
+  box.textContent='已整理 '+aiDesState.turns.length+' 轮对话。以下是生成方案时的全部用户回答依据：\n'+transcript+'\n\nAI 暂定假设：\n'+(aiDesState.assumptions.map(function(x){return '- '+x;}).join('\n')||'- 无');
+}
 function aiDesBuildSkeleton(){
-  var provided=aiDesState.qa.map(function(q,i){return '- '+(i+1)+'. '+String(q).slice(0,220);}).join('\n')||'- （尚未提供）';
-  var assumptions=aiDesState.assumptions.length?aiDesState.assumptions.map(function(x){return '- '+x;}).join('\n'):'- 无';
-  var needs=(aiDesState.conflicts.length?aiDesState.conflicts:aiDesState.needs).map(function(x){return '- '+x;}).join('\n')||'- 请在生成前补充或接受 AI 建议';
-  var summary=aiDesPlain(aiDesState.summary);
+  var provided=aiDesTranscript();
   var productAi=aiDesState.productAi||'未确认（默认不加入产品功能）';
-  return '# 产品方案（名称将在生成前由你填写）\n\n## 要做什么\n'+(aiDesState.understood||'根据下面的描述整理')+'\n\n## 你已提供的信息\n'+provided+'\n\n## AI 整理的方案\n'+(summary||'（尚未完成 AI 汇总；以下信息会以待确认状态交给 AI 生成草稿。）')+'\n\n## 产品中的 AI 功能边界\n- '+productAi+'\n- AI 用于辅助开发，不自动等同于产品功能；若需要让最终用户使用 AI，请在此处写清它具体帮谁完成什么。\n\n## AI 建议（待确认）\n'+assumptions+'\n\n## 还需要确认 / 可能冲突\n'+needs+'\n\n## 第一版边界\n- 只实现上面已确认的核心任务；其余内容默认不做，除非你在此处补充。';
+  var manual=String((aiDesState.skeletonFields||{}).manual||'').trim();
+  var cards=aiDesState.planCards.map(function(card){return '## '+card.title+'\n'+String(card.content||'（待补充）').trim()+'\n\n> 状态：'+card.status+(card.manual?'（已由用户修改）':'');}).join('\n\n')||'## 用户原始想法\n（待补充）';
+  var decisions=aiDesState.decisions.map(function(item){return '- '+item.question+'：'+(item.value||'待你决定（AI 建议：'+item.recommendation+'）');}).join('\n')||'- 无';
+  return '# 产品方案（名称将在生成前由你填写）\n\n'+cards+'\n\n## 已确认的关键取舍\n'+decisions+'\n\n## 已完成竞品研究\n'+aiDesResearchContext()+'\n\n## 产品中的 AI 功能边界\n- '+productAi+'\n- AI 用于辅助开发，不自动等同于产品功能；未明确需要时，不加入面向最终用户的 AI 能力。\n\n## 全部对话依据（'+aiDesState.turns.length+' 轮）\n'+provided+(manual?'\n\n## 用户手动补充\n'+manual:'');
+}
+function aiDesBuildHandoff(projectName){
+  var cards=aiDesState.planCards.map(function(card){return '- '+card.title+'：'+String(card.content||'（待补充）').trim()+'（'+card.status+'）';}).join('\n')||'- （待补充）';
+  var decisions=aiDesState.decisions.map(function(item){return '- '+item.question+'：'+(item.value||'待确认（AI 建议：'+item.recommendation+'）');}).join('\n')||'- 无';
+  return '# Coding Agent 交接摘要\n\n## 项目\n'+projectName+'\n\n## 已整理方案卡\n'+cards+'\n\n## 验收起点\n- 用户可以完成方案卡中已确认的核心路径，不被阻断。\n- 第一版只覆盖已确认范围，不把待确认或暂不做的内容私自加入。\n- 所有“待确认”方案卡都须在开发前决定或明确保留假设。\n\n## 已确认的关键取舍\n'+decisions;
+}
+function aiDesSyncSkeletonEditor(){
+  aiDesRememberSkeletonCards();
+  var editor=document.getElementById('aiDesSkeletonEditor');if(editor&&!aiDesState.skeletonAdvanced)editor.value=aiDesBuildSkeleton();
 }
 function aiDesFinish(){
   if(aiDesState.busy){aiToast('AI 仍在整理，稍后再查看方案');return;}
-  var editor=document.getElementById('aiDesSkeletonEditor');if(editor)editor.value=aiDesBuildSkeleton();
+  aiDesState.skeletonAdvanced=false;aiDesRenderSkeletonCards();aiDesRenderDecisionCards();aiDesRenderEvidence();aiDesSyncSkeletonEditor();
   var nameEl=document.getElementById('aiDesProjectName');if(nameEl){nameEl.value='';nameEl.placeholder=aiDesState.name?('AI 建议：'+aiDesState.name+'（请自行填写或改写）'):'例如：我的喝水记录';}
   var nameHint=document.getElementById('aiDesProjectNameHint');if(nameHint)nameHint.textContent=aiDesState.name?('AI 名称建议：'+aiDesState.name+'。仅供参考，请自行填写或改写。'):'请为这份需求取名；AI 的名称建议仅供参考，不会自动采用。';
   var hint=document.getElementById('aiDesSkeletonHint');if(hint)hint.textContent=aiDesState.conflicts.length?'发现可能冲突：确认前请在方案中说明取舍。':'确认后才会开始按章节生成草稿；生成内容仍需在 AI 面板逐条接受后写入。';
@@ -9502,12 +9751,14 @@ function aiDesOpenCheckpoint(){
 function aiDesCloseCheckpoint(){try{closeModal('aiDesCheckpointModal');}catch(e){var m=document.getElementById('aiDesCheckpointModal');if(m)m.classList.remove('open');}}
 function aiDesConfirmSkeleton(){
   var st=aiGetSettings();
-  if(!String(st.apiKey||'').trim()||!String(st.baseUrl||'').trim()){aiToast('请先在 设置→AI 中配置 API Key 与地址');return;}
+  if(!aiDesConfigReady(st)){aiToast('请先在 设置→AI 中配置 API Key、地址和标准模型');return;}
+  if(!aiDesState.skeletonAdvanced)aiDesSyncSkeletonEditor();else aiDesRememberSkeletonCards();
   var editor=document.getElementById('aiDesSkeletonEditor');var text=String(editor&&editor.value||'').trim();
   if(text.length<10){aiToast('请补充至少一句产品方案');return;}
   var projectName=String((document.getElementById('aiDesProjectName')||{}).value||'').trim();
   if(!projectName){aiToast('请先为项目取个名字，你之后仍可在项目菜单重命名');var projectNameEl=document.getElementById('aiDesProjectName');if(projectNameEl)projectNameEl.focus();return;}
   aiDesState.name=projectName;
+  aiDesState.handoffBrief=aiDesBuildHandoff(projectName);
   var frameworkChoice=String((document.getElementById('aiDesFramework')||{}).value||'__IDEA_STANDARD__');
   if(frameworkChoice!=='__IDEA_STANDARD__'&&frameworkChoice!=='__IDEA_MINIMAL__')frameworkChoice='__IDEA_STANDARD__';
   var genFwEl=document.getElementById('aiGenFw');if(genFwEl){genFwEl.innerHTML='<option value="'+frameworkChoice+'">'+(frameworkChoice==='__IDEA_MINIMAL__'?'精简 MVP（7 节）':'通用产品 PRD（14 节）')+'</option>';genFwEl.value=frameworkChoice;}
@@ -9533,14 +9784,21 @@ function aiBind(){
     if(act==='optimize'){aiOpenOptModal();return;}
     if(act==='review'){rvOpen();return;}
     if(act==='dessend'){aiDesSend();return;}
-    if(act==='desadvise'){var di=document.getElementById('aiDesInput');if(di){di.value='我不确定，请结合我前面的描述给出一个合理建议，并标记为待确认。';aiDesSend();}return;}
+    if(act==='desadvise'){var di=document.getElementById('aiDesInput');if(di){di.value='我不确定，让 AI 建议。请结合我前面的描述给出三个可选方向，并标记为待确认。';aiDesSend();}return;}
+    if(act==='desresearchstart'){aiDesStartResearch();return;}
+    if(act==='desresearchlater'){aiDesSkipResearch();return;}
+    if(act==='despickrecommend'){var picked=aiDesState.recommendations[+t.dataset.recommend],pickInput=document.getElementById('aiDesInput');if(picked&&pickInput){pickInput.value='我选择第 '+(+t.dataset.recommend+1)+' 个建议：'+picked+'。请把它作为我的选择继续澄清，并更新本轮方案卡。';pickInput.focus();aiToast('已填入输入框，你可以修改后再发送');}return;}
+    if(act==='deswriterecommend'){var ownInput=document.getElementById('aiDesInput');if(ownInput){ownInput.value='我不选择以上方案，我想自己补充：';ownInput.focus();aiToast('请写下你的方向，再发送给 AI');}return;}
+    if(act==='desaddplancard'){var titleEl=document.getElementById('aiDesNewCardTitle'),contentEl=document.getElementById('aiDesNewCardContent'),title=String(titleEl&&titleEl.value||'').trim(),content=String(contentEl&&contentEl.value||'').trim();if(!title||!content){aiToast('先写清方案卡标题和内容');return;}aiDesRememberSkeletonCards();aiDesState.planCards.push({key:aiDesPlanCardKey(title)+'-'+Date.now(),title:title,content:content,status:'已确认',manual:true});if(titleEl)titleEl.value='';if(contentEl)contentEl.value='';aiDesState.skeletonAdvanced=false;aiDesRenderSkeletonCards();aiDesSyncSkeletonEditor();return;}
+    if(act==='desdecisionrecommend'){var choice=aiDesState.decisions[+t.dataset.decision];if(choice){choice.value=choice.recommendation;var choiceInput=document.querySelector('[data-desdecision-input="'+t.dataset.decision+'"]');if(choiceInput)choiceInput.value=choice.value;aiDesState.skeletonAdvanced=false;aiDesSyncSkeletonEditor();}return;}
+    if(act==='deshandoffcopy'){var pending=aiState()&&aiState().pendingDiffs,brief=pending&&pending.handoff;if(!brief){aiToast('交接摘要暂不可用');return;}var copied=function(){aiToast('已复制交接摘要，可直接交给 Coding Agent');};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(brief).then(copied,function(){fallbackCopy(brief);copied();});else{fallbackCopy(brief);copied();}return;}
     if(act==='desskip'){if(aiDesState.busy){aiToast('AI 正在输出，可先点「■ 停止」再查看方案');return;}if(!aiDesState.qa.length){aiToast('先回答一个问题，或提供一点想法吧');return;}aiDesState.assumptions.push('未继续回答的部分：AI 建议（待确认）');aiDesRenderState();aiDesFinish();return;}
     if(act==='descheckpointcontinue'){aiDesCloseCheckpoint();var di2=document.getElementById('aiDesInput');if(di2)di2.focus();aiToast('继续完善，下一次会在第 '+(aiDesState.checkpointAt+10)+' 轮再次询问');return;}
     if(act==='descheckpointgenerate'){aiDesCloseCheckpoint();aiDesFinish();return;}
     if(act==='desstop'){if(aiDesState.abort){try{aiDesState.abort.abort();}catch(e){}}aiCancelFlag=true;return;}
     if(act==='desfinish'){aiDesFinish();return;}
     if(act==='desclose'){try{closeModal('aiDesignModal');}catch(e){var dmx=document.getElementById('aiDesignModal');if(dmx)dmx.classList.remove('open');}return;}
-    if(act==='desskelback'){try{closeModal('aiDesSkeletonModal');openModal('aiDesignModal');}catch(e){var smx=document.getElementById('aiDesSkeletonModal'),dmx2=document.getElementById('aiDesignModal');if(smx)smx.classList.remove('open');if(dmx2)dmx2.classList.add('open');}return;}
+    if(act==='desskelback'){aiDesRememberSkeletonCards();try{closeModal('aiDesSkeletonModal');openModal('aiDesignModal');}catch(e){var smx=document.getElementById('aiDesSkeletonModal'),dmx2=document.getElementById('aiDesignModal');if(smx)smx.classList.remove('open');if(dmx2)dmx2.classList.add('open');}return;}
     if(act==='desskelclose'){try{closeModal('aiDesSkeletonModal');}catch(e){var smc=document.getElementById('aiDesSkeletonModal');if(smc)smc.classList.remove('open');}return;}
     if(act==='desskelconfirm'){aiDesConfirmSkeleton();return;}
     if(act==='align'){aiAlign();return;}
@@ -9593,6 +9851,11 @@ function aiBind(){
     if(act==='savesettings'){aiSaveForm();return;}
     if(act==='testconn'){aiTestConn();return;}
   });
+  document.addEventListener('input',function(e){
+    var target=e.target;if(!target)return;
+    if(target.matches&&((target.matches('[data-desplan-card]'))||target.matches('[data-desdecision-input]')||target.id==='aiDesManualInput')){aiDesState.skeletonAdvanced=false;aiDesSyncSkeletonEditor();return;}
+    if(target.id==='aiDesSkeletonEditor')aiDesState.skeletonAdvanced=true;
+  });
   document.addEventListener('keydown',function(e){
     if(e.key==='Enter'&&!e.shiftKey&&(e.target.id==='aiChatInput'||e.target.id==='aiFloatInput')){e.preventDefault();chatSend(e.target.value);e.target.value='';return;}
     if(e.key==='Escape'){var mm=document.getElementById('aiOptModal'),gm=document.getElementById('aiGenModal');if(mm&&mm.classList.contains('open')){try{closeModal('aiOptModal');}catch(e2){mm.classList.remove('open');}}else if(gm&&gm.classList.contains('open')){try{closeModal('aiGenModal');}catch(e3){gm.classList.remove('open');}}else if(aiUi.open)aiClosePanel();}
@@ -9641,6 +9904,17 @@ function aiChatActionsFrom(text){
   }
   return out;
 }
+function aiLocalDateText(){
+  var d=new Date();
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
+}
+function aiChatDateAnswer(text){
+  var t=String(text||'').replace(/\s+/g,'').trim();
+  /* 仅拦截非常短的“今天/现在日期”事实问答；涉及项目日期、排期等仍由项目助手处理。 */
+  if(!t||t.length>24||/(项目|需求|排期|截止|上线|文档|功能|设置)/.test(t))return '';
+  if(/^(?:今天|现在)(?:是)?(?:几月几日|几月几号|几号|日期|多少号|多少日)\??[？]?$/.test(t))return '今天是'+aiLocalDateText()+'（以这台设备的本地时间为准）。';
+  return '';
+}
 function aiChatSystemPrompt(){
   var web=aiGetSettings().web;
   return '你是「产品助手」，一名资深产品经理 AI，服务于 需求文档工作台。你的使命是帮助任何人——尤其是用 AI 构建产品的开发者与 vibe coding 人群——先把模糊想法写成清晰的 PRD，再交给 AI 高效落地执行。你的第一身份是**对话伙伴**，其次才是执行者。\n'
@@ -9660,8 +9934,9 @@ function aiChatSystemPrompt(){
    +'示例——用户："给我加一节竞品分析，写段背景"：回复"好的，新增『竞品分析』节并写入背景。"\n<action name="addSection" payload=\'{"title":"竞品分析","type":"text","content":"## 竞品分析\\n\\n当前主流协作工具方案对比：……"}\'/>\n'
    +'7) 一次回复可含多个动作标签，按顺序执行；复杂任务先列计划、再逐步执行。\n'
    +'8) 纯提问就正常回答，不加动作标签。\n'
-   +(web?'9) 你已开启联网，可基于最新资料作答（引用来源时标注出处）。\n':'')
-   +'10) 语言简洁、像产品经理带实习生，不要写新闻稿。';
+   +(web?'9) 已配置真实联网竞品研究，但只有用户明确确认搜索后才会调用并展示来源；未见来源时不得声称已联网或引用最新资料。\n':'')
+   +'10) 当前客户端日期是 '+aiLocalDateText()+'。涉及“今天/现在”的日期先以此为准；不知道时明确说明，不得编造日期。\n'
+   +'11) 语言简洁、像产品经理带实习生，不要写新闻稿。';
 }
 function aiChatEnsureProject(){
   var p=currentProj();
@@ -9724,6 +9999,12 @@ function chatSend(text){
   var project=aiChatEnsureProject();
   if(!project){aiToast('请先创建或打开一个项目');return;}
   aiChatState.messages.push({role:'user',content:text});
+  var localDateReply=aiChatDateAnswer(text);
+  if(localDateReply){
+    aiChatState.messages.push({role:'assistant',content:localDateReply});
+    aiRenderChatLog();
+    return;
+  }
   aiChatState.messages.push({role:'assistant',content:'',pending:true});
   aiRenderChatLog();
   aiChatState.busy=true;
@@ -10221,6 +10502,9 @@ window.__AICtrl={
     genPrompt:aiGenSectionPrompt,
     chatKnowledge:aiChatProjectKnowledge,
     chatPrompt:aiChatSystemPrompt,
+    chatDateAnswer:aiChatDateAnswer,
+    localDateText:aiLocalDateText,
+    inferProvider:aiInferProvider,
     styleGuide:aiGenStyleGuide,
     chunkDoc:aiChunkDoc,
     scoreChunked:aiScoreChunked,
@@ -10230,6 +10514,19 @@ window.__AICtrl={
     normRows:aiGenNormRows,
     privacyMeta:aiPrivacyMeta,
     privacyConfirm:aiPrivacyConfirm,
+    designFinish:aiDesFinish,
+    designConfigReady:aiDesConfigReady,
+    designAbsorbResponse:aiDesAbsorbResponse,
+    designAppendRoundCards:aiDesAppendRoundCards,
+    designShouldOfferResearch:aiDesShouldOfferResearch,
+    designOfferResearch:aiDesOfferResearch,
+    designStartResearch:aiDesStartResearch,
+    designSkipResearch:aiDesSkipResearch,
+    designState:function(){return aiDesState;},
+    webResearchAvailable:aiWebResearchAvailable,
+    webResearchMode:aiWebResearchMode,
+    webResponseSources:aiResponseSources,
+    designSetState:function(data){aiDesState=Object.assign(aiDesNewState(),data||{});aiDesRenderState();return aiDesState;},
     privacySeen:function(){return aiPrivacySeen;},
     clearPrivacySeen:function(){aiPrivacySeen={};try{localStorage.removeItem(AI_PRIVACY_ACK_KEY);}catch(e){}},
     backup:aiBackupState,
