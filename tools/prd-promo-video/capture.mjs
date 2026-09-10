@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SHOTS = path.join(__dirname, 'shots');
 fs.mkdirSync(SHOTS, { recursive: true });
 
-const FILE = 'file:///' + path.join('E:', 'WorkBuddy', 'work', 'prd看板', 'PRD智能看板.html').replace(/\\/g, '/');
+const FILE = 'file:///' + path.join('E:', 'WorkBuddy', 'work', 'prd看板', 'PMHub.html').replace(/\\/g, '/');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

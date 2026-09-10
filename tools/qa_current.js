@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const appFile = path.join(root, 'PRD智能看板.html');
+const appFile = path.join(root, 'PMHub.html');
 const html = fs.readFileSync(appFile, 'utf8');
 const failures = [];
 
@@ -28,7 +28,7 @@ const block1End = html.indexOf('</script>', block1Start);
 const block1 = block1Start >= 0 && block1End >= 0 ? html.slice(block1Start, block1End) : null;
 const aiController = scriptBodyById('ai-controller');
 
-check('主应用文件存在且为当前版本', html.includes('版本 v19.11 · 联网研究闭环'), appFile);
+check('主应用文件存在且为当前版本', html.includes('版本 v19.17 · AI 设置页重排'), appFile);
 check('AI 发送后立即创建深度思考状态，实际推理到达后流式替换', html.includes('深度思考已启动') && html.includes('正在理解你的想法，并找出最需要确认的一件事') && html.includes('m.reasoning||m.pending'));
 check('AI 需求澄清支持小白从一句想法起步且不强制填写指标', html.includes('AI 需求澄清 · 从一句想法开始') && html.includes('先用一句话说说') && html.includes('不需要懂 PRD、指标或技术术语') && html.includes('AI 建议（待确认）'));
 check('AI 需求澄清按信息缺口选择下一问，而不机械走固定题序', html.includes('不要按固定题序') && html.includes('当前最大的缺口') && html.includes('第一版最小范围'));
@@ -46,8 +46,8 @@ check('AI 生成前用可手动编辑的动态方案卡与自由补充替代固�
 check('每轮方案卡由全部对话累积整理，展示全部对话依据并将关键取舍交由用户确认', html.includes('【本轮方案卡】') && html.includes('function aiDesAppendRoundCards') && html.includes('查看本次方案依据（全部对话）') && html.includes('function aiDesRenderDecisionCards') && html.includes('data-ai="desdecisionrecommend"'));
 check('用户主动让 AI 建议时以内容卡展示三条有取舍方向，兼容单行输出并提供 A/B/C/D 选择且文本不塞进按钮', html.includes('【三条建议】') && html.includes('我不确定，让 AI 建议。请结合我前面的描述给出三个可选方向') && html.includes('function aiDesAbsorbRecommendations') && html.includes('var re=/(?:^|\\s)([123])') && html.includes("aria-label=\"选择方案 '+letter+'\"") && html.includes('data-ai="deswriterecommend"') && html.includes('D · 我自己填写') && html.includes('已填入输入框，你可以修改后再发送'));
 check('用户主动请求三条建议时，AI 被要求停止追问并等待 A/B/C/D 选择', html.includes('必须等待用户点选 A/B/C/D') && html.includes("if(aiDesState.adviceRequested&&t.indexOf('【三条建议】')>=0)") && html.includes("}else if(!aiDesState.adviceRequested&&t.indexOf('【进入下一题】')>=0)"));
-check('联网竞品研究优先支持 DeepSeek、Qwen、GLM：Responses 检索或 GLM 真实检索结果受证据分析，GLM 用户确认后强制实际搜索且不向普通聊天猜测性注入工具参数', html.includes("deepseek:'responses'") && html.includes("qwen:'responses'") && html.includes("zhipu:'zhipu-search'") && html.includes("tools:[{type:'web_search'}]") && html.includes("tool_choice:{type:'web_search'}") && html.includes('https://open.bigmodel.cn/api/paas/v4/web_search') && html.includes('search_intent:false') && html.includes('function aiResearchPayloadError(payload)') && html.includes('未取得可展示来源') && !html.includes('if(st.web&&!opts.json)aiApplyWebSearch(body,st);'));
-check('需求澄清每约 5 轮仅在 AI 确认后单独询问竞品研究；研究可停止、存入本次记忆并基于结果追问', html.includes('function aiDesShouldOfferResearch') && html.includes('n-aiDesState.researchPromptAt>=5') && html.includes('researchCheckAfterReply') && html.includes('pendingNextQuestion') && html.includes('function aiDesStartResearch') && html.includes('正在联网搜索') && html.includes('aiDesStopControl(true)') && html.includes('已存入本次需求记忆') && html.includes('function aiDesResearchFollowup') && html.includes('查看实际搜索来源'));
+check('联网竞品研究优先支持 DeepSeek、Qwen、GLM：Responses / DashScope 检索或 GLM 真实检索结果受证据分析，GLM 用户确认后强制实际搜索且不向普通聊天猜测性注入工具参数', html.includes("deepseek:'responses'") && html.includes("qwen:'dashscope'") && html.includes("zhipu:'zhipu-search'") && html.includes("tools:[{type:'web_search'}]") && html.includes("tool_choice:{type:'web_search'}") && html.includes('https://open.bigmodel.cn/api/paas/v4/web_search') && html.includes('search_intent:false') && html.includes('function aiResearchPayloadError(payload)') && html.includes('未取得可展示来源') && !html.includes('if(st.web&&!opts.json)aiApplyWebSearch(body,st);'));
+check('需求澄清每约 5 轮仅在 AI 确认后单独询问竞品研究；研究可停止、存入本次记忆并直接给出方向、复用与差异化策略', html.includes('function aiDesShouldOfferResearch') && html.includes('n-aiDesState.researchPromptAt>=5') && html.includes('researchCheckAfterReply') && html.includes('pendingNextQuestion') && html.includes('function aiDesStartResearch') && html.includes('正在联网搜索') && html.includes('aiDesStopControl(true)') && html.includes('已存入本次需求记忆') && html.includes('function aiDesResearchRecommendation') && html.includes('【研究推荐】') && html.includes('复用判断') && html.includes('差异化机会') && html.includes('查看实际搜索来源'));
 check('想法生成完成后提供可复制的 Coding Agent 交接摘要，不扩展为任务管理', html.includes('function aiDesBuildHandoff') && html.includes('Coding Agent 交接摘要') && html.includes('data-ai="deshandoffcopy"') && html.includes('handoff:aiGenMode===\'design\''));
 check('从想法开始在发起或确认生成前校验标准模型配置', html.includes('function aiDesConfigReady') && html.includes("aiModelFor('standard',st)") && html.includes('API Key、地址和标准模型'));
 check('AI 需求澄清不会因准备阶段异常永久卡在思考中，停止可在请求前生效', html.includes('function aiDesSend(forceEnd)') && html.includes('forceEnd=!!forceEnd') && /Promise\.resolve\(\)\.then\(function\(\)\{\s*if\(aiCancelFlag\)throw \{kind:'canceled'/.test(html) && html.includes('var collected=aiDesTranscript();') && html.includes('return aiChat([{role:\'system\',content:sys}'));
@@ -86,8 +86,8 @@ for (const [relative, expected] of mirrors) {
 }
 
 check('未引用已删除的 newest.html', !html.includes('newest.html'));
-check('设置页主题入口未重复', (html.match(/class="theme-opt"/g) || []).length === 3);
-check('未保存主题时默认使用浅色', html.includes("t=(t==='light'||t==='dark'||t==='hc')?t:'light'"));
+check('设置页主题入口未重复', (html.match(/class="theme-opt"/g) || []).length === 4);
+check('未保存主题时默认使用品牌主题', html.includes("t=(t==='brand'||t==='light'||t==='dark'||t==='hc')?t:'brand'"));
 check('AI 总评维度展开不重排指标且有可访问状态', html.includes('class="dim-details"') && html.includes('aria-controls="dimd-') && html.includes("dim.setAttribute('aria-expanded','true')"));
 check('重置提供三档范围与二次确认', html.includes('data-scope="projects"') && html.includes('data-scope="projectsTemplates"') && html.includes('data-scope="all"') && html.includes('data-act="resetconfirm"'));
 check('全部重置覆盖独立本地数据键', html.includes("RESET_LOCAL_KEYS.aiSettings") && html.includes("RESET_LOCAL_KEYS.theme") && html.includes("STORAGE_KEY+'.bak'"));
@@ -109,8 +109,8 @@ check('项目助手每轮带入当前项目正文和质量状态，并在切换�
 check('项目助手的当前日期由本机时间确定性回答，并把日期注入普通对话提示，避免模型猜测', html.includes('function aiLocalDateText()') && html.includes('function aiChatDateAnswer(text)') && html.includes('今天是\'+aiLocalDateText()') && html.includes('当前客户端日期是 \'+aiLocalDateText()') && html.includes('var localDateReply=aiChatDateAnswer(text)'));
 check('旧版官方 DeepSeek/Qwen/GLM 地址会安全识别服务商，第三方代理仍保持自定义', html.includes('function aiInferProvider(provider,baseUrl)') && html.includes("return 'zhipu'") && html.includes("return 'deepseek'") && html.includes("return 'qwen'") && html.includes('def.provider=aiInferProvider(def.provider,def.baseUrl)'));
 check('项目助手的可见即可做入口支持小白提问与当前项目提示', html.includes('ai-float-quick') && html.includes('data-ai="floatask"') && html.includes('解释项目') && html.includes('下一步建议') && html.includes('教我怎么写') && html.includes('已读取「'));
-check('AI 设置不再默认绑定 DeepSeek，支持标准/快速/深度模型分档与本地免费引导', html.includes("provider:'custom'") && html.includes("baseUrl:''") && html.includes("fastModel:''") && html.includes("deepModel:''") && html.includes('function aiModelFor') && html.includes("tier:'fast'") && html.includes("tier:'deep'") && html.includes('preset-local-free') && html.includes('ollama run qwen3:8b') && html.includes('在线“免费额度”会随服务商和时间变化'));
-check('版本规则从 v19 起每 20 次改动进一位已记录在计划书', html.includes('版本 v19.11 · 联网研究闭环') && fs.readFileSync(path.join(root,'docs','个人本地PRD输出助手_优化实施计划.md'),'utf8').includes('v19.01–v19.19'));
+check('AI 设置不默认绑定服务商、支持标准/快速/深度分档、分区呈现且不提供本地部署入口', html.includes("provider:'custom'") && html.includes("baseUrl:''") && html.includes("fastModel:''") && html.includes("deepModel:''") && html.includes('function aiModelFor') && html.includes("tier:'fast'") && html.includes("tier:'deep'") && html.includes('function aiFillProviderDefaults') && html.includes('class="set-sec-h"') && !html.includes('preset-local-free') && !html.includes('aiFillModelPreset(') && !html.includes("['ollama','本地 Ollama']") && !html.includes('http://localhost:11434/v1') && !html.includes('ollama run qwen3:8b'));
+check('版本规则从 v19 起每 20 次改动进一位已记录在计划书', html.includes('版本 v19.17 · AI 设置页重排') && fs.readFileSync(path.join(root,'docs','个人本地PRD输出助手_优化实施计划.md'),'utf8').includes('v19.01–v19.19'));
 check('浮动编辑工具栏保存精确选区，仅提供行内格式且拒绝整段标题/引用格式', html.includes('let mfbBar=null,miniFmtRange=null,miniFmtEditor=null') && html.includes('function rememberMiniFmtRange') && html.includes("if(op==='h2'||op==='h3'||op==='quote')") && !html.includes('data-fmt="h2"') && !html.includes('data-fmt="h3"'));
 
 console.log(`\n质量基线：${failures.length ? `失败 ${failures.length} 项` : '通过'}`);

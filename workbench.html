@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>产品经理工作台 · 整合试验</title>
+<link rel="stylesheet" href="src/workbench/workbench.css">
+<header><div><small>整合试验 · 本地保存 · 不影响旧项目</small><h1>把需求和页面对应起来</h1></div><button id="export" disabled>导出项目备份</button></header>
+<main>
+<p id="status" role="status" aria-live="polite">正在读取本地项目…</p>
+<section id="start" hidden><h2>先用一个小项目走一遍</h2><p>以“喝水记录”为例，体验编辑需求、关联页面和检查变更。此入口暂不迁移你的正式项目。</p><button id="demo">创建体验项目</button></section>
+<div id="workspace" hidden>
+<nav aria-label="工作视图"><button id="documentTab" aria-pressed="true">1. 确认需求</button><button id="prototypeTab" aria-pressed="false">2. 对应页面</button></nav>
+<section id="document"><h2>你希望用户能做什么？</h2><p>这里是原始需求。修改后，原型侧会读取同一份内容，不需要再改一遍。</p><label for="requirement">选择需求</label><select id="requirement"></select><form id="edit"><label for="name">功能名称</label><input id="name" required maxlength="120"><label for="description">用户怎么用，完成后得到什么</label><textarea id="description" rows="5" maxlength="10000"></textarea><button>保存需求</button><button type="button" id="toPage">去页面建立对应关系 →</button></form></section>
+<section id="prototype" hidden><h2>这条需求对应页面上的哪里？</h2><p id="currentRequirement"></p><p>点击预览中的元素，再确认关联。静态预览不执行原型脚本、不加载外部资源；不代表业务功能已经实现。</p><div class="columns"><div><iframe id="preview" title="喝水记录页面的隔离静态预览" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div><aside><h3>当前选择</h3><p id="selection">请先点选左侧页面元素。</p><button id="bind" disabled>确认关联</button><button id="back">返回修改需求</button><h3>已建立的对应关系</h3><p>“已核对”仅表示你确认了对应关系，不代表通过功能验收。</p><div id="bindings"></div></aside></div></section>
+</div></main><script type="module" src="src/workbench/app.mjs"></script></html>

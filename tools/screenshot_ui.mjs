@@ -1,4 +1,4 @@
-// 需求文档工作台 · UI 截图工具（无头 Edge/Chrome + CDP）
+// PMHub · UI 截图工具（无头 Edge/Chrome + CDP）
 // 用法：node tools/screenshot_ui.mjs [输出目录]
 // 说明：沙箱内 node 直接 spawn 浏览器会崩，这里用 PowerShell Start-Process 拉起（-WindowStyle Hidden），node 只做 CDP 客户端。
 import fs from 'node:fs';
@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
+const appUrl = new URL('../PMHub.html', import.meta.url).href;
 const candidates = [
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
@@ -97,7 +97,7 @@ try {
   await new Promise(r => setTimeout(r, 2500));
   const facts = await evalJs(`(()=>{
     const out={};
-    out.theme = document.documentElement.getAttribute('data-theme')||'light';
+    out.theme = document.documentElement.getAttribute('data-theme')||'brand';
     out.topbar = Array.from(document.querySelectorAll('#topbar button, .top-icon-btn')).map(b=>(b.textContent||'').trim()).filter(Boolean).slice(0,20);
     out.sections = Array.from(document.querySelectorAll('#content .section-card')).map(s=>{
       const id=s.id.replace('sec-','');

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
+const appUrl = new URL('../PMHub.html', import.meta.url).href;
 const candidates = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
   'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',

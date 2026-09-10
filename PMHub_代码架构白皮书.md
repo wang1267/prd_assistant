@@ -1,8 +1,8 @@
-# 需求文档工作台 · 代码架构白皮书
+# PMHub · 代码架构白皮书
 
 > 当前实现基线：**v19.01**（2026-08-30）。本正文保留 v16.1 起的架构演进快照；当前事项与验收以 [优化实施计划](docs/个人本地PRD输出助手_优化实施计划.md) 为准，不能把下文的旧行号、版本号或功能入口当作当前事实。
 >
-> 当前维护要点：主应用是 `PRD智能看板.html`；项目数据与 AI 设置在浏览器本地存储，AI 请求由浏览器直连用户配置的 OpenAI 兼容服务。主文件中供测试抽取的脚本块由 `node tools/sync_test_blocks.js` 同步到 `tools/block1.js` 和 `tools/ai-controller.js`，这两个副本不应手工编辑。每次改动后至少运行 `node tools/qa_current.js` 与 `node tools/browser_check_dash.mjs`。
+> 当前维护要点：主应用是 `PMHub.html`；项目数据与 AI 设置在浏览器本地存储，AI 请求由浏览器直连用户配置的 OpenAI 兼容服务。主文件中供测试抽取的脚本块由 `node tools/sync_test_blocks.js` 同步到 `tools/block1.js` 和 `tools/ai-controller.js`，这两个副本不应手工编辑。每次改动后至少运行 `node tools/qa_current.js` 与 `node tools/browser_check_dash.mjs`。
 >
 > 以下为历史基线：v16.1（项目下拉弹窗）｜整理日期：2026-08-14。适用于理解早期的核心心智模型：**数据在内存（STATE/DATA）→ `render()` 全量重建 DOM → 事件委托 `bindStatic` 分发 → 改数据 → `save()` 落 localStorage**。
 
@@ -180,13 +180,13 @@
 >   4. 测试：`browser_check_dash.mjs` 增至 27 断言（更多→帮助/示例内容完整/切换不覆盖/排序）；regress v170 示例断言改「标准 14 节框架且内容完整」。
 
 >   📌 **当前现状速览（v17.24）**：本白皮书正文仍以 v16.1 基线撰写，以下为截至 v17.24 的现状事实，与正文冲突时以此为准。
->   1. 文件规模：`PRD智能看板.html` 约 **2.35MB / 7555 行**；脚本块行号（v17.24）：block0 ~802、block1 1080–4434、block2 4435、block3-4 ~4470、block5 4489、block6 4749–7555。
+>   1. 文件规模：`PMHub.html` 约 **2.35MB / 7555 行**；脚本块行号（v17.24）：block0 ~802、block1 1080–4434、block2 4435、block3-4 ~4470、block5 4489、block6 4749–7555。
 >   2. 存储键：`prdKanbanStateV3`（+ `.bak` 自动备份）、`prdKanbanAiSettings`（AI 设置，永不导出）、`prdKanbanTheme`、`prdKanbanTplCustom`（自定义模板）、`TPL_DRAFT_KEY`（模板草稿）。
 >   3. 框架预设：仅「标准 PRD 14 节 + 精简 7 节」（v17.23 移除「带小卡片 8 节」并迁移清理）。
 >   4. 事件委托新增：`help`（更多→帮助）、`ovsort`（总览排序）、`ovopen`（总览切换项目，先 `refreshData()` 再 `save()`）、`wz-newproj`/`wz-ai`（引导直达）、`tpl-preset`/`tpl-saveas`/`tpl-delcustom`（模板）、`copyhealth`（摘要复制）；AI 面板 `data-ai` 新增 `gen/genstart/genclose/cleargendbg`。
 >   5. AI 能力现状：6 维评分（引用/幻觉/缓存 + **长文分块**）、一键优化（块级最小编辑/独立复检/确定性校验/按节兜底）、结构对齐（搬移 + ops）、**AI 撰写草稿**（模板风格注入、items 补丁、transform 回滚）。
 >   6. 测试清单（截至 v17.24，全绿）：10 套 node 回归（`regress_v162~166`、`v170`、`v1715`、`v1719`、`v1722`、`v1723`）+ 6 个浏览器端到端（`browser_check.mjs` / `browser_check_grid.mjs` / `browser_check_ai.mjs` 19 / `browser_check_gen.mjs` 6 / `browser_check_dash.mjs` 27 / `browser_check_rtbl.mjs` 5）+ `screenshot_ui.mjs` 截图基线；**210 项 node 断言 + 57 项浏览器断言**。
->   7. 设计权威文档：方案设计请读《[PRD智能看板_方案设计.md](PRD智能看板_方案设计.md)》（v17.24 整合版）；旧三份方案已归档。
+>   7. 设计权威文档：方案设计请读《[PMHub_方案设计.md](PMHub_方案设计.md)》（v17.24 整合版）；旧三份方案已归档。
 
 >   ⚠️ v17.25 变更提示（顶栏收纳到更多）：
 >   1. 「设置 / 评论 / 框架」按钮从顶栏移入「更多 ▾」菜单（`#ddMore`：设置 / 评论 / 框架 / 帮助 / PRD 模板 / 重置看板），`data-act` 不变（settings/comments/managefw），bindStatic 零改动；
@@ -197,7 +197,7 @@
 
 ## 0. 阅读导览
 
-- 单文件自包含：`PRD智能看板.html`（约 2.35MB / 7555 行），无任何外部依赖（图片内联 base64、docx 解析自实现）。
+- 单文件自包含：`PMHub.html`（约 2.35MB / 7555 行），无任何外部依赖（图片内联 base64、docx 解析自实现）。
 
 - 结构三明治：**`<style>` 设计系统 → `<body>` 静态骨架 → 7 个 `<script>` 逻辑**（block0 主题 / block1 主逻辑 / block2 视图模式 / block3-4 Floating UI / block5 评论 / block6 AI）。
 
@@ -522,7 +522,7 @@
 
 1. **渲染与数据边界**：运行时注入的临时 UI 必须打标记（data-rtbl 等）且**保存时剥离**；不要往 `c.html` 里留任何 UI 壳。
 
-1. **多副本警惕**：只改主文件 `PRD智能看板.html`；历史备份在 `tools/backups/`（勿当主文件）。参考：[AGENTS.md](AGENTS.md)。
+1. **多副本警惕**：只改主文件 `PMHub.html`；历史备份在 `tools/backups/`（勿当主文件）。参考：[AGENTS.md](AGENTS.md)。
 
 1. **自测清单**（改完至少跑一遍）：
 

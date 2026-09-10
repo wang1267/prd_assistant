@@ -1,8 +1,8 @@
-# 需求文档工作台 · 交接文档
+# PMHub · 交接文档
 
 > 当前运行基线：**v19.01**（2026-08-30）。本正文是 v17.25 的历史交接快照；其中旧版本号、旧发布链接、旧模板数量、旧功能入口和旧本地路径均不代表当前状态。
 >
-> 当前接手顺序：先阅读 [优化实施计划](docs/个人本地PRD输出助手_优化实施计划.md)，再查看 `PRD智能看板.html`。主文件改动后依次执行 `node tools/sync_test_blocks.js`、`node tools/qa_current.js`、`node tools/browser_check_dash.mjs`。测试副本 `tools/block1.js`、`tools/ai-controller.js` 由同步脚本生成，不手工修改。
+> 当前接手顺序：先阅读 [优化实施计划](docs/个人本地PRD输出助手_优化实施计划.md)，再查看 `PMHub.html`。主文件改动后依次执行 `node tools/sync_test_blocks.js`、`node tools/qa_current.js`、`node tools/browser_check_dash.mjs`。测试副本 `tools/block1.js`、`tools/ai-controller.js` 由同步脚本生成，不手工修改。
 >
 > 当前产品概况：本地优先的单文件 PRD 输出助手，核心用户是 Vibe Coding 前、不会写专业 PRD 的新手；提供从想法、从空白、导入已有 PRD和场景模板四种入口，AI 先澄清并确认方案骨架，后生成、检测、优化和复核。场景模板当前为六套；AI 首次外发才提示隐私边界。
 >
@@ -12,7 +12,7 @@
 
 ## 一、一句话概况
 
-**需求文档工作台** 是一个单文件 HTML 的 PRD 撰写 + 健康度自检工具：14 节标准框架、红黄绿体检、Word 导入导出、划线评论、富文本表格、项目分组收纳，纯前端本地存储，无需服务器。
+**PMHub** 是一个单文件 HTML 的 PRD 撰写 + 健康度自检工具：14 节标准框架、红黄绿体检、Word 导入导出、划线评论、富文本表格、项目分组收纳，纯前端本地存储，无需服务器。
 
 ## 二、如何打开使用（最重要）
 
@@ -30,9 +30,9 @@
 
 ### 方式 B：本地文件
 
-主文件：`E:\vibecoding\prd_assistant\PRD智能看板.html`（约 2.35MB / 7555 行，双击用浏览器打开）。
+主文件：`E:\vibecoding\prd_assistant\PMHub.html`（约 2.35MB / 7555 行，双击用浏览器打开）。
 
-> ⚠️ 认准主文件名 `PRD智能看板.html`；打开后看**左下角版本水印**必须是 `v17.24 · 帮助入口与标准示例`。历史备份在 `tools\backups\`（勿当主文件使用）。
+> ⚠️ 认准主文件名 `PMHub.html`；打开后看**左下角版本水印**必须是 `v17.24 · 帮助入口与标准示例`。历史备份在 `tools\backups\`（勿当主文件使用）。
 
 ## 三、当前功能清单（v17.24）
 
@@ -60,7 +60,7 @@
 
 ## 四、技术要点（继续开发必读）
 
-- **单文件自包含**：全部 HTML/CSS/JS 在 `PRD智能看板.html` 一个文件里，共 7 个 `<script>` 块（block0 主题 / block1 主逻辑 / block2 视图模式 / block3-4 Floating UI（MIT 内联）/ block5 评论控制器 / block6 AI 控制器 `id="ai-controller"`）。AI 功能全部在新块内，不改 block1。
+- **单文件自包含**：全部 HTML/CSS/JS 在 `PMHub.html` 一个文件里，共 7 个 `<script>` 块（block0 主题 / block1 主逻辑 / block2 视图模式 / block3-4 Floating UI（MIT 内联）/ block5 评论控制器 / block6 AI 控制器 `id="ai-controller"`）。AI 功能全部在新块内，不改 block1。
 
 - **存储**：localStorage，键 `STORAGE_KEY`；`STATE` 含 `projects[]`、`groups[]`（分组）、`groupOpen{}`（分组展开态）、`framework[]`、`ruleSet[]`、`frameworkPresets[]`。
 
@@ -151,7 +151,7 @@
 
 1. 若旧数据在另一台电脑：先「导出 JSON 备份」→ 新电脑「导入 JSON 备份」；
 
-1. 需要继续开发：把 `E:\vibecoding\prd_assistant\PRD智能看板.html` 拷到新电脑，用编辑器改同一个文件（保持单文件结构，别拆散）；
+1. 需要继续开发：把 `E:\vibecoding\prd_assistant\PMHub.html` 拷到新电脑，用编辑器改同一个文件（保持单文件结构，别拆散）；
 
 1. 改完验证：按 `AGENTS.md` 纪律——重新抽取 `tools\block1.js` / `tools\ai-controller.js` → `node --check` → 跑 10 套回归 + 6 个浏览器端到端 + `screenshot_ui.mjs` 截图基线；
 

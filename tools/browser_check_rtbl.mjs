@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
+const appUrl = new URL('../PMHub.html', import.meta.url).href;
 const browserExe = ['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', 'C:/Program Files/Google/Chrome/Application/chrome.exe'].find(p => fs.existsSync(p));
 if (!browserExe) { console.log('NO_BROWSER'); process.exit(2); }
 const port = 11600 + Math.floor(Math.random() * 100);

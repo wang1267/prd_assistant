@@ -7,7 +7,7 @@ const vm = require('vm');
 const root = path.join(__dirname, '..');
 const block1 = fs.readFileSync(path.join(root, 'tools', 'block1.js'), 'utf8');
 // v16.6：注释控制器是独立 script（block 编号含 vendor 脚本，按 id 精确抽取）
-const htmlFile = fs.readFileSync(path.join(root, 'PRD智能看板.html'), 'utf8');
+const htmlFile = fs.readFileSync(path.join(root, 'PMHub.html'), 'utf8');
 const cmtMatch = htmlFile.match(/<script id="comment-controller">([\s\S]*?)<\/script>/);
 const block3 = cmtMatch ? cmtMatch[1] : '';
 const src = block1 + `

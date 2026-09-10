@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
+const appUrl = new URL('../PMHub.html', import.meta.url).href;
 const candidates = [
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
@@ -74,14 +74,21 @@ async function evalJs(expr) {
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Page.navigate', { url: appUrl });
-await new Promise(r => setTimeout(r, 3500));
+// 等应用就绪：原为固定延时等待，831KB 单文件冷启动偶尔会超过该时长，
+// 后续 eval 就会撞上「loadSample is not defined」这类假回归（见 README 文件约定）。
+for (let i = 0; i < 60; i++) {
+  try { if (await evalJs("document.readyState==='complete' && typeof loadSample==='function'")) break; }
+  catch (e) { /* 导航尚未完成，继续等 */ }
+  await new Promise(r => setTimeout(r, 250));
+}
+await new Promise(r => setTimeout(r, 300));
 
 let pass = 0, fail = 0;
 function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + name); } else { fail++; console.log('FAIL  ' + name + '  >>> ' + detail); } }
 
 try {
   const appShell = await evalJs(`({title:document.title,legacyBadge:!!document.getElementById('vbadge')})`);
-  check('browser 当前应用加载且无废弃顶栏版本水印', appShell.title==='需求文档工作台' && !appShell.legacyBadge, JSON.stringify(appShell));
+  check('browser 当前应用加载且无废弃顶栏版本水印', appShell.title==='PMHub' && !appShell.legacyBadge, JSON.stringify(appShell));
 
   // 预置 AI 设置（Key 只进独立键）
   await evalJs(`(()=>{

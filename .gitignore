@@ -7,8 +7,15 @@ preview.html
 .DS_Store
 Thumbs.db
 deploy/
-deploy/
 tools/prd-promo-video/node_modules/
 tools/prd-promo-video/_backup_before_desensitize_v18.38.html
 tools/prd-promo-video/package-lock.json
 tools/prd-promo-video/build/
+
+# 宣传片子项目：仅保留可复现的源代码与素材清单，排除依赖与渲染产物
+tools/prd-promo-video/remotion/node_modules/
+tools/prd-promo-video/remotion/out/
+tools/prd-promo-video/remotion/public/textures/
+tools/prd-promo-video/textures/
+tools/prd-promo-video/*.mp4
+tools/prd-promo-video/_qa_theme/

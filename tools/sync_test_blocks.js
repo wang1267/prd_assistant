@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const appFile = path.join(root, 'PRD智能看板.html');
+const appFile = path.join(root, 'PMHub.html');
 const html = fs.readFileSync(appFile, 'utf8');
 
 function scriptBodyById(id) {

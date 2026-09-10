@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
+const appUrl = new URL('../PMHub.html', import.meta.url).href;
 const candidates = [
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
@@ -72,14 +72,21 @@ async function evalJs(expr) {
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Page.navigate', { url: appUrl });
-await new Promise(r => setTimeout(r, 3500));
+// 等应用就绪：原为固定延时等待，831KB 单文件冷启动偶尔会超过该时长，
+// 后续 eval 就会撞上「loadSample is not defined」这类假回归（见 README 文件约定）。
+for (let i = 0; i < 60; i++) {
+  try { if (await evalJs("document.readyState==='complete' && typeof loadSample==='function'")) break; }
+  catch (e) { /* 导航尚未完成，继续等 */ }
+  await new Promise(r => setTimeout(r, 250));
+}
+await new Promise(r => setTimeout(r, 300));
 
 let pass = 0, fail = 0;
 function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + name); } else { fail++; console.log('FAIL  ' + name + '  >>> ' + detail); } }
 
 try {
   const appShell = await evalJs(`({title:document.title,legacyBadge:!!document.getElementById('vbadge')})`);
-  check('dash 当前应用加载且无废弃顶栏版本水印', appShell.title==='需求文档工作台' && !appShell.legacyBadge, JSON.stringify(appShell));
+  check('dash 当前应用加载且无废弃顶栏版本水印', appShell.title==='PMHub' && !appShell.legacyBadge, JSON.stringify(appShell));
 
   // ---------- v17.25 顶栏收纳：设置/评论/框架移入「更多」 ----------
   const more1 = await evalJs(`(()=>{
@@ -115,11 +122,14 @@ try {
   check('设置密度：点击后即时更新选中态、说明与页面状态', !density.missing && density.compactState.body==='compact' && density.compactState.active && density.compactState.pressed==='true' && density.compactState.text.indexOf('紧凑')>=0 && density.comfortableState.body==='comfortable' && density.comfortableState.active && density.comfortableState.pressed==='true' && density.comfortableState.text.indexOf('宽松')>=0 && density.restored.body==='standard' && density.restored.active && density.restored.pressed==='true' && density.restored.text.indexOf('标准')>=0, JSON.stringify(density));
   const modelSetup = await evalJs(`(()=>{
     const tab=document.querySelector('#tierAdvanced [data-tab="ai"]');if(tab)tab.click();
-    const local=document.querySelector('[data-ai="preset-local-free"]');if(local)local.click();
-    const online=document.querySelector('[data-ai="preset-online"]');
-    return {tab:!!tab,local:!!local,online:!!online,provider:(document.getElementById('aiProvider')||{}).value||'',base:(document.getElementById('aiBaseUrl')||{}).value||'',model:(document.getElementById('aiModel')||{}).value||'',fast:(document.getElementById('aiFastModel')||{}).value||'',deep:(document.getElementById('aiDeepModel')||{}).value||'',key:(document.getElementById('aiKey')||{}).value||'',hint:(document.getElementById('aiConnStatus')||{}).textContent||''};
+    const secs=document.querySelectorAll('#tabAI .set-sec .set-sec-h').length;
+    const sel=document.getElementById('aiProvider');
+    const options=sel?[...sel.options].map(o=>o.value):[];
+    if(sel){sel.value='deepseek';sel.dispatchEvent(new Event('change',{bubbles:true}));}
+    return {tab:!!tab,sections:secs,options,provider:sel?sel.value:'',base:(document.getElementById('aiBaseUrl')||{}).value||'',model:(document.getElementById('aiModel')||{}).value||'',fast:!!document.getElementById('aiFastModel'),deep:!!document.getElementById('aiDeepModel'),review:!!document.getElementById('aiReviewModel'),statusBtn:!!document.querySelector('[data-ai="savesettings"]'),hint:(document.getElementById('aiConnStatus')||{}).textContent||''};
   })()`);
-  check('AI 设置：默认引导用户配置，支持本地免费 Ollama 示例与快速/深度模型分档', modelSetup.tab && modelSetup.local && modelSetup.online && modelSetup.provider==='ollama' && modelSetup.base==='http://localhost:11434/v1' && modelSetup.model==='qwen3:8b' && modelSetup.fast==='qwen3:8b' && modelSetup.deep==='qwen3:8b' && modelSetup.key==='ollama' && modelSetup.hint.indexOf('ollama run qwen3:8b')>=0, JSON.stringify(modelSetup));
+  // v19.17：AI 设置页重排为 4 个分区、去掉本地部署入口，改为「选中服务商即自动填入官方地址与推荐模型」
+  check('AI 设置：4 分区呈现、服务商可选官方三家、选中后自动填入地址与模型、无本地部署选项', modelSetup.tab && modelSetup.sections===4 && modelSetup.options.indexOf('ollama')<0 && modelSetup.options.indexOf('deepseek')>=0 && modelSetup.options.indexOf('qwen')>=0 && modelSetup.options.indexOf('zhipu')>=0 && modelSetup.options.indexOf('custom')>=0 && modelSetup.provider==='deepseek' && /api\.deepseek\.com/.test(modelSetup.base) && !!modelSetup.model && modelSetup.fast && modelSetup.deep && modelSetup.review && modelSetup.statusBtn && modelSetup.hint.indexOf('DeepSeek')>=0, JSON.stringify(modelSetup));
   await evalJs(`(()=>{ const b=document.querySelector('#settingsModal .x'); if(b)b.click(); return true; })()`);
   await new Promise(r => setTimeout(r, 150));
 
@@ -151,7 +161,11 @@ try {
     const all={projects:STATE.projects.length,state:localStorage.getItem(keys.state),backup:localStorage.getItem(keys.backup),draft:localStorage.getItem(keys.draft),custom:localStorage.getItem(keys.custom),theme:localStorage.getItem(keys.theme),ai:localStorage.getItem(keys.ai),rootTheme:document.documentElement.dataset.theme,bodyDensity:document.body.dataset.density};
     return {projects,projectsTemplates,all};
   })()`);
-  check('重置：仅项目保留模板与 AI 设置，项目+模板保留偏好，全部清除独立键', resetData.projects.projects===0 && resetData.projects.keepPreset && resetData.projects.draft==='draft' && resetData.projects.custom==='[]' && resetData.projects.theme==='dark' && resetData.projects.ai && resetData.projects.backup===null && resetData.projectsTemplates.projects===0 && !resetData.projectsTemplates.keepPreset && resetData.projectsTemplates.draft===null && resetData.projectsTemplates.custom===null && resetData.projectsTemplates.theme==='dark' && resetData.projectsTemplates.ai && resetData.projectsTemplates.backup===null && resetData.projectsTemplates.state && resetData.all.projects===0 && resetData.all.state===null && resetData.all.backup===null && resetData.all.draft===null && resetData.all.custom===null && resetData.all.theme===null && resetData.all.ai===null && resetData.all.rootTheme==='light' && resetData.all.bodyDensity==='standard', JSON.stringify(resetData));
+  // 注意 rootTheme 期望 'brand' 而非 'light'：应用默认主题自 v19 起为「蓝紫光感」brand ——
+  // theme-controller 里对无效值也回落 brand，resetLocalData('all') 更显式写入
+  // document.documentElement.dataset.theme='brand'，qa_current.js 亦有同口径基线断言。
+  // 此处原为 'light'，属旧默认值时代的遗留，导致这一项长期误报失败。
+  check('重置：仅项目保留模板与 AI 设置，项目+模板保留偏好，全部清除独立键', resetData.projects.projects===0 && resetData.projects.keepPreset && resetData.projects.draft==='draft' && resetData.projects.custom==='[]' && resetData.projects.theme==='dark' && resetData.projects.ai && resetData.projects.backup===null && resetData.projectsTemplates.projects===0 && !resetData.projectsTemplates.keepPreset && resetData.projectsTemplates.draft===null && resetData.projectsTemplates.custom===null && resetData.projectsTemplates.theme==='dark' && resetData.projectsTemplates.ai && resetData.projectsTemplates.backup===null && resetData.projectsTemplates.state && resetData.all.projects===0 && resetData.all.state===null && resetData.all.backup===null && resetData.all.draft===null && resetData.all.custom===null && resetData.all.theme===null && resetData.all.ai===null && resetData.all.rootTheme==='brand' && resetData.all.bodyDensity==='standard', JSON.stringify(resetData));
 
   // ---------- v17.23 新手引导 + 默认框架精简 ----------
   // v17.24：引导移入「更多 → 帮助」，不再首启自动弹出
@@ -243,7 +257,7 @@ try {
     const turns=[{question:'想做什么？',answer:'我想做一个给自己用的喝水记录网页'},{question:'谁会用？',answer:'只有我自己用，记得更规律'},{question:'第一版做什么？',answer:'每天一键记录，并看到当天是否喝够'},{question:'有什么限制？',answer:'手机上也要能用，不需要登录'},{question:'什么算成功？',answer:'我能一眼看出今天还差多少水'}];
     window.__AI_TEST_MODE=true;localStorage.setItem('prdKanbanAiSettings',JSON.stringify({provider:'zhipu',web:true,apiKey:'test-key',baseUrl:'https://open.bigmodel.cn/api/paas/v4',model:'mock-model',deepModel:'mock-deep'}));
     aiDesignOpen();t.designSetState({turns,qa:turns.map(x=>x.answer),understood:'做一个帮助自己坚持喝水的简单网页',facts:['只给自己使用','手机可用，不需要登录'],needs:['是否需要提醒'],pendingNextQuestion:'第一版是否需要本地提醒？'});t.designOfferResearch(true);
-    let releaseSearch;window.fetch=(url,opts)=>{if(String(url).indexOf('/web_search')>=0)return new Promise((resolve,reject)=>{if(opts.signal)opts.signal.addEventListener('abort',()=>reject(new DOMException('aborted','AbortError')));releaseSearch=()=>resolve(new Response(JSON.stringify({search_result:[{title:'开源喝水记录示例',link:'https://github.com/example/water',content:'可参考本地记录与每日进度。'}]}),{headers:{'Content-Type':'application/json'}}));});return Promise.resolve(new Response(JSON.stringify({choices:[{message:{content:'结合刚才搜到的同类做法，第一版要先做本地提醒，还是先只做记录和进度？'}}]}),{headers:{'Content-Type':'application/json'}}));};
+    let releaseSearch;window.fetch=(url,opts)=>{if(String(url).indexOf('/web_search')>=0)return new Promise((resolve,reject)=>{if(opts.signal)opts.signal.addEventListener('abort',()=>reject(new DOMException('aborted','AbortError')));releaseSearch=()=>resolve(new Response(JSON.stringify({search_result:[{title:'开源喝水记录示例',link:'https://github.com/example/water',content:'可参考本地记录与每日进度。'}]}),{headers:{'Content-Type':'application/json'}}));});return Promise.resolve(new Response(JSON.stringify({choices:[{message:{content:'【研究推荐】\\n1. 行业基础 MVP：后续方向：先做本地记录与每日进度；复用判断：仅参考现有做法，不直接引入依赖；差异化机会：先验证坚持体验；代价：提醒暂缓。\\n2. 复用评估：后续方向：先核对开源喝水记录示例；复用判断：仅参考，须核对许可证、维护和兼容性；差异化机会：把精力留给体验；代价：需要评估接入。\\n3. 差异化验证：后续方向：先访谈容易忘记喝水的人；复用判断：不建议复用；差异化机会：验证低打扰提醒；代价：需要先验证需求。'}}]}),{headers:{'Content-Type':'application/json'}}));};
     const start=document.querySelector('[data-ai="desresearchstart"]');if(start)start.click();await new Promise(r=>setTimeout(r,10));
     const during={stop:getComputedStyle(document.getElementById('aiDesStop')).display,researching:t.designState().researching,state:(document.getElementById('aiDesState')||{}).textContent||''};
     if(releaseSearch)releaseSearch();await new Promise(r=>setTimeout(r,80));
@@ -251,9 +265,9 @@ try {
     aiDesignOpen();t.designSetState({turns,qa:turns.map(x=>x.answer),pendingNextQuestion:'原来的下一问'});t.designOfferResearch(true);t.designSkipResearch();const skipLog=(document.getElementById('aiDesLog')||{}).textContent||'';
     window.fetch=oldFetch;if(oldSettings===null)localStorage.removeItem('prdKanbanAiSettings');else localStorage.setItem('prdKanbanAiSettings',oldSettings);window.__AI_TEST_MODE=oldTest;
     const close=document.querySelector('[data-ai="desclose"]');if(close)close.click();
-    return {during,history:afterState.researchHistory.length,sources:(saved.sources||[]).length,followUp:saved.followUp||'',afterLog,skipLog,pending:afterState.pendingNextQuestion};
+    return {during,history:afterState.researchHistory.length,sources:(saved.sources||[]).length,recommendations:(saved.recommendations||[]),afterLog,skipLog,pending:afterState.pendingNextQuestion};
   })()`);
-  check('AI 澄清：联网搜索期间展示可停止状态；真实来源与结论写入本次记忆，再基于研究追问；暂不搜索才恢复原问题', researchFlow.during.stop!=='none' && researchFlow.during.researching && researchFlow.during.state.indexOf('正在联网搜索')>=0 && researchFlow.history===1 && researchFlow.sources===1 && researchFlow.followUp.indexOf('？')>=0 && researchFlow.afterLog.indexOf('已存入本次需求记忆')>=0 && researchFlow.afterLog.indexOf('根据研究继续确认')>=0 && researchFlow.pending==='' && researchFlow.skipLog.indexOf('暂不搜索')>=0 && researchFlow.skipLog.indexOf('原来的下一问')>=0, JSON.stringify(researchFlow));
+  check('AI 澄清：联网搜索期间展示可停止状态；真实来源与结论写入本次记忆后直接给出方向、复用与差异化策略；暂不搜索才恢复原问题', researchFlow.during.stop!=='none' && researchFlow.during.researching && researchFlow.during.state.indexOf('正在联网搜索')>=0 && researchFlow.history===1 && researchFlow.sources===1 && researchFlow.recommendations.length===3 && researchFlow.recommendations.every(x=>x.indexOf('复用判断')>=0&&x.indexOf('差异化机会')>=0) && researchFlow.afterLog.indexOf('已存入本次需求记忆')>=0 && researchFlow.afterLog.indexOf('下一步推荐')>=0 && researchFlow.pending==='' && researchFlow.skipLog.indexOf('暂不搜索')>=0 && researchFlow.skipLog.indexOf('原来的下一问')>=0, JSON.stringify(researchFlow));
   const deterministicFacts = await evalJs(`(()=>{
     const t=window.__AICtrl._test,local=t.localDateText(),answer=t.chatDateAnswer('今天几月几日？'),nonDate=t.chatDateAnswer('项目今天要做什么？');
     return {local,answer,nonDate,zhipu:t.inferProvider('custom','https://open.bigmodel.cn/api/paas/v4'),deepseek:t.inferProvider('custom','https://api.deepseek.com/v1'),qwen:t.inferProvider('custom','https://workspace.cn-beijing.maas.aliyuncs.com/compatible-mode/v1'),proxy:t.inferProvider('custom','https://my-proxy.example/v1'),prompt:t.chatPrompt()};

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const appUrl = new URL('../PRD智能看板.html', import.meta.url).href;
+const appUrl = new URL('../PMHub.html', import.meta.url).href;
 const candidates = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
   'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
@@ -62,7 +62,16 @@ function send(method, params) {
 await send('Page.enable');
 await send('Runtime.enable');
 await send('Page.navigate', { url: appUrl });
-await new Promise(r => setTimeout(r, 3000));
+// 等应用就绪：原为固定延时等待，冷启动偶尔超时会让后续 evaluate 撞上
+// 「loadSample is not defined」这类假回归（见 README 文件约定）。
+for (let i = 0; i < 60; i++) {
+  try {
+    const r = await send('Runtime.evaluate', { expression: "document.readyState==='complete' && typeof loadSample==='function'", returnByValue: true });
+    if (r.result && r.result.value) break;
+  } catch (e) { /* 导航尚未完成，继续等 */ }
+  await new Promise(r => setTimeout(r, 250));
+}
+await new Promise(r => setTimeout(r, 300));
 
 const expr = `(async()=>{
   const out={};

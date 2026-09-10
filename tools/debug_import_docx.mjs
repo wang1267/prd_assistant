@@ -21,7 +21,7 @@ ws.onmessage=ev=>{ const m=JSON.parse(ev.data); if(m.id&&pend.has(m.id)){ const 
 function send(method,params){ return new Promise((res,rej)=>{ const id=++msgId; pend.set(id,{res,rej}); ws.send(JSON.stringify({id,method,params})); }); }
 async function evalJs(expr){ const r=await send('Runtime.evaluate',{expression:expr,awaitPromise:true,returnByValue:true}); if(r.exceptionDetails) return {__err:JSON.stringify(r.exceptionDetails).slice(0,600)}; return r.result&&r.result.value; }
 await send('Page.enable'); await send('Runtime.enable'); await send('DOM.enable');
-await send('Page.navigate',{url:'file:///E:/vibecoding/prd_assistant/PRD智能看板.html'});
+await send('Page.navigate',{url:'file:///E:/vibecoding/prd_assistant/PMHub.html'});
 await new Promise(r=>setTimeout(r,3500));
 await evalJs(`(()=>{
   window.__cap='';

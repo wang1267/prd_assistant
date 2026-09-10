@@ -1,4 +1,4 @@
-# AGENTS.md · 需求文档工作台 开发守则
+# AGENTS.md · PMHub 开发守则
 
 本文件给任何接手本项目的 AI / 开发者。**改动前必读**,尤其注意下面的红线。
 
@@ -8,13 +8,13 @@
 
 ## 文件结构(勿拆散)
 
-- `PRD智能看板.html`(唯一主文件,约 6700 行):全部 HTML/CSS/JS。
+- `PMHub.html`(唯一主文件,约 6700 行):全部 HTML/CSS/JS。
   - block0 `theme-controller`(约 730 行)
   - block1 主脚本(约 976–3900 行):状态/渲染/事件/表格/导入导出/模板
   - block2 `view-mode-controller`、block3-4 Floating UI、block5 `comment-controller`
   - block6 `ai-controller`(约 4300 行起):**AI 全部逻辑,独立 IIFE,默认不改 block1**
 - `tools/`:回归/端到端脚本。`block1.js`、`ai-controller.js` 是**从主文件抽取的测试副本**,改主文件后必须重新抽取再跑测试。
-- `PRD智能看板_*.md`:方案/白皮书/交接文档,发版后同步。
+- `PMHub_*.md`:方案/白皮书/交接文档,发版后同步。
 
 ## 红线(血泪教训,违背必出 bug)
 
