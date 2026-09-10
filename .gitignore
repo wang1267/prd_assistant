@@ -19,3 +19,10 @@ tools/prd-promo-video/remotion/public/textures/
 tools/prd-promo-video/textures/
 tools/prd-promo-video/*.mp4
 tools/prd-promo-video/_qa_theme/
+
+# 原型模块：proto-req 是独立的**私有**仓库，不能作为本仓库的 git 子模块 ——
+# GitHub Pages 构建是匿名拉取，私有子模块会 clone 失败，导致整个站点构建失败
+# （2026-09-10 实测 run #16 Checkout 步骤 "repository not found"）。
+# 因此这里排除它；PMHub 的「原型」工作区在线上站点暂不可用。
+# 若要让线上也能打开原型模块，需先把 proto-req 公开，或把其产物并入本仓库。
+proto-req/
