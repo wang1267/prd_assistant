@@ -1,117 +1,65 @@
-# PMHub
+<p align="center">
+  <img src="assets/readme-cover.svg" alt="PMHub — From idea to delivery-ready PRD" width="100%" />
+</p>
 
-> 本地优先、单文件的 PRD 输出助手：把一句模糊想法变成可确认、可检测、可交给 Vibe Coding 工具的需求文档。
+<p align="center">
+  <a href="PMHub.html"><strong>打开 PMHub / Open PMHub</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#quick-start--快速开始">快速开始 / Quick start</a>
+  &nbsp;·&nbsp;
+  <a href="#privacy--数据边界">数据边界 / Privacy</a>
+</p>
 
-`PMHub` 面向不会写专业 PRD 的创作者，也适合产品、研发和测试在交付前补齐文档。它不会要求用户先理解指标、优先级或验收术语，而是通过 AI 澄清把自然语言愿望转译为可编辑的方案与结构化 PRD。
+## 从想法到可交付的 PRD / From idea to a delivery-ready PRD
 
-## 你可以如何开始
+PMHub 是一个浏览器优先的产品需求工作台。它把零散想法整理为可编辑的 PRD，并帮助产品、设计、研发和测试在交付前对齐范围、验收标准和页面原型。
 
-1. **从想法开始**：说出想做什么，AI 每轮只问一个关键问题，先确认小白可读的方案骨架，再生成 PRD。
-2. **从空白开始**：已有清晰结构时，新建项目并自行编辑。
-3. **导入已有 PRD**：导入 Markdown、Word 或文本，先预览章节映射与覆盖范围，再决定新建或覆盖。
-4. **使用场景模板**：直接使用标准 PRD、精简 MVP、SaaS / Web、移动 App、AI 功能或智能硬件模板；原始 Markdown 编辑只在“高级编辑”中按需打开。
+PMHub is a browser-first workspace for turning rough ideas into editable product requirements. It helps product, design, engineering, and QA align on scope, acceptance criteria, and interactive page prototypes before delivery.
 
-完成首稿后，可运行规则体检与 AI 深度审查；每条问题会标出证据、影响和下一步。优化始终先生成建议，校验通过并由用户确认后才写入正文。
+## 核心能力 / What you can do
 
-## 核心能力
+| 需求澄清 / Clarify | 交付检查 / Validate | 页面原型 / Prototype |
+| --- | --- | --- |
+| 通过 AI 问答或模板将想法整理为结构化 PRD。<br><sub>Shape an idea into a structured PRD with guided AI prompts or templates.</sub> | 检查完整度、风险与一致性，输出可讨论的问题。<br><sub>Review completeness, risks, and consistency with actionable findings.</sub> | 从 PRD 创建、编辑并导出独立 HTML 页面原型。<br><sub>Create, edit, and export standalone HTML prototypes from a PRD.</sub> |
 
-- **面向小白的 AI 需求澄清**：识别已知信息、待确认项和 AI 暂定假设；每累计 10 轮回答提供一次“继续完善 / 查看方案并生成”的自主检查点，矛盾信息会先要求澄清。
-- **理解当前项目的项目助手**：每次对话都会携带当前项目的正文、上下文和质量缺口；既能解释 PRD 概念，也能结合当前内容给出下一步建议，明确变更时才执行看板动作。
-- **按任务分配模型**：标准模型负责需求澄清和生成，快速模型用于对话，深度模型用于体检、优化和评审；可选项留空时自动回退到标准模型。服务商下拉选中后会填入该服务商的官方 Base URL 与推荐模型（v19.17 起不再提供本地部署引导）。
-- **交付就绪检查**：按评审、研发、测试三个阶段给出就绪结论；P0 功能缺验收或测试点不会被误判为可交付。
-- **可追溯的文档质量**：关联用户需求、功能、验收、测试点和埋点；规则和跨章节检查定位真正影响交付的缺口。
-- **可信的 AI 优化闭环**：引用原文、锁定不允许 AI 修改的章节、关联原始问题，并在应用后自动复检已解决、仍存在和新引入的问题。
-- **可读的多角色评审**：产品、研发、测试、设计和项目经理的评审意见自动进入评论并署名；可基于本次评审一键生成并安全应用优化。
-- **真实联网竞品研究**：AI 先确认本轮信息，再单独询问是否搜索；搜索中清晰显示进度并可停止，真实来源与结论会写入本次需求记忆，随后直接给出“后续方向 / 是否复用 / 差异化机会”三条可选策略，未取得来源不生成模拟结论。
-- **本地优先**：项目、模板、主题和 AI 设置保存在当前浏览器；支持 JSON 备份与恢复。
+| 多角色评审 / Review together | 多种导出 / Export | 本地优先 / Local first |
+| --- | --- | --- |
+| 汇总产品、设计、研发和测试视角的意见。<br><sub>Bring product, design, engineering, and QA feedback into one review flow.</sub> | 导出 Markdown、Word、JSON 备份和原型 HTML。<br><sub>Export Markdown, Word, JSON backups, and prototype HTML.</sub> | 项目、模板和设置默认保存在当前浏览器。<br><sub>Projects, templates, and settings stay in the current browser by default.</sub> |
 
-## AI 与隐私
-
-未配置 AI 时，基础编辑、模板、导入导出和确定性质量检查都可离线使用。首次向 AI 服务商发送内容前，应用会说明服务商、模型和实际发送范围；同一范围在当前会话仅确认一次。API Key 仅保存在本机浏览器，且不写入项目备份。
-
-联网搜索可选择“跟随聊天服务”（DeepSeek / Qwen / 智谱 / OpenAI），或“独立智谱搜索”。独立搜索可搭配豆包、Kimi、MiniMax、硅基流动、本地模型等现有兼容聊天服务，搜索 Key 与聊天 Key 分开配置。Qwen 通过官方 DashScope 协议返回来源；DeepSeek 使用 Responses 搜索，需选择支持搜索的模型。服务商仍需允许浏览器跨域请求并开通相应权限。
-
-项目助手可勾选“联网搜索”或直接说“搜索 / 查一下”，支持停止并显示来源。从想法生成会并行查询网页和 GitHub 仓库；GitLab / Gitee 由网页检索覆盖。仓库结果包含公开的语言、Stars、最近推送和 License，不能替代源码及授权审查。某条搜索链路失败时明确标为部分结果，没有来源时不会伪装搜索成功。
-
-在“原型”工作区打开一个已有页面后，可点击顶部“导出 HTML”，下载当前页面的独立视觉原型，保留样式和中文编码。PRD 模式导出继续禁用脚本与外部请求，不包含工作区编辑工具或需求连线。
-
-## 使用方式
-
-直接打开 [PMHub.html](PMHub.html)，或发布 `index.html`、主文件、`assets/`、`src/` 与 `prototype/` 到静态托管服务。无需 Node.js、后端或构建步骤。修改私有原型开发源后，运行 `powershell -ExecutionPolicy Bypass -File tools/sync-prototype-runtime.ps1` 更新待发布的 `prototype/` 静态运行包。
-
-跨电脑使用时，请在旧浏览器导出 JSON 备份，再在新浏览器导入；浏览器本地数据不会自动同步。
-
-## 当前版本与验证
-
-当前产品基线为 **v19.17**（2026-09-10）。版本约定：v19 之后依次使用 v19.01–v19.19；v19.19 的下一次改动进入 v20。修改主文件后，请先同步测试副本并运行：
-
-```powershell
-node tools/sync_test_blocks.js
-node tools/qa_current.js
-node tools/browser_check_dash.mjs
-node tools/browser_check_web_export.mjs
-```
-
-> ⚠️ **排查浏览器回归的两条铁律。**
->
-> 1. **一次只跑一个。** 这几个脚本各自启动独立 headless 浏览器，并用 `Runtime.evaluate` 注入指令。
->    串在同一条命令里（如 `gen && web_export`）时，前一个脚本崩溃后残留的实例会污染后一个。
-> 2. **看到 `loadSample is not defined` 或 `window.__AICtrl` 为 undefined，先重跑一次再下结论。**
->    这两个症状已被多次误判为功能回归，实际是页面没加载完就执行了 eval —— 脚本原为固定 3–3.5 秒等待，
->    而 831KB 单文件冷启动偶尔会超过它。2026-09-10 已把等待改为「轮询 `document.readyState` 与
->    `typeof loadSample`，最长 15 秒」，但偶发失败仍不等于回归。
->
-> 判定回归的可靠做法只有一个：用 `tools/backups/` 里改动前的备份替换主文件跑同一脚本，结果一致即为既有问题。
-> 另注：单个脚本重复跑两次结果不同，一律按偶发处理，不要据此改代码。
-
-`browser_check_dash.mjs` 已全绿（62 pass / 0 fail）。此前「重置」那 1 项经查是**断言过时而非应用缺陷**：
-应用默认主题自 v19 起为「蓝紫光感」brand，而断言仍写 `rootTheme==='light'`；`resetLocalData('all')`
-本就显式写入 `dataset.theme='brand'`，`qa_current.js` 也有同口径断言。已对齐。
-
-`browser_check_gen.mjs` 仍余 4 项，已定性为**测试脚本与当前实现脱节**，不是功能缺陷：
-
-- 断言从 `window.__AICtrl._test.state()` 取 `pendingDiffs` 与 `lastGenDebug`。该接口就是 `aiState()`，
-  返回的是 `p.ai`（字段仅 `versions / lastReport / ignoredAiIssues / pendingDiffs`）——
-  **其中的 `lastGenDebug` 是控制器内部变量，从未挂在 `p.ai` 上**，该断言必然取不到值。
-- 点击「AI 撰写」后 `pendingDiffs` 始终为 `null`，说明生成未真正触发（mock 或前置条件未满足）。
-- 第 4 项 `reading 'id'` 是同一前置问题引发的连锁报错。
-
-AI 草稿链路的现行覆盖由 `qa_current.js` 基线断言、`browser_check_dash.mjs`（62 项）与
-`browser_check_web_export.mjs`（17 项）承担，均通过。`browser_check_gen.mjs` 需单独重写对齐，未纳入本轮。
-
-完整的可执行检查、阶段状态和验收记录见 [优化实施计划](docs/个人本地PRD输出助手_优化实施计划.md)。
-
-## 项目结构
-
-> 应用名称与主文件名均已统一为 **PMHub**（2026-09-10，v19.14）。旧文件名 `PRD智能看板.html`
-> 保留为一个转发查询参数的跳转页，用于兜住存量分享链接；新链接请直接使用 `PMHub.html`。
+## 工作流 / Workflow
 
 ```text
-PMHub.html                                # 唯一应用主文件
-PRD智能看板.html                          # 旧名跳转页，转发 ?project= 等参数（勿删，兜存量链接）
-index.html                                # 静态托管入口
-tools/sync_test_blocks.js                 # 从主文件同步测试脚本块
-tools/qa_current.js                       # 当前版本质量基线
-tools/browser_check_*.mjs                 # 浏览器回归检查
-docs/个人本地PRD输出助手_优化实施计划.md  # 当前产品决策、执行与验收依据
-PMHub_方案设计.md                         # 历史设计快照 + 当前补充
-PMHub_代码架构白皮书.md                   # 历史架构快照 + 当前维护说明
-PMHub_交接文档.md                         # 历史交接记录 + 当前运行说明
+Idea / 想法  →  PRD / 需求文档  →  Review / 评审  →  Prototype / 原型  →  Export / 交付
 ```
 
-### 文件约定
+先从一句产品想法、现有 PRD 或场景模板开始；完成首稿后检查交付缺口，再进入原型工作区校准页面表达，最后导出交付物。
 
-- **行尾统一 CRLF**。仓库设置了 `core.autocrlf=true`，工作区文件应为 CRLF。用脚本批量改写文件时，
-  读写两侧都必须显式指定 `newline=''`（Python），否则默认的 universal newlines 会把 CRLF 折成 LF，
-  导致整个文件行尾被静默改写。症状是文件字节数变化量与行数几乎相同，且 `git diff` 提示
-  `LF will be replaced by CRLF the next time Git touches it`。
-- **旧文件名跳转页不要删**：`PRD智能看板.html` 仅为存量分享链接保留，转发时会带上 `?project=` 等参数。
-  新链接、新文档一律使用 `PMHub.html`。
+Start with an idea, an existing PRD, or a template. Check delivery gaps after the first draft, refine the page in the prototype workspace, then export what your team needs.
 
-## 文档口径
+## Quick start / 快速开始
 
-计划书是当前版本的执行依据。其余三份长文档保留了早期版本的设计与交接历史，已在文首标明适用范围；开发时不要把其中的旧版本号、旧模板数量或旧发布链接当成当前事实。
+1. 打开 [PMHub.html](PMHub.html)。无需安装、构建或后端服务。<br>
+   Open [PMHub.html](PMHub.html). No installation, build step, or backend is required.
+2. 选择“从想法开始”、新建空白项目，或导入已有 PRD。<br>
+   Start from an idea, create a blank project, or import an existing PRD.
+3. 如需 AI，在“设置”中选择兼容服务并填写自己的配置。<br>
+   To use AI, choose a compatible provider and enter your own configuration in Settings.
 
-## 技术栈
+## Privacy / 数据边界
 
-原生 HTML、CSS 和 JavaScript，单文件实现；AI 功能通过浏览器调用用户配置的兼容服务。联网竞品研究为 DeepSeek / Qwen 的 Responses Web Search，或 GLM 的 Web Search API 后再由当前深度模型分析。
+- PMHub 默认将项目数据保存在本地浏览器；换设备时请导出 JSON 备份后再导入。<br>
+  PMHub stores project data in local browser storage by default. Export and import a JSON backup when moving to another device.
+- AI 功能仅在你完成配置并确认发送范围后才会调用对应服务；API Key 仅保存在当前浏览器。<br>
+  AI calls are made only after you configure a provider and confirm the data scope. API keys remain in the current browser.
+- 原型导出为独立 HTML，不携带工作区编辑器、脚本或外部请求。<br>
+  Exported prototypes are standalone HTML without workspace editor code, scripts, or external requests.
+
+## Static hosting / 静态托管
+
+发布静态站点时，请一并包含 `index.html`、`PMHub.html`、`assets/`、`src/` 和 `prototype/`。修改原型开发源后，运行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/sync-prototype-runtime.ps1
+```
+
+For static hosting, publish `index.html`, `PMHub.html`, `assets/`, `src/`, and `prototype/` together. Run the command above after updating the prototype source.
