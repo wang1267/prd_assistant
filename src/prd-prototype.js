@@ -142,7 +142,7 @@
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     save();
     if (saveFailed) { alert('PRD 尚未保存成功，请先导出备份或释放本地空间，再进入原型'); return; }
-    location.href = 'proto-req/prd.html?project=' + encodeURIComponent(p.id);
+    location.href = 'prototype/prd.html?project=' + encodeURIComponent(p.id);
   });
   var query = new URLSearchParams(location.search);
   if (query.get('project') && STATE.projects.some(function (p) { return p.id === query.get('project'); })) switchProject(query.get('project'));

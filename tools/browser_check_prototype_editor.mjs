@@ -1,5 +1,5 @@
 // 原型编辑增强与主题适配回归：隔离本地浏览器，无 AI 网络请求。
-// 运行：node tools/browser_check_web_export.mjs
+// 运行：node tools/browser_check_prototype_editor.mjs
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -81,8 +81,9 @@ function check(name, cond, detail) { if (cond) { pass++; console.log('PASS  ' + 
 
 try {
   const id=await evalJs(`(()=>{loadSample();const p=currentProj();p.prototype={revision:1,html:'<!doctype html><html><head><style>body{padding:40px;font-family:system-ui;background:#fff;color:#20243b}.card{padding:20px;border:1px solid #e2e5f1;border-radius:14px;margin:15px 0}</style></head><body><h1>编辑器回归示例</h1><section class="card"><h2 id="source" style="color:rgb(80,69,216);font-size:24px">品牌标题</h2><p>选择文字或区域，精确调整样式</p></section><div id="target" style="width:200px;height:80px;padding:10px;background:#f1f3fb">目标文案</div></body></html>'};save();return p.id;})()`);
-  await send('Page.navigate',{url:new URL('../proto-req/prd.html?project='+id,import.meta.url).href});
+  await evalJs(`document.getElementById('prdPrototypeOpen').click()`);
   await new Promise(r=>setTimeout(r,900));
+  check('main entry opens deployable prototype runtime',await evalJs(`location.pathname.endsWith('/prototype/prd.html')&&new URLSearchParams(location.search).get('project')==='${id}'`));
   for(const [theme,background] of [['brand','rgb(246, 247, 252)'],['light','rgb(250, 249, 247)'],['dark','rgb(45, 49, 58)'],['hc','rgb(0, 0, 0)']]){
     await evalJs(`localStorage.setItem('prdKanbanTheme','${theme}');window.dispatchEvent(new Event('focus'));`);
     check('workspace theme '+theme,await evalJs(`document.documentElement.dataset.theme==='${theme}'&&getComputedStyle(document.body).backgroundColor==='${background}'`));

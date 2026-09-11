@@ -37,7 +37,7 @@
 
 ## 使用方式
 
-直接打开 [PMHub.html](PMHub.html)，或发布 `index.html` 与主文件到静态托管服务。无需 Node.js、后端或构建步骤。
+直接打开 [PMHub.html](PMHub.html)，或发布 `index.html`、主文件、`assets/`、`src/` 与 `prototype/` 到静态托管服务。无需 Node.js、后端或构建步骤。修改私有原型开发源后，运行 `powershell -ExecutionPolicy Bypass -File tools/sync-prototype-runtime.ps1` 更新待发布的 `prototype/` 静态运行包。
 
 跨电脑使用时，请在旧浏览器导出 JSON 备份，再在新浏览器导入；浏览器本地数据不会自动同步。
 
