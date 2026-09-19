@@ -49,8 +49,22 @@
 .ve-format-btn.active{border-color:var(--accent-line)}
 .ve-viewport{background-color:var(--canvas);background-image:radial-gradient(var(--canvas-dot) .75px,transparent .75px)}
 .visual-editor{min-width:0}
+.prd-startup{max-width:620px;margin:12vh auto;padding:28px;color:var(--ink);line-height:1.7}.prd-startup h1{font-size:24px}.prd-startup p{color:var(--ink-2)}.prd-startup .btn{margin:8px 8px 0 0;white-space:normal;overflow-wrap:anywhere;max-width:100%}
 .ve-topbar{height:auto;min-height:52px;flex-basis:auto;grid-template-columns:minmax(130px,1fr) auto auto;padding-block:10px}
 .ve-tools{flex-wrap:wrap;justify-content:flex-end}
 .ve-contextbar{overflow-x:auto}
 :root[data-theme=hc] :focus-visible{outline:2px solid #fff;outline-offset:3px}
 @media(max-width:800px){.ve-topbar{grid-template-columns:1fr auto}.ve-tools{grid-column:1/-1;justify-self:start}.ve-properties{gap:8px}.ve-viewport{padding:20px}.tb-proj-sub{max-width:160px}}
+/* 窄屏使用上下布局，避免固定需求栏把原型画布挤到零宽。 */
+@media(max-width:600px){
+  #body{flex-direction:column}
+  #tree{width:100%;max-height:52px;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--line)}
+  .tree-head{padding:8px}.tree-head>span{display:none}
+  #treeList{display:flex;gap:4px;overflow:auto;padding:4px;min-width:0}
+  .tree-item{flex-shrink:0;max-width:180px;margin:0}.tree-add{margin:4px;white-space:nowrap;padding:0 8px}
+  #stage{flex-direction:column;overflow:auto;min-height:0}
+  #protoPanel{flex:0 0 320px;min-height:320px}
+  #reqPanel{width:100%!important;min-width:0;flex:0 0 320px;border-left:0;border-top:1px solid var(--line)}
+  #dragbar{display:none}.panel-hint{white-space:normal;text-align:right}
+  body.mode-proto #protoPanel{flex:1;min-height:280px}
+}

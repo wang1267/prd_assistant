@@ -62,6 +62,9 @@
           U.toast('导入失败：不是 ProtoReq 备份文件（缺少项目数据）', 'error');
           return;
         }
+        if (window.PRD_MODE && ['pages','documents','blocks','elements','links'].some(function (key) { return !Array.isArray(data[key]); })) {
+          U.toast('导入失败：原型备份不完整，原有数据未修改', 'error'); return;
+        }
         var stat = data.projects.length + ' 个项目 · ' + (data.pages || []).length + ' 个页面 · ' + (data.links || []).length + ' 条连线';
         U.confirm('将用备份（' + stat + '）替换当前浏览器中的全部数据，建议先导出现有数据作为备份。确定导入？', { danger: true, okLabel: '替换并导入' })
           .then(function (ok) {
@@ -175,7 +178,7 @@
 
     /* 存储用量：localStorage 同源上限约 5MB（各浏览器略有差异） */
     var used = 0;
-    try { used = new Blob([localStorage.getItem('protoReq.db.v1') || '']).size; } catch (e) { /* ignore */ }
+    try { used = new Blob([localStorage.getItem(window.PRD_MODE ? PRD_MODE.key : 'protoReq.db.v1') || '']).size; } catch (e) { /* ignore */ }
     var pct = Math.min(100, Math.round(used / (5 * 1024 * 1024) * 100));
     var snapshot = Store.exportAll();
     var usageText = '已用 ' + fmtBytes(used) + '（约 ' + pct + '%）· '
@@ -223,7 +226,7 @@
       acctSection,
 
       U.el('div', { class: 'set-section' },
-        U.el('div', { class: 'set-sec-title', text: '数据管理' }),
+        U.el('div', { class: 'set-sec-title', text: window.PRD_MODE ? '当前 PRD 的原型备份' : '数据管理' }),
         U.el('div', { class: 'set-storage-bar' },
           U.el('div', { class: 'set-storage-fill' + (pct > 80 ? ' hot' : ''), style: 'width:' + Math.max(pct, 1.5) + '%' })),
         U.el('div', { class: 'set-storage-text', text: usageText + (Store.isRemote() ? ' · 已同步到服务器' : ' · 仅此浏览器') }),
@@ -232,7 +235,7 @@
           U.el('button', { class: 'btn', html: U.ICONS.upload + '<span>导入数据</span>', title: '从备份 JSON 恢复（替换当前数据）', onclick: importBackup })
         ),
         U.el('div', { class: 'set-danger-row' },
-          U.el('span', { class: 'set-danger-hint', text: '清空全部数据（不可恢复）' }),
+          U.el('span', { class: 'set-danger-hint', text: window.PRD_MODE ? '清空当前 PRD 的原型数据（不可恢复）' : '清空全部数据（不可恢复）' }),
           U.el('button', { class: 'btn btn-danger-ghost', text: '清空', onclick: clearAllData })
         )
       ),

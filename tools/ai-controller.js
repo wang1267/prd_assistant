@@ -3227,7 +3227,14 @@ function aiDesRenderState(){
   el.innerHTML=cell('我已理解',understood,'var(--color-success-text,#2e6f4e)')+cell('还需要确认',needs.join('；')||'AI 正在判断下一步','var(--color-warning-text,#8a5b13)')+cell('AI 暂定假设',assumptions.join('；')||'没有；不知道时可让 AI 建议','var(--ink-2,#667)')+(aiDesState.researching?'<div style="grid-column:1/-1;padding:7px 8px;border:1px solid var(--color-warning-border,#e5c98e);border-radius:8px;background:var(--color-warning-bg,#fff9e8);color:var(--color-warning-text,#8a5b13)"><strong>正在联网搜索</strong> · 正在查找同类产品、开源项目与实际来源；可随时点“停止”。</div>':'');
 }
 function aiDesConfigReady(st){st=st||aiGetSettings();return !!(String(st.apiKey||'').trim()&&String(st.baseUrl||'').trim()&&aiModelFor('standard',st));}
-function aiDesConfigHint(){return '请先在 设置→高级→AI 设置 中配置 API Key、地址和标准模型。';}
+function aiDesConfigHint(){return '先连接 AI 服务即可开始。你的想法会保留；也可以关闭此窗口，从空白项目或模板开始。';}
+var aiDesSettingsReturn=false;
+function aiDesUpdateSetup(){
+  var ready=aiDesConfigReady(),notice=document.getElementById('aiDesSetup');
+  if(!notice){notice=document.createElement('div');notice.id='aiDesSetup';notice.className='ai-setup-notice';notice.innerHTML='<span>'+aiDesConfigHint()+'</span><button type="button" data-ai="desconfigure">配置 AI 服务</button>';document.getElementById('aiDesLog').before(notice);}
+  notice.hidden=ready;
+}
+document.addEventListener('pmhub:settings-closed',function(){if(!aiDesSettingsReturn)return;aiDesSettingsReturn=false;aiDesUpdateSetup();openModal('aiDesignModal');document.getElementById('aiDesInput').focus();});
 function aiDesLabelValue(block,label){var m=String(block||'').match(new RegExp('(?:^|\\n)\\s*'+label+'[：:]\\s*([^\\n]+)','i'));return m?aiDesPlain(m[1]).replace(/^[-•]\s*/,'').trim():'';}
 function aiDesAbsorbCardDrafts(txt){
   var block=aiDesMarker(txt,'方案卡片');if(!block)return;
@@ -3324,6 +3331,7 @@ var aiDesStreamEl=null;
 function aiDesSend(forceEnd){
   forceEnd=!!forceEnd;
   if(aiDesState.busy){aiToast('AI 正在思考，稍等片刻');return;}
+  if(!aiDesConfigReady()){aiDesUpdateSetup();aiToast('请先点击“配置 AI 服务”，输入内容已保留');return;}
   var inp=document.getElementById('aiDesInput');var txt=(inp&&inp.value||'').trim();
   if(!txt){aiToast('先回答当前问题吧');return;}
   if(inp)inp.value='';
@@ -3420,9 +3428,8 @@ function aiDesignOpen(){
   aiDesRenderState();
   var stp=document.getElementById('aiDesStop');if(stp)stp.style.display='none';
   var st=aiGetSettings();
-  if(!aiDesConfigReady(st)){
-    aiDesLogAdd('sys',aiDesConfigHint());
-  }else{
+  aiDesUpdateSetup();
+  if(aiDesConfigReady(st)){
     aiDesLogAdd('bot','你好，我是需求澄清助手。你不用会写 PRD，先告诉我一个想法就好；不确定的地方我会给建议，并标成待确认。\n\n'+AI_DES_Q[0]);
   }
   try{openModal('aiDesignModal');}catch(e){var mm=document.getElementById('aiDesignModal');if(mm)mm.classList.add('open');}
@@ -3538,6 +3545,7 @@ function aiBind(){
     if(act==='descheckpointgenerate'){aiDesCloseCheckpoint();aiDesFinish();return;}
     if(act==='desstop'){if(aiDesState.abort){try{aiDesState.abort.abort();}catch(e){}}aiCancelFlag=true;return;}
     if(act==='desfinish'){aiDesFinish();return;}
+    if(act==='desconfigure'){aiDesSettingsReturn=true;closeModal('aiDesignModal');openSettings('ai');return;}
     if(act==='desclose'){try{closeModal('aiDesignModal');}catch(e){var dmx=document.getElementById('aiDesignModal');if(dmx)dmx.classList.remove('open');}return;}
     if(act==='desskelback'){aiDesRememberSkeletonCards();try{closeModal('aiDesSkeletonModal');openModal('aiDesignModal');}catch(e){var smx=document.getElementById('aiDesSkeletonModal'),dmx2=document.getElementById('aiDesignModal');if(smx)smx.classList.remove('open');if(dmx2)dmx2.classList.add('open');}return;}
     if(act==='desskelclose'){try{closeModal('aiDesSkeletonModal');}catch(e){var smc=document.getElementById('aiDesSkeletonModal');if(smc)smc.classList.remove('open');}return;}

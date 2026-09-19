@@ -24,3 +24,6 @@ tools/prd-promo-video/_qa_theme/
 # tools/sync-prototype-runtime.ps1 生成的 prototype/ 静态运行包，
 # 不再以子模块方式拉取私有仓库。
 proto-req/
+
+# 本地体验测试截图与隔离测试页
+tools/_experience-qa/

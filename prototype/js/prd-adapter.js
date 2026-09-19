@@ -5,14 +5,37 @@
   Store.initRemote = function () { return Promise.resolve(false); };
   Store.saveVersion = function () { return null; };
   Store.addChange = function () {};
+  PRD_MODE.showStartupError = function (error) {
+    var root = document.getElementById('app');
+    var box = U.el('main', { class: 'prd-startup' });
+    box.appendChild(U.el('h1', { text: '选择一个 PRD，继续制作原型' }));
+    box.appendChild(U.el('p', { text: '原型跟随当前浏览器中的 PRD 项目保存。请从项目进入；换浏览器后需要先导入项目。' }));
+    var projects = [];
+    try { projects = JSON.parse(localStorage.getItem('prdKanbanStateV3') || '{}').projects || []; } catch (e) {}
+    if (!PRD_MODE.projectId && Array.isArray(projects)) projects.forEach(function (p) {
+      if (p && p.id) box.appendChild(U.el('a', { class: 'btn', text: p.name || '未命名项目', href: 'prd.html?project=' + encodeURIComponent(p.id) }));
+    });
+    if (PRD_MODE.projectId) {
+      box.querySelector('h1').textContent = '暂时无法打开这个原型';
+      box.querySelector('p').textContent = error instanceof SyntaxError ? '本地数据格式异常。请先下载原始数据备份，再返回项目检查；原有数据未被清空。' : (error.message || '请返回 PMHub 后重新选择项目。');
+      box.appendChild(U.el('button', { class: 'btn', text: '下载原始数据备份', onclick: function () {
+        var url = URL.createObjectURL(new Blob([JSON.stringify({ projectId: PRD_MODE.projectId, prd: localStorage.getItem('prdKanbanStateV3'), prototype: localStorage.getItem(PRD_MODE.key) })], { type: 'application/json' }));
+        var a = document.createElement('a'); a.href = url; a.download = 'PMHub-原型恢复备份.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      } }));
+    }
+    box.appendChild(U.el('a', { class: 'btn btn-primary', text: '返回 PMHub', href: '../PMHub.html' }));
+    root.replaceChildren(box);
+  };
   PRD_MODE.readAIConfig = function () {
-    var s = JSON.parse(localStorage.getItem('prdKanbanAiSettings') || '{}');
+    var s;
+    try { s = JSON.parse(localStorage.getItem('prdKanbanAiSettings') || '{}') || {}; } catch (error) { s = {}; }
     var base = String(s.baseUrl || '').trim().replace(/\/+$/, '').replace(/\/chat\/completions$/, '');
     return { endpoint: base ? base + '/chat/completions' : '', apiKey: s.apiKey || '', model: s.model || '', thinking: 'auto', maxTokens: 12000, histories: [] };
   };
   PRD_MODE.source = function () {
     var state = JSON.parse(localStorage.getItem('prdKanbanStateV3') || '{}');
-    var source = (state.projects || []).find(function (p) { return p.id === PRD_MODE.projectId; });
+    if (!state || !Array.isArray(state.projects)) throw new Error('本地 PRD 数据为空或格式异常，请返回 PMHub 检查');
+    var source = state.projects.find(function (p) { return p && p.id === PRD_MODE.projectId; });
     if (!source) throw new Error('当前 PRD 项目不存在，请返回 PMHub 检查');
     return source;
   };
@@ -67,12 +90,10 @@
   AI.optimizePrototype = function (instruction, html) { return AI.generate(instruction, { currentHtml: html }); };
   var originalInit = Store.init;
   Store.init = function () {
+    var source = PRD_MODE.source();
     var raw = localStorage.getItem(PRD_MODE.key);
-    if (raw) { var parsed = JSON.parse(raw); if (!Array.isArray(parsed.projects)) throw new Error('原型数据损坏，请先备份，不会重置'); }
+    if (raw) { var parsed = JSON.parse(raw); if (!parsed || ['projects','pages','documents','blocks','elements','links'].some(function (key) { return !Array.isArray(parsed[key]); })) throw new Error('原型数据损坏，请先备份，不会重置'); }
     originalInit();
-    var state = JSON.parse(localStorage.getItem('prdKanbanStateV3') || '{}');
-    var source = (state.projects || []).find(function (p) { return p.id === PRD_MODE.projectId; });
-    if (!source) throw new Error('找不到对应 PRD，请从 PMHub 的“原型”重新进入');
     var project = Store.listProjects()[0];
     if (!project) project = Store.createProject({ name: source.name });
     if (project.name !== source.name) { Store.updateProject(project.id, { name: source.name }); Store.save(); }

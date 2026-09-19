@@ -471,6 +471,7 @@ function render(){
   if(typeof closeTblMenu==='function')closeTblMenu(); // v16.4：重建时收起右键菜单
   updateUndoBtn();
   refreshData();
+  document.body.classList.toggle('no-project',!currentProj());
   if(!currentProj()){renderPlaceholder();renderSidebar();return;}
   HEALTH=runHealth();
   renderSidebar();
@@ -480,8 +481,8 @@ function renderHero(){/* hero 已随 renderSections 的 heroHtml 写入，无需
 function renderPlaceholder(){
   const main=document.getElementById('main');
   main.innerHTML='<div class="placeholder wk">'+
-    '<div class="wk-hero"><h2 class="wk-hi">你好，产品经理</h2>'+
-    '<p class="wk-sub">今天想完成什么？让 AI 搭档帮你从想法一路推进到研发就绪。</p></div>'+
+    '<div class="wk-hero"><h2 class="wk-hi">把想法写成可交付的需求</h2>'+
+    '<p class="wk-sub">从一个想法或已有文档开始，整理需求、检查缺口，再制作页面原型。</p></div>'+
     '<div class="wk-entries">'+
       '<button class="wk-entry" data-act="wz-ai" data-genmode="design"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10c1 1 2 2 1 3h6c-1-1 0-2 1-3a6 6 0 0 0-4-10z"/></svg></span><span class="wk-e-t">从想法开始</span><span class="wk-e-d">AI 逐步澄清用户、目标、范围与验收，再生成可确认的 PRD。</span><span class="wk-e-meta">约 5–10 分钟 · 适合只有模糊想法</span></button>'+
       '<button class="wk-entry" data-act="newproj"><span class="wk-e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg></span><span class="wk-e-t">从空白开始</span><span class="wk-e-d">新建一个空项目，自选框架后从第一节开始自由编辑。</span><span class="wk-e-meta">约 1 分钟 · 适合已有清晰结构</span></button>'+
@@ -803,13 +804,17 @@ function renderSections(){
   const main=document.getElementById('main');
   // hero + dashboard 容器只在首次创建
   let wrap=main.querySelector('#content');
+  if(main.dataset.renderedProject!==currentProj().id)wrap=null;
   const latestImport=currentProj().importReport;
+  const starting=editing&&!STATE.framework.some(s=>!isEmpty(s.id));
   const heroHtml='<div class="hero"><div class="hcontent"><h1>'+esc(currentProj().name)+'</h1><div class="sub" id="heroSub"></div>'+
     (latestImport?'<button class="import-report-chip" data-act="showimportreport">最近导入：'+esc(latestImport.sourceLabel||'文档')+' · 查看报告 <span aria-hidden="true">→</span></button>':'')+
     '</div></div>'+
 
-    '<div id="dashboard" class="dashboard"></div><div id="content"></div>';
-  if(!wrap){main.innerHTML=heroHtml;wrap=main.querySelector('#content');}
+    (starting?'<div class="draft-start"><strong>先写清楚：为谁解决什么问题？</strong><p>内容会自动保存在当前浏览器。写好初稿后，再展开交付检查。</p><button type="button" class="btn btn--primary" data-act="sample-edit">开始填写需求</button></div>':'')+
+    '<details class="health-details"'+(starting?'':' open')+'><summary>交付检查 · 完成度与待补齐项</summary><div id="dashboard" class="dashboard"></div></details><div id="content"></div>';
+  if(!wrap){main.innerHTML=heroHtml;wrap=main.querySelector('#content');main.dataset.renderedProject=currentProj().id;}
+  if(!editing){const starter=main.querySelector('.draft-start');if(starter)starter.remove();main.querySelector('.health-details').open=true;}
   if(typeof aiTblDestroyAll==='function')aiTblDestroyAll();
   let html='';
   STATE.framework.forEach((s,i)=>{html+=renderSection(s,i);});
@@ -1788,7 +1793,7 @@ function resetLocalData(scope){
 
 /* ============ 模态 ============ */
 function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');if(id==='settingsModal')document.dispatchEvent(new Event('pmhub:settings-closed'));}
 /* ============ 首开向导（R-18） ============ */
 let wzStep=0;
 function openWizard(){wzStep=0;showWzStep();openModal('wizardModal');}
@@ -1813,7 +1818,7 @@ function bindStatic(){
       case 'toggleproj':document.getElementById('projPanel').classList.toggle('open');break;
       case 'switchproj':switchProject(id);break;
       case 'newproj':{renderNewProjFrameworks();openModal('newProjModal');break;}
-      case 'doCreateProject':{const n=document.getElementById('npName').value.trim();const fwId=document.getElementById('npFramework').value;createProject(n,fwId);closeModal('newProjModal');break;}
+      case 'doCreateProject':{const input=document.getElementById('npName'),n=input.value.trim();if(!n){toast('请输入项目名称');input.setAttribute('aria-invalid','true');input.focus();break;}input.removeAttribute('aria-invalid');const fwId=document.getElementById('npFramework').value;createProject(n,fwId);closeModal('newProjModal');break;}
       case 'np-pick':{const sel=document.getElementById('npFramework');if(sel){sel.value=t.dataset.fwid;refreshFwPickSel();}break;}
       case 'np-edit':{openFwEditorFromPreset(t.dataset.fwid);break;}
       case 'np-autogen':{const sel=document.getElementById('npFramework');if(sel){sel.value='__AUTO__';refreshFwPickSel();}break;}

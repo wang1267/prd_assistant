@@ -5,7 +5,11 @@
 (function () {
   'use strict';
 
-  Store.init();
+  try { Store.init(); }
+  catch (error) {
+    if (window.PRD_MODE) { PRD_MODE.showStartupError(error); return; }
+    throw error;
+  }
 
   /* ==================== 路由 ==================== */
 
@@ -320,28 +324,31 @@
         versionBtn = U.el('button', { class: 'btn btn-sm', html: U.ICONS.branch + '<span>版本</span>', title: '版本管理：保存快照 / 对比 Diff / 恢复' }),
         shareBtn = U.el('button', { class: 'btn btn-sm btn-primary', html: U.ICONS.share + '<span>分享</span>', title: '生成分享链接' }),
         accountBtn = Auth.accountButton(),
-        settingsBtn = U.el('button', { class: 'icon-btn', title: '设置（署名 / 数据备份 / 关于）', html: U.ICONS.gear, onclick: function () { Settings.open(); } }),
+        settingsBtn = U.el('button', { class: 'icon-btn', title: '设置（署名 / 数据备份 / 关于）', html: U.ICONS.gear, onclick: function () { flushSave(); persistPrototypeNow(); Settings.open(); } }),
         helpBtn = U.el('button', { class: 'icon-btn', title: '快捷键与操作速查（按 ? 随时打开）', html: U.ICONS.help })
       )
     );
 
     if (window.PRD_MODE) {
-      [historyBtn, versionBtn, shareBtn, accountBtn, settingsBtn, helpBtn].forEach(function (button) { if (button) button.remove(); });
+      [historyBtn, versionBtn, shareBtn, accountBtn, helpBtn].forEach(function (button) { if (button) button.remove(); });
       var prdUrl = '../PMHub.html?project=' + encodeURIComponent(PRD_MODE.projectId);
       topbar.querySelector('.tb-back').title = '返回当前项目的需求文档';
-      topbar.querySelector('.tb-back').onclick = function () { flushSave(); persistPrototypeNow(); location.href = prdUrl; };
+      topbar.querySelector('.tb-back').onclick = function () { if (flushSave() === false || persistPrototypeNow() === false) return; location.href = prdUrl; };
       topbar.querySelector('.tb-proj-btn').title = '当前 PRD 项目的原型工作区';
       topbar.querySelector('.tb-proj-caret').remove();
-      var stopPrdBtn = U.el('button', { class: 'btn btn-sm', text: '停止 AI', onclick: function () { if (PRD_MODE.abort) PRD_MODE.abort.abort(); } });
+      var stopPrdBtn = U.el('button', { class: 'btn btn-sm', text: '停止 AI', disabled: true, onclick: function () { if (PRD_MODE.abort) PRD_MODE.abort.abort(); } });
       topbar.querySelector('.tb-right').prepend(stopPrdBtn);
       var generatePrdBtn = U.el('button', { class: 'btn btn-sm', text: '根据 PRD 生成', onclick: async function () {
-        if (!page) return;
+        if (!page || PRD_MODE.busy || generatePrdBtn.disabled) return;
+        generatePrdBtn.disabled = true;
         try {
+          if (!AI.isRemoteReady()) { Settings.openAIConfig(); return; }
           var instruction = await U.prompt({ title: '根据 PRD 生成当前页面', label: '页面要求', placeholder: '例如：移动端首页', okLabel: '生成' });
           if (instruction === null) return;
           var targetId = page.id;
           var originalHtml = page.prototype_content || '';
           generatePrdBtn.disabled = true; generatePrdBtn.textContent = '正在生成…';
+          stopPrdBtn.disabled = false;
           var generated = await AI.generate('当前页面：' + page.name + '\n' + (instruction || '根据 PRD 生成此页面'), { currentHtml: originalHtml });
           var result = generated.html;
           if (page.id !== targetId) throw new Error('已切换页面，未应用生成结果');
@@ -353,12 +360,14 @@
           loadPage(Store.getPage(page.id));
           U.toast('原型已应用，可进入画布编辑', 'success');
         } catch (error) { U.toast(error.message || '生成失败，当前页面未替换', 'error'); }
-        finally { generatePrdBtn.disabled = false; generatePrdBtn.textContent = '根据 PRD 生成'; }
+        finally { stopPrdBtn.disabled = true; generatePrdBtn.disabled = false; generatePrdBtn.textContent = '根据 PRD 生成'; }
       }});
       topbar.querySelector('.tb-right').prepend(generatePrdBtn);
       var analyzePrdBtn = U.el('button', { class: 'btn btn-sm', text: 'AI 需求说明与连线', onclick: async function () {
-        if (!page) return;
+        if (!page || PRD_MODE.busy) return;
+        if (!AI.isRemoteReady()) { Settings.openAIConfig(); return; }
         analyzePrdBtn.disabled = true; analyzePrdBtn.textContent = '分析画布中…';
+        stopPrdBtn.disabled = false;
         try {
           flushSave();
           editor.setReadonly(true);
@@ -367,7 +376,7 @@
           if (page.id === targetId) loadPage(Store.getPage(targetId));
           U.toast('已新增 ' + count + ' 条待确认说明并连线，原有说明保留', 'success');
         } catch (error) { U.toast(error.message || '分析失败，未写入', 'error'); }
-        finally { editor.setReadonly(mode === 'read' || locked); analyzePrdBtn.disabled = false; analyzePrdBtn.textContent = 'AI 需求说明与连线'; }
+        finally { stopPrdBtn.disabled = true; editor.setReadonly(mode === 'read' || locked); analyzePrdBtn.disabled = false; analyzePrdBtn.textContent = 'AI 需求说明与连线'; }
       }});
       topbar.querySelector('.tb-right').prepend(analyzePrdBtn);
     }
@@ -412,12 +421,13 @@
     protoEmpty = U.el('div', { id: 'protoEmpty', class: 'panel-empty' },
       U.el('div', { class: 'empty-ico small', html: U.ICONS.doc }),
       U.el('div', { class: 'empty-title', text: '还没有原型' }),
-      U.el('div', { class: 'empty-desc', text: '导入 HTML 原型' }),
+      U.el('div', { class: 'empty-desc', text: window.PRD_MODE ? '根据当前需求生成页面，或导入已有 HTML 后继续编辑。' : '导入 HTML 原型' }),
       U.el('div', { class: 'empty-actions' },
         U.el('button', { class: 'btn btn-sm', text: '导入原型', onclick: function () { openImportDialog(); } })
       )
     );
 
+    if (window.PRD_MODE) protoEmpty.querySelector('.empty-actions').prepend(U.el('button', { class: 'btn btn-primary', text: '根据 PRD 生成', onclick: function () { generatePrdBtn.click(); } }));
     protoPanel = U.el('div', { id: 'protoPanel' }, protoEmpty);
     dragbar = U.el('div', { id: 'dragbar', title: '拖动调整需求栏宽度，双击复位' });
     reqHint = U.el('span', { class: 'panel-hint' });
@@ -668,6 +678,11 @@
         saveChip.textContent = '编辑中…';
         saveChip.title = '有未保存的修改 · 点击立即保存';
         saveChip.classList.add('editing');
+      } else if (st === 'error') {
+        dirty = true;
+        saveChip.textContent = '未保存 · 点击重试';
+        saveChip.title = '保存失败，请先导出备份或释放浏览器存储空间';
+        saveChip.classList.add('editing');
       } else {
         /* 顶栏文案固定为「已保存」，避免时间变化导致顶栏宽度抖动；
            具体保存时间收进 title，悬停可见 */
@@ -709,16 +724,16 @@
           Store.linksForBlock(o.id).forEach(function (l) { Store.removeLink(l.id); removedLinks++; });
           removedComments += Store.removeCommentsOfBlock(o.id);
         });
-        Store.save();
         savedBlocks = U.deepCopy(cur);
         if (removedLinks) U.toast('已移除 ' + removedLinks + ' 条失效关联', 'info');
         if (removedComments) U.toast('已清理 ' + removedComments + ' 条块评论', 'info');
         refreshLinks();
       } else {
-        Store.save();
         savedBlocks = U.deepCopy(cur);
       }
+      if (Store.save() === false) { setSaveStatus('error'); return false; }
       setSaveStatus('saved');
+      return true;
     }
 
     var scheduleSave = U.debounce(flushSave, 1000);
@@ -745,12 +760,13 @@
         return !(meta && meta.fingerprint && meta.fingerprint.tag);
       });
       Store.updatePage(targetId, { prototype_content: html });
-      Store.save();
+      if (Store.save() === false) { protoDirty = true; setSaveStatus('error'); return false; }
       protoDirty = false;
       if (lost.length) {
         U.toast('原型更新导致 ' + lost.length + ' 个已连线元素丢失标识，点击顶部「关联元素缺失」可重新绑定', 'warn', 5000);
         updateMissingChip();
       }
+      return true;
     }
 
     /* ---------- 元素标识自动恢复（指纹治愈） ----------
@@ -835,7 +851,7 @@
       schedulePrototypePersist.cancel();
       if (!protoDirty || !page || locked) return;
       if (protoForPageId !== page.id) { protoDirty = false; return; }
-      persistPrototype(page.id);
+      return persistPrototype(page.id);
     }
     persistPrototypeNowRef = persistPrototypeNow;
 
@@ -1664,7 +1680,7 @@
 
     undoBtn.addEventListener('click', function () { if (!locked) editor.undo(); });
     redoBtn.addEventListener('click', function () { if (!locked) editor.redo(); });
-    saveChip.addEventListener('click', function () { flushSave(); U.toast('已保存', 'success'); });
+    saveChip.addEventListener('click', function () { if (flushSave() === false || persistPrototypeNow() === false) return; U.toast('已保存', 'success'); });
     historyBtn.addEventListener('click', openHistory);
     versionBtn.addEventListener('click', openVersions);
     commentBtn.addEventListener('click', openCommentsPanel);
@@ -2282,11 +2298,16 @@
         },
         onSave: function (html, changed) {
           if (!changed) { U.toast('未修改原型', 'info'); return; }
-          flushSave();
+          if (flushSave() === false) throw new Error('保存失败，编辑内容已保留，请释放浏览器存储空间后重试');
           Store.saveVersion(page.id, doc.id, '进入编辑态前自动备份', true);
           var count = window.PRD_MODE ? 0 : Store.clearPageLinks(page.id);
+          var previousHtml = page.prototype_content;
           Store.updatePage(page.id, { prototype_content: html });
-          Store.save();
+          if (Store.save() === false) {
+            Store.updatePage(page.id, { prototype_content: previousHtml });
+            setSaveStatus('error');
+            throw new Error('保存失败，编辑内容已保留，请释放浏览器存储空间后重试');
+          }
           loadPage(Store.getPage(page.id));
           setMode('req');
           U.toast(count ? '已保存，原连线已清除' : '已保存并回到评审视图', 'success');
@@ -2503,14 +2524,23 @@
           { label: 'AI 生成', onClick: openImportAIGenerator },
           {
             label: '导入原型', kind: 'primary', onClick: async function (close) {
+              if (done) return;
               var html = ta.value.trim();
               if (!html) { U.toast('请先粘贴 HTML、上传文件或选择模板', 'warn'); return; }
+              if (!/<html[\s>]|<!doctype html/i.test(html)) { U.toast('请粘贴完整 HTML 文档', 'warn'); return; }
+              done = true;
               if (isReplace && Store.getLinks(page.id).length) {
                 var ok = await U.confirm('当前页面已存在连线关联，替换原型后这些关联可能失效，确定继续？', { danger: true, okLabel: '替换原型' });
-                if (!ok) return;
+                if (!ok) { done = false; return; }
               }
+              var previousHtml = page.prototype_content;
               Store.updatePage(page.id, { prototype_content: html });
-              Store.save();
+              if (Store.save() === false) {
+                Store.updatePage(page.id, { prototype_content: previousHtml });
+                done = false;
+                setSaveStatus('error');
+                return;
+              }
               close();
               loadPage(Store.getPage(page.id));
               U.toast('原型已导入', 'success');
@@ -2594,7 +2624,7 @@
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        flushSave();
+        if (flushSave() === false || persistPrototypeNow() === false) return;
         U.toast('已保存', 'success');
       }
       /* ? 键打开快捷键速查：正在输入（编辑器 / 输入框 / 弹窗）时不拦截 */
