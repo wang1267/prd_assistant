@@ -27,3 +27,6 @@ proto-req/
 
 # 本地体验测试截图与隔离测试页
 tools/_experience-qa/
+
+# Sites 静态发布产物
+/out/
